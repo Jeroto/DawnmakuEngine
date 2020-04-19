@@ -4,7 +4,7 @@ using System.Text;
 using OpenTK;
 using DawnmakuEngine.Elements;
 
-namespace DawnmakuEngine
+namespace DawnmakuEngine.Data
 {
     class EnemyPattern
     {

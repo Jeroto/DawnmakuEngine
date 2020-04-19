@@ -7,7 +7,10 @@ namespace DawnmakuEngine
 {
     public static class DawnMath
     { //Note: All angles are calculated with 0 degrees being the vector 0,1,0 -- straight up
-        public static Vector2 upDir = new Vector2(0, 1);
+        public static Vector2 vec2Up = new Vector2(0, 1);
+        public static Vector2 vec2Right = new Vector2(1, 0);
+        public static Vector2 vec2Down = new Vector2(0, -1);
+        public static Vector2 vec2Left = new Vector2(-1,0);
 
         public static float Repeat(float curVal, float maxVal, float minVal = 0)
         {
@@ -223,13 +226,13 @@ namespace DawnmakuEngine
         public static float FindAngleToCenterRad(Vector2 startingPosition)
         {
             Vector2 directionToCenter = FindDirectionToCenter(startingPosition);
-            return GetSignedAngleRad(directionToCenter, upDir);
+            return GetSignedAngleRad(directionToCenter, vec2Up);
         }
         //Uses the above function to find the direction, and then converts it to an angle
         public static float FindAngleToCenterDeg(Vector2 startingPosition)
         {
             Vector2 directionToCenter = FindDirectionToCenter(startingPosition);
-            return GetSignedAngleDeg(directionToCenter, upDir);
+            return GetSignedAngleDeg(directionToCenter, vec2Up);
         }
 
         //Finds the direction to the player object stored in the GameMaster
@@ -242,13 +245,13 @@ namespace DawnmakuEngine
         public static float FindAngleToPlayerRad(Vector2 startingPosition)
         {
             Vector2 directionToPlayer = FindDirectionToPlayer(startingPosition);
-            return GetSignedAngleRad(directionToPlayer, upDir);
+            return GetSignedAngleRad(directionToPlayer, vec2Up);
         }
         //Uses the above function to find the angle to the player object stored in the GameMaster
         public static float FindAngleToPlayerDeg(Vector2 startingPosition)
         {
             Vector2 directionToPlayer = FindDirectionToPlayer(startingPosition);
-            return GetSignedAngleDeg(directionToPlayer, upDir);
+            return GetSignedAngleDeg(directionToPlayer, vec2Up);
         }
 
         //Finds the direction between an object's x and z and the starting position's x and z -- mainly used for background effects and turning sprites towards the camera
@@ -268,14 +271,14 @@ namespace DawnmakuEngine
         public static float FindAngleToObjectRad(Vector2 startingPosition, Entity otherObject)
         {
             Vector2 directionToObject = FindDirectionToObject(startingPosition, otherObject);
-            return GetSignedAngleRad(directionToObject, upDir);
+            return GetSignedAngleRad(directionToObject, vec2Up);
         }
 
         //Finds the angle between two positions
         public static float FindAngleRad(Vector2 startPoint, Vector2 endPoint)
         {
             Vector2 direction = endPoint - startPoint;
-            return GetSignedAngleRad(direction, upDir);
+            return GetSignedAngleRad(direction, vec2Up);
         }
 
         //Finds the angle difference between two directions
@@ -287,7 +290,7 @@ namespace DawnmakuEngine
         //Finds the angle of the direction, based off of 0,1
         public static float FindAngleRad(Vector2 direction)
         {
-            return GetSignedAngleRad(direction,upDir);
+            return GetSignedAngleRad(direction,vec2Up);
         }
 
         public static Vector3 QuaternionToEuler(Quaternion quat)
@@ -311,14 +314,14 @@ namespace DawnmakuEngine
         public static float FindAngleToObjectDeg(Vector2 startingPosition, Entity otherObject)
         {
             Vector2 directionToObject = FindDirectionToObject(startingPosition, otherObject);
-            return GetSignedAngleDeg(directionToObject, upDir);
+            return GetSignedAngleDeg(directionToObject, vec2Up);
         }
 
         //Finds the angle between two positions
         public static float FindAngleDeg(Vector2 startPoint, Vector2 endPoint)
         {
             Vector2 direction = endPoint - startPoint;
-            return GetSignedAngleDeg(direction, upDir);
+            return GetSignedAngleDeg(direction, vec2Up);
         }
 
         //Finds the angle difference between two directions
@@ -330,7 +333,7 @@ namespace DawnmakuEngine
         //Finds the angle of the direction, based off of 0,1
         public static float FindAngleDeg(Vector2 direction)
         {
-            return GetSignedAngleDeg(direction, upDir);
+            return GetSignedAngleDeg(direction, vec2Up);
         }
 
 

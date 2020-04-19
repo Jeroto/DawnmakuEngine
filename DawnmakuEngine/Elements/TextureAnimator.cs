@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-
 using OpenTK.Graphics.ES30;
+using DawnmakuEngine.Data;
 
 namespace DawnmakuEngine.Elements
 {

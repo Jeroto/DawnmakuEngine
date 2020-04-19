@@ -6,7 +6,7 @@ using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.ES30;
 
-namespace DawnmakuEngine
+namespace DawnmakuEngine.Data
 {
     class Shader : IDisposable
     {

@@ -6,6 +6,7 @@ using OpenTK.Graphics;
 using OpenTK.Graphics.ES30;
 using OpenTK.Input;
 using DawnmakuEngine.Elements;
+using DawnmakuEngine.Data;
 
 namespace DawnmakuEngine
 {

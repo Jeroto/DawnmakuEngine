@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
+using DawnmakuEngine.Elements;
+using DawnmakuEngine.Data;
 using static DawnmakuEngine.DawnMath;
 using OpenTK;
 
@@ -10,7 +12,7 @@ namespace DawnmakuEngine
     class DataLoader
     {
         GameMaster gameMaster;
-        public string directory, stageDirectory, enemyDir, enemyPatternDir;
+        public string directory, stageDirectory, enemyDir, enemyPatternDir, enemyMovementDir;
 
         public DataLoader(string stageName)
         {
@@ -57,10 +59,13 @@ namespace DawnmakuEngine
                 if (dirs[i].Name == "Patterns")
                 {
                     enemyPatternDir = dirs[i].FullName;
-                    dirs = dirs[i].Parent.Parent.GetDirectories();
-                    break;
+                }
+                else if (dirs[i].Name == "Movement")
+                {
+                    enemyMovementDir = dirs[i].FullName;
                 }
             }
+            dirs = dirs[0].Parent.Parent.GetDirectories();
         }
 
         public void EnemyPatternLoader()
@@ -78,12 +83,22 @@ namespace DawnmakuEngine
         public void EnemyLoader()
         {
             string[] files = Directory.GetFiles(enemyDir, "*.dwnenemy");
+            gameMaster.loadedEnemyData = new EnemyData[files.Length];
 
             for (int i = 0; i < files.Length; i++)
             {
                 Console.WriteLine(files[i]);
             }
-           
+        }
+        public void EnemyMovementLoader()
+        {
+            string[] files = Directory.GetFiles(enemyMovementDir, "*.dwnbezier");
+            gameMaster.enemyMovementPaths = new Bezier[files.Length];
+
+            for (int i = 0; i < files.Length; i++)
+            {
+                gameMaster.loadedPatterns[i] = ReadPatternData(File.ReadAllText(files[i]));
+            }
         }
 
         public int[] FindIndexes(string text, string opener, int startIndex = 0, string closer = ";")
@@ -91,6 +106,49 @@ namespace DawnmakuEngine
             int indexStart = text.IndexOf(opener, startIndex) + opener.Length;
             int indexEnd = text.IndexOf(closer, indexStart);
             return new int[] { indexStart, indexEnd  };
+        }
+
+        public Bezier ReadBezierData(string data)
+        {
+            data = data.Replace(" ", "").Replace("\n", "").Replace("{", "").Replace("}", "");
+            Bezier thisBezier = new Bezier();
+            int[] indexes;
+            float numVal1, numVal2, numVal3;
+            bool boolVal;
+            string[] tempStrings, tempSubstrings; 
+            try
+            {
+                indexes = FindIndexes(data, "scale=");
+                float.TryParse(data.Substring(indexes[0], indexes[1] - indexes[0]), out numVal1);
+                thisBezier.scale = Round(numVal1);
+
+                indexes = FindIndexes(data, "autosetpoints=", indexes[1]);
+                bool.TryParse(data.Substring(indexes[0], indexes[1] - indexes[0]), out boolVal);
+                thisBezier.AutoSetPoints = boolVal;
+
+                indexes = FindIndexes(data, "points=", indexes[1], "end");
+                tempStrings = data.Substring(indexes[0], data.Length - indexes[0]).Split(':', StringSplitOptions.RemoveEmptyEntries);
+                thisBezier.points = new List<Bezier.Point>();
+                for (int i = 0; i < tempStrings.Length; i++)
+                {
+                    indexes = FindIndexes(data, "pos=", indexes[1]);
+                    tempSubstrings = data.Substring(indexes[0], indexes[1] - indexes[0]).Split(',', StringSplitOptions.RemoveEmptyEntries);
+                    float.TryParse(tempSubstrings[0], out numVal1);
+                    float.TryParse(tempSubstrings[1], out numVal2);
+
+                    indexes = FindIndexes(data, "time=", indexes[1]);
+                    float.TryParse(data.Substring(indexes[0], indexes[1] - indexes[0]), out numVal3);
+
+                    thisBezier.points.Add(new Bezier.Point(new Vector2(numVal1, numVal2), numVal3));
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("There was an error loading this bezier!");
+                Console.WriteLine(e.Message);
+            }
+
+            return thisBezier;
         }
 
         public EnemyPattern ReadPatternData(string data)
@@ -228,7 +286,7 @@ namespace DawnmakuEngine
 
                         indexes = FindIndexes(data, "customsprite=", indexes[1]);
                         float.TryParse(data.Substring(indexes[0], indexes[1] - indexes[0]), out numVal);
-                        thisInstance.customSprite = gameMaster.loadedTextures[Math.Clamp(Round(numVal), 0, gameMaster.loadedTextures.Length - 1)];
+                        thisInstance.customSprite = gameMaster.loadedBulletTextures[Math.Clamp(Round(numVal), 0, gameMaster.loadedBulletTextures.Length - 1)];
 
                         indexes = FindIndexes(data, "customanim=", indexes[1]);
                         subSubstrings = data.Substring(indexes[0], indexes[1] - indexes[0]).Split(',', StringSplitOptions.RemoveEmptyEntries);
@@ -236,7 +294,7 @@ namespace DawnmakuEngine
                         for (int a = 0; a < subSubstrings.Length; a++)
                         {
                             float.TryParse(subSubstrings[a], out numVal);
-                            thisInstance.customAnim[a] = gameMaster.loadedAnimStates[Math.Clamp(Round(numVal), 0, gameMaster.loadedAnimStates.Length - 1)];
+                            thisInstance.customAnim[a] = gameMaster.loadedBulletAnimStates[Math.Clamp(Round(numVal), 0, gameMaster.loadedBulletAnimStates.Length - 1)];
                         }
 
                         indexes = FindIndexes(data, "renderscale=", indexes[1]);

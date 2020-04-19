@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using OpenTK;
 using DawnmakuEngine.Elements;
+using DawnmakuEngine.Data;
 
 namespace DawnmakuEngine
 {
@@ -16,15 +17,24 @@ namespace DawnmakuEngine
 
         public int killzoneDetectIndex;
 
+        public int difficulty;
+
         public Entity playerEntity;
 
         public Shader spriteShader = new Shader("Shaders/Shader.vert", "Shaders/TransparentShader.frag");
-        
+
+
+        public Texture[] loadedBulletTextures = new Texture[] { null };
+        public TextureAnimator.AnimationState[] loadedBulletAnimStates = new TextureAnimator.AnimationState[] { null };
+        public EnemyPattern[] loadedPatterns;
+
         public Entity[] bulletSpawns = new Entity[] { null };
 
-        public Texture[] loadedTextures = new Texture[] { null };
-        public TextureAnimator.AnimationState[] loadedAnimStates = new TextureAnimator.AnimationState[] { null };
-        public EnemyPattern[] loadedPatterns;
+        public Texture[] loadedEnemyTextures = new Texture[] { null };
+        public TextureAnimator.AnimationState[] loadedEnemyAnimStates = new TextureAnimator.AnimationState[] { null };
+        public Bezier[] enemyMovementPaths = new Bezier[] { null };
+        public EnemyData[] loadedEnemyData;
+
 
 
 

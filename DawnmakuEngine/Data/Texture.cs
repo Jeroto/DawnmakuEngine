@@ -9,7 +9,7 @@ using SixLabors.ImageSharp.Processing;
 
 using OpenTK.Graphics.ES30;
 
-namespace DawnmakuEngine
+namespace DawnmakuEngine.Data
 {
     class Texture
     {
