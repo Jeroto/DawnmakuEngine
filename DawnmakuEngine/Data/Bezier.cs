@@ -17,11 +17,13 @@ namespace DawnmakuEngine.Data
         {
             public Vector2 pos;
             public float time;
+            public ushort waitTime;
 
-            public Point(Vector2 pos_, float time_)
+            public Point(Vector2 pos_, float time_, ushort waitTime_ = 0)
             {
-                this.pos = pos_;
-                this.time = time_;
+                pos = pos_;
+                time = time_;
+                waitTime = waitTime_;
             }
         }
 
@@ -143,6 +145,10 @@ namespace DawnmakuEngine.Data
             return new Point[] { points[i * 3], points[i * 3 + 1], points[i * 3 + 2], points[i * 3 + 3] };
         }
 
+        public float StartWaitTime(int i) { return points[i * 3].waitTime; }
+        public float StartTimeOfSegment(int i) { return points[i * 3].time; }
+        public float EndTimeOfSegment(int i) { return points[i * 3 + 3].time; }
+
         public void MovePoint(int i, Vector2 pos)
         {
             Vector2 moveDist = pos - points[i].pos;
@@ -247,6 +253,51 @@ namespace DawnmakuEngine.Data
             Vector2 p0 = QuadraticCurve(a, b, c, t);
             Vector2 p1 = QuadraticCurve(b, c, d, t);
             return Lerp(p0, p1, t);
+        }
+        /// <summary>
+        /// Slower than PositionOnSegment, but requires less stored variables
+        /// </summary>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        public Vector2 PositionOnCurve(float time)
+        {
+            Point[] segmentPoints = new Point[4];
+            float nextTime = 1;
+            for (int i = 0; i < NumPoints; i += 3)
+            {
+                if(time < points[i].time)
+                {
+                    nextTime = points[i].time;
+                    i -= 3;
+
+                    time -= points[i].time;
+                    for (int p = 0; p < 4; p++)
+                    {
+                        segmentPoints[p] = points[i + p];
+                    }
+                    break;
+                }
+            }
+            if (nextTime <= 0)
+                nextTime = 1;
+
+            return CubicCurve(segmentPoints[0].pos, segmentPoints[1].pos, segmentPoints[2].pos, segmentPoints[3].pos, time / nextTime) * scale;
+        }
+        /// <summary>
+        /// Faster than PositionOnCurve(), but requires more storing of variables from calling object
+        /// </summary>
+        /// <param name="segment"></param>
+        /// <returns></returns>
+        public Vector2 PositionOnSegment(int segment, float time, bool overallTime)
+        {
+            Point[] segmentPoints = GetPointsInSegment(segment);
+            float nextTime = segmentPoints[3].time;
+            if (overallTime)
+            {
+                time -= segmentPoints[0].time;
+                nextTime -= segmentPoints[0].time;
+            }
+            return CubicCurve(segmentPoints[0].pos, segmentPoints[1].pos, segmentPoints[2].pos, segmentPoints[3].pos, time / nextTime) * scale;
         }
     }
 }

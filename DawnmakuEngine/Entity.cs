@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using OpenTK;
+using OpenTK.Audio.OpenAL;
 using static DawnmakuEngine.DawnMath;
 
 namespace DawnmakuEngine
@@ -10,7 +11,7 @@ namespace DawnmakuEngine
     {
         public static List<Entity> allEntities = new List<Entity>();
 
-        public Entity parent; //Stores parent object
+        protected Entity parent; //Stores parent object
 
         protected string name;
         protected Vector3 position = Vector3.Zero; //Local position
@@ -35,6 +36,10 @@ namespace DawnmakuEngine
         public Entity(string name_) : this()
         {
             Name = name_;
+        }
+        public Entity(string name_, Vector3 localPosition_) : this(name_)
+        {
+            LocalPosition = localPosition_;
         }
 
         public Entity(string name_, Vector3 localPosition_, Vector3 localRotation_, Vector3 localScale_) : this(name_)
@@ -74,6 +79,31 @@ namespace DawnmakuEngine
             get { return name; }
             set { name = value; }
         }
+        public Entity Parent
+        {
+            get { return parent; }
+            set
+            {
+                if (value == null)
+                {
+                    LocalPosition = WorldPosition;
+                    LocalRotation = WorldRotation;
+                    LocalScale = WorldScale;
+                }
+                else
+                {
+                    LocalRotation = WorldRotation * value.WorldRotation.Inverted();
+                    LocalPosition = GetLocalPositionToObject(value);
+                    Vector3 newScale = WorldScale, parentScale = value.WorldScale;
+                    newScale.X /= parentScale.X;
+                    newScale.Y /= parentScale.Y;
+                    newScale.Z /= parentScale.Z;
+                    LocalScale = newScale;
+                }
+
+                parent = value;
+            }
+        }
         public Vector3 LocalPosition
         {
             get { return position; }
@@ -83,18 +113,18 @@ namespace DawnmakuEngine
         {
             get
             {
-                Vector3 position = LocalPosition;   //Gets local position and stores it so the property is only accessed once
                 Entity currentEntity = parent;      //Used to go up through each parent until we are at the top of the list
-                Vector4 vec4Pos = new Vector4(position.X, position.Y, position.Z, 1);   //Used in matrix multiplication
+                Vector4 vec4Pos = new Vector4(LocalPosition, 1);   //Used in matrix multiplication
                 Matrix4 modifyMatrix;
                 while (currentEntity != null)
                 {
                     modifyMatrix = Matrix4.Identity //Identity base matrix
-                        * Matrix4.CreateTranslation(currentEntity.LocalPosition)    //Adds translation of the parent's position
                         * Matrix4.CreateScale(currentEntity.LocalScale)             //Adds a scale of the parent's local scale to scale units
                         * Matrix4.CreateRotationX(currentEntity.LocalRotationRad.X)    //Rotates position based on parent's rotation
                         * Matrix4.CreateRotationY(currentEntity.LocalRotationRad.Y)    // /\
-                        * Matrix4.CreateRotationZ(currentEntity.LocalRotationRad.Z);   // /\
+                        * Matrix4.CreateRotationZ(currentEntity.LocalRotationRad.Z)    // /\
+                        * Matrix4.CreateTranslation(currentEntity.LocalPosition)   //Adds translation of the parent's position
+                        ; 
 
                     vec4Pos *= modifyMatrix;    //Modifies vector with the above matrix
                     currentEntity = currentEntity.parent;   //Updates to parent of parent
@@ -127,25 +157,38 @@ namespace DawnmakuEngine
                 return new Vector3(MathHelper.RadiansToDegrees(rot.X), MathHelper.RadiansToDegrees(rot.Y), MathHelper.RadiansToDegrees(rot.Z)); }
             set { rotation = Quaternion.FromEulerAngles(new Vector3(MathHelper.DegreesToRadians(value.X), MathHelper.DegreesToRadians(value.Y), MathHelper.DegreesToRadians(value.Z))); }
         }
-        public Vector3 WorldRotation
+        public Vector3 WorldRotationRad
         {
             get
             {
-                Vector3 rotation = LocalRotationRad;
+                return QuaternionToEuler(WorldRotation);
+            }
+            //set { rotation = value; }
+        }
+        public Vector3 WorldRotationDeg
+        {
+            get
+            {
+                Vector3 euler = QuaternionToEuler(WorldRotation);
+                euler.X = MathHelper.RadiansToDegrees(euler.X);
+                euler.Y = MathHelper.RadiansToDegrees(euler.Y);
+                euler.Z = MathHelper.RadiansToDegrees(euler.Z);
+                return euler;
+            }
+            //set { rotation = value; }
+        }
+        public Quaternion WorldRotation
+        {
+            get
+            {
+                Quaternion rotation = LocalRotation;
                 Entity currentEntity = parent;
-                Vector4 vec4Rot = new Vector4(rotation.X, rotation.Y, rotation.Z, 0);
-                Matrix4 rotationMatr;
                 while (currentEntity != null)
                 {
-                    rotationMatr = Matrix4.Identity
-                    * Matrix4.CreateRotationX(currentEntity.LocalRotationRad.X)
-                    * Matrix4.CreateRotationY(currentEntity.LocalRotationRad.Y)
-                    * Matrix4.CreateRotationZ(currentEntity.LocalRotationRad.Z);
-
-                    vec4Rot *= rotationMatr;
+                    rotation *= currentEntity.LocalRotation;
                     currentEntity = currentEntity.parent;
                 }
-                return vec4Rot.Xyz;
+                return rotation;
             }
             //set { rotation = value; }
         }
@@ -169,6 +212,27 @@ namespace DawnmakuEngine
                 }
                 return vec4Scale.Xyz;
             }
+        }
+
+        public Vector3 GetLocalPositionToObject(Entity obj)
+        {
+            Entity currentEntity = obj;      //Used to go up through each parent until we are at the top of the list
+            Vector4 vec4Pos = new Vector4(WorldPosition, 1);   //Used in matrix multiplication
+            Matrix4 modifyMatrix;
+            while (currentEntity != null)
+            {
+                modifyMatrix = Matrix4.Identity //Identity base matrix
+                    * Matrix4.CreateScale(currentEntity.LocalScale)             //Adds a scale of the parent's local scale to scale units
+                    * Matrix4.CreateRotationX(currentEntity.LocalRotationRad.X)    //Rotates position based on parent's rotation
+                    * Matrix4.CreateRotationY(currentEntity.LocalRotationRad.Y)    // /\
+                    * Matrix4.CreateRotationZ(currentEntity.LocalRotationRad.Z)    // /\
+                    * Matrix4.CreateTranslation(currentEntity.LocalPosition)   //Adds translation of the parent's position
+                    ;
+
+                vec4Pos *= modifyMatrix.Inverted();    //Modifies vector with the above matrix
+                currentEntity = currentEntity.parent;   //Updates to parent of parent
+            }
+            return vec4Pos.Xyz;
         }
 
         public static Entity FindEntity(string searchName)
@@ -205,6 +269,16 @@ namespace DawnmakuEngine
         public void RemoveElement(Element toRemove)
         {
             elements.Remove(toRemove);
+        }
+        public void RemoveAllElements()
+        {
+            elements = new List<Element>();
+        }
+        public void DeleteAllElements()
+        {
+            for (int i = 0; i < elements.Count; i++)
+                elements[i].AttemptDelete();
+            elements = new List<Element>();
         }
 
         public void Enable()
@@ -276,6 +350,13 @@ namespace DawnmakuEngine
             Vector3 tempRotation = LocalRotation;
             LocalRotation = (new Vector4(tempRotation.X, tempRotation.Y, tempRotation.Z, 0) * rotateMatr).Xyz;*/
             LocalRotationRad += axis;
+        }
+
+        public void AttemptDelete()
+        {
+            allEntities.Remove(this);
+            Disable();
+            DeleteAllElements();
         }
     }
 }

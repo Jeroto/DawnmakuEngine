@@ -36,6 +36,15 @@ namespace DawnmakuEngine
             OnDisableAndDestroy();
         }
 
+        public virtual void AttemptDelete()
+        {
+            enabled = false;
+            OnDisableAndDestroy();
+            OnDestroy();
+            allElements.Remove(this);
+            EntityAttachedTo.RemoveElement(this);
+        }
+
         public Element() //MUST be included in the constructor of all Elements for many functions to work!
         {
             allElements.Add(this);  //Unless you add this line into the constructor 

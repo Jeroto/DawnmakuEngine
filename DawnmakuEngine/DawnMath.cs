@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using DawnmakuEngine.Elements;
 using OpenTK;
 
 namespace DawnmakuEngine
@@ -23,9 +24,10 @@ namespace DawnmakuEngine
         public static int Repeat(int curVal, int maxVal, int minVal = 0)
         {
             while (curVal < minVal)
-                curVal += maxVal;
+                curVal = Math.Abs(curVal - (minVal - 1)) + maxVal;
+
             while (curVal > maxVal)
-                curVal -= maxVal;
+                curVal = Math.Abs(curVal - (maxVal + 1)) + minVal;
             return curVal;
         }
         public static long Repeat(long curVal, long maxVal, long minVal = 0)
@@ -361,31 +363,30 @@ namespace DawnmakuEngine
         //Runs through every enemy position under the enemy container, and finds the nearest to the position within a maximum distance of the max radius
         //And returns the shortest distance as an out
         //This accounts for bosses under the if statements below the main for loop
-        /* public static Transform FindNearestEnemy(Vector2 position, float maxRadius, out float shortestDist)
+         public static Entity FindNearestEnemy(Vector2 position, float maxRadius, out float shortestDist)
          {
              shortestDist = float.MaxValue;
              float tempDist;
-             Transform newTarget = null;
+             Entity newTarget = null;
              GameMaster gameMaster = GameMaster.gameMaster;
-             Transform enemyContainer = gameMaster.enemyContainer;
-             int childCount = enemyContainer.childCount;
+             int childCount = BaseEnemyElement.allEnemies.Count;
 
              for (int i = 0; i < childCount; i++)
              {
-                 tempDist = Vector2.Distance(position, enemyContainer.GetChild(i).position);
+                 tempDist = Vector2.Distance(position, BaseEnemyElement.allEnemies[i].EntityAttachedTo.WorldPosition.Xy);
                  if (tempDist <= maxRadius && tempDist < shortestDist)
                  {
-                     newTarget = enemyContainer.GetChild(i);
+                     newTarget = BaseEnemyElement.allEnemies[i].EntityAttachedTo;
                      shortestDist = tempDist;
                  }
              }
-
+            /*
              //Finds nearest distance to any midboss while fighting the midboss -- is set up to allow for multiple-character midbosses
              if (gameMaster.stageScript.fightingMidboss)
              {
                  BaseBossScript[] midbosses;
                  midbosses = gameMaster.stageScript.midbossSpawn.GetComponentsInChildren<BaseBossScript>();
-                 Transform thisBoss;
+                 Entity thisBoss;
                  for (int i = 0; i < midbosses.Length; i++)
                  {
                      thisBoss = midbosses[i].transform;
@@ -403,7 +404,7 @@ namespace DawnmakuEngine
              {
                  BaseBossScript[] bosses;
                  bosses = gameMaster.stageScript.bossSpawn.GetComponentsInChildren<BaseBossScript>();
-                 Transform thisBoss;
+                 Entity thisBoss;
                  for (int i = 0; i < bosses.Length; i++)
                  {
                      thisBoss = bosses[i].transform;
@@ -414,48 +415,47 @@ namespace DawnmakuEngine
                          shortestDist = tempDist;
                      }
                  }
-             }
+             }*/
 
              //Returns the nearest enemy's transform
              return newTarget;
          }
-         */
+         
         //Same the above function, and even uses it, but doesn't return the shortest distance
-        /*public static Transform FindNearestEnemy(Vector2 position, float maxRadius)
+        public static Entity FindNearestEnemy(Vector2 position, float maxRadius)
         {
             float outDeletion;
             return FindNearestEnemy(position, maxRadius, out outDeletion);
-        }*/
+        }
 
 
         //Runs through every enemy position under the enemy container, and finds the nearest to the position
         //And returns the shortest distance as an out
         //This accounts for bosses under the if statements below the main for loop
-        /*public static Transform FindNearestEnemy(Vector2 position, out float shortestDist)
+        public static Entity FindNearestEnemy(Vector2 position, out float shortestDist)
         {
             shortestDist = float.MaxValue;
             float tempDist;
-            Transform newTarget = null;
+            Entity newTarget = null;
             GameMaster gameMaster = GameMaster.gameMaster;
-            Transform enemyContainer = gameMaster.enemyContainer;
-            int childCount = enemyContainer.childCount;
+            int childCount = BaseEnemyElement.allEnemies.Count;
 
             for (int i = 0; i < childCount; i++)
             {
-                tempDist = Vector2.Distance(position, enemyContainer.GetChild(i).position);
+                tempDist = Vector2.Distance(position, BaseEnemyElement.allEnemies[i].EntityAttachedTo.WorldPosition.Xy);
                 if (tempDist < shortestDist)
                 {
-                    newTarget = enemyContainer.GetChild(i);
+                    newTarget = BaseEnemyElement.allEnemies[i].EntityAttachedTo;
                     shortestDist = tempDist;
                 }
             }
 
-            //Finds nearest distance to any midboss while fighting the midboss -- is set up to allow for multiple-character midbosses
+            /*//Finds nearest distance to any midboss while fighting the midboss -- is set up to allow for multiple-character midbosses
             if (gameMaster.stageScript.fightingMidboss)
             {
                 BaseBossScript[] midbosses;
                 midbosses = gameMaster.stageScript.midbossSpawn.GetComponentsInChildren<BaseBossScript>();
-                Transform thisBoss;
+                Entity thisBoss;
                 for (int i = 0; i < midbosses.Length; i++)
                 {
                     thisBoss = midbosses[i].transform;
@@ -473,7 +473,7 @@ namespace DawnmakuEngine
             {
                 BaseBossScript[] bosses;
                 bosses = gameMaster.stageScript.bossSpawn.GetComponentsInChildren<BaseBossScript>();
-                Transform thisBoss;
+                Entity thisBoss;
                 for (int i = 0; i < bosses.Length; i++)
                 {
                     thisBoss = bosses[i].transform;
@@ -484,16 +484,16 @@ namespace DawnmakuEngine
                         shortestDist = tempDist;
                     }
                 }
-            }
+            }*/
 
             return newTarget;
-        }*/
+        }
 
         //Same the above function, and even uses it, but doesn't return the shortest distance
-        /*public static Transform FindNearestEnemy(Vector2 position)
+        public static Entity FindNearestEnemy(Vector2 position)
         {
             float outDeletion;
             return FindNearestEnemy(position, out outDeletion);
-        }*/
+        }
     }
 }

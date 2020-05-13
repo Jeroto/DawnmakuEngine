@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using DawnmakuEngine.Data;
 using OpenTK;
 using OpenTK.Graphics.ES30;
 
@@ -62,9 +63,9 @@ namespace DawnmakuEngine.Elements
             if (tex2 != null)
                 tex2.Use(TextureUnit.Texture1);
             Quaternion modelRotation = entityAttachedTo.LocalRotation;
-            Matrix4 model = Matrix4.Identity * Matrix4.CreateFromQuaternion(entityAttachedTo.LocalRotation) * 
-                Matrix4.CreateTranslation(entityAttachedTo.WorldPosition) *
-                Matrix4.CreateScale(entityAttachedTo.LocalScale);
+            Matrix4 model = Matrix4.Identity *
+                Matrix4.CreateScale(entityAttachedTo.WorldScale) * Matrix4.CreateFromQuaternion(entityAttachedTo.WorldRotation) *
+                Matrix4.CreateTranslation(entityAttachedTo.WorldPosition);
             shader.SetMatrix4("model", model);
             shader.SetVector4("colorModInput", ColorFloat);
         }
@@ -72,6 +73,20 @@ namespace DawnmakuEngine.Elements
         public MeshRenderer() : base()
         {
 
+        }
+        public MeshRenderer(Mesh newMesh, BufferUsageHint bufferUsage) : base()
+        {
+            mesh = newMesh;
+            mesh.SetUp(bufferUsage);
+        }
+        public MeshRenderer(Mesh newMesh, BufferUsageHint bufferUsage, Texture texture, Texture texture2 = null) : this(newMesh, bufferUsage)
+        {
+            tex = texture;
+            tex2 = texture2;
+        }
+        public MeshRenderer(Mesh newMesh, BufferUsageHint bufferUsage, Shader newShader, Texture texture, Texture texture2 = null) : this(newMesh, bufferUsage, texture, texture2)
+        {
+            shader = newShader;
         }
 
         protected override void OnEnableAndCreate()
@@ -89,5 +104,10 @@ namespace DawnmakuEngine.Elements
             meshRenderers.Remove(this);
         }
 
+        public override void AttemptDelete()
+        {
+            base.AttemptDelete();
+            meshRenderers.Remove(this);
+        }
     }
 }

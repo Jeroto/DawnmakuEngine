@@ -1,28 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using DawnmakuEngine.Elements;
 using OpenTK;
 
 namespace DawnmakuEngine.Data
 {
     class EnemyData
     {
-        public float health;
+        public string enemyName;
+        public int health;
         public float invTime = 30;
         public int deathScoreValue;
-        public int hitsToGiveScore;
 
         public float colliderSize;
         public Vector2 colliderOffset;
 
-        public int movementCurve;
-        public int[] animations;
+        public Bezier movementCurve;
+        public TextureAnimator.AnimationState[] animations;
         public Difficulty[] patternsByDifficulty;
 
         [System.Serializable]
         public class Difficulty
         {
-            public int[] patterns;
+            public Pattern[] patterns;
         }
     }
 }

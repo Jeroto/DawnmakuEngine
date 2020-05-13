@@ -8,30 +8,37 @@ namespace DawnmakuEngine.Data
     class Mesh
     {
         public float[] vertices;
-        protected int vertexArrayHandle;
-        protected int vertexBufferHandle;
+        public uint[] triangleData;
+        protected int vertexArrayHandle, vertexBufferHandle, elementBufferHandle;
 
         public int VertexArrayHandle { get { return vertexArrayHandle; } }
         public int VertexBufferHandle { get { return vertexBufferHandle; } }
 
-        public enum Primitives { SqrPlane, TallPlane, Cube, Pyramid }
+        public enum Primitives { SqrPlaneWTriangles, SqrPlane, TallPlane, Cube, Pyramid }
 
         public void Use()
         {
             GL.BindVertexArray(VertexArrayHandle);
             GL.BindBuffer(BufferTarget.ArrayBuffer, VertexBufferHandle);
+            GL.BindBuffer(BufferTarget.ElementArrayBuffer, elementBufferHandle);
         }
 
         public void SetUp(BufferUsageHint bufferUsage)
         {
             GL.BindBuffer(BufferTarget.ArrayBuffer, VertexBufferHandle);
             GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, bufferUsage);
+            if(triangleData != null)
+            {
+                GL.BindBuffer(BufferTarget.ElementArrayBuffer, elementBufferHandle);
+                GL.BufferData(BufferTarget.ElementArrayBuffer, triangleData.Length * sizeof(uint), triangleData, bufferUsage);
+            }
         }
 
         public Mesh()
         {
             vertexArrayHandle = GL.GenVertexArray();
             vertexBufferHandle = GL.GenBuffer();
+            elementBufferHandle = GL.GenBuffer();
         }
 
         public Mesh(Primitives primitiveBase) : this()
@@ -54,10 +61,26 @@ namespace DawnmakuEngine.Data
             }
         }
 
+        public static Mesh CreatePrimitiveMesh(Primitives primitiveType)
+        {
+            Mesh created = new Mesh(primitiveType);
+            if (primitiveType == Primitives.SqrPlaneWTriangles)
+                created.triangleData = new uint[] {0, 1, 2,   0, 2, 3};
+            return created;
+        }
+
         public static float[] GetPrimitiveVertices(Primitives primitiveType)
         {
             switch (primitiveType)
             {
+                case Primitives.SqrPlaneWTriangles:
+                    return new float[] {
+                        -.5f, 0.5f, 0, 0, 1,
+                        0.5f, 0.5f, 0, 1, 1,
+                        0.5f, -.5f, 0, 1, 0,
+                        -.5f, -.5f, 0, 0, 0,
+                    };
+
                 case Primitives.SqrPlane:
                     return new float[] {
                         -.5f, 0.5f, 0, 0, 1,

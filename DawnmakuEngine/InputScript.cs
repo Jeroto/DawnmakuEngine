@@ -14,6 +14,11 @@ namespace DawnmakuEngine
         private static bool bomb = false;
         private static bool special = false;
 
+        private static bool prevFocus = false;
+        private static bool prevShoot = false;
+        private static bool prevBomb = false;
+        private static bool prevSpecial = false;
+
         public class ExtraInputData
         {
             //input
@@ -42,6 +47,39 @@ namespace DawnmakuEngine
             get { return special; }
         }
 
+        public static bool focusDown
+        {
+            get { return focus && !prevFocus; }
+        }
+        public static bool focusUp
+        {
+            get { return !focus && prevFocus; }
+        }
+        public static bool shootDown
+        {
+            get { return shoot && !prevShoot; }
+        }
+        public static bool shootUp
+        {
+            get { return !shoot && prevShoot; }
+        }
+        public static bool bombDown
+        {
+            get { return bomb && !prevBomb; }
+        }
+        public static bool bombUp
+        {
+            get { return !bomb && prevBomb; }
+        }
+        public static bool specialDown
+        {
+            get { return special && !prevSpecial; }
+        }
+        public static bool specialUp
+        {
+            get { return !special && prevSpecial; }
+        }
+
         public static void GetInput()
         {
             KeyboardState keyboardState = Keyboard.GetState();
@@ -49,10 +87,23 @@ namespace DawnmakuEngine
             directionalInput.X = keyboardState.IsKeyDown(Key.Left) ? -1 : keyboardState.IsKeyDown(Key.Right) ? 1 : 0;
             directionalInput.Y = keyboardState.IsKeyDown(Key.Down) ? -1 : keyboardState.IsKeyDown(Key.Up) ? 1 : 0;
 
+            prevFocus = focus;
+            prevShoot = shoot;
+            prevBomb = bomb;
+            prevSpecial = special;
+
             focus = keyboardState.IsKeyDown(Key.ShiftLeft);
             shoot = keyboardState.IsKeyDown(Key.Z);
             bomb = keyboardState.IsKeyDown(Key.X);
             special = keyboardState.IsKeyDown(Key.C);
+        }
+
+        public static void ResetUpDown()
+        {
+            prevFocus = focus;
+            prevShoot = shoot;
+            prevBomb = bomb;
+            prevSpecial = special;
         }
 
         public static void ClearInput()

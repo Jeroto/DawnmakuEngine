@@ -71,9 +71,106 @@ namespace DawnmakuEngine
         {
         }
 
+
+        protected override void OnLoad(EventArgs e)
+        {
+            DataLoader loader = new DataLoader("1");
+            loader.LoadBullets();
+            loader.LoadPlayerOrbs();
+            loader.LoadPlayers();
+            loader.LoadEnemies();
+
+            GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+            /*vertexBufferObject = GL.GenBuffer();
+            elementBufferObject = GL.GenBuffer();
+            vertexArrayObject = GL.GenVertexArray();
+
+            GL.BindVertexArray(vertexArrayObject);
+
+            GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBufferObject);
+            GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.DynamicDraw);
+
+            GL.BindBuffer(BufferTarget.ElementArrayBuffer, elementBufferObject);
+            GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(uint), indices, BufferUsageHint.DynamicDraw);*/
+
+            /*shader = new Shader("Shaders/Shader.vert", "Shaders/TransparentShader.frag");
+
+            texture1 = new Texture("Wood.jpg", false);
+            texture2 = new Texture("PlsRember.png", false);
+            shader.SetInt("texture0", 0);
+            shader.SetInt("texture1", 1);*/
+
+
+            /*int positionLocation = shader.GetAttribLocation("aPosition");
+            GL.VertexAttribPointer(positionLocation, 3, VertexAttribPointerType.Float, false, 5 * sizeof(float), 0);
+            GL.EnableVertexAttribArray(positionLocation);
+            int texCoordLocation = shader.GetAttribLocation("aTexCoord");
+            GL.EnableVertexAttribArray(texCoordLocation);
+            GL.VertexAttribPointer(texCoordLocation, 2, VertexAttribPointerType.Float, false, 5 * sizeof(float), 3 * sizeof(float));*/
+
+
+            MeshRenderer debugPlayerRenderer = new MeshRenderer();
+            debugPlayerRenderer.mesh = Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles);
+            debugPlayerRenderer.mesh.SetUp(BufferUsageHint.DynamicDraw);
+            debugPlayerRenderer.shader = GameMaster.gameMaster.spriteShader;
+            //newRenderer1.tex = new Texture("Wood.jpg", true);
+            debugPlayerRenderer.shader.SetInt("texture0", 0);
+            debugPlayerRenderer.shader.SetInt("texture1", 1);
+
+            Entity debugPlayer = new Entity("Player");
+            debugPlayer.AddElement(debugPlayerRenderer);
+
+            PlayerController debugPlayerControl = new PlayerController();
+            debugPlayerControl.playerData = GameMaster.gameMaster.loadedPlayerChars["reimu"];
+            debugPlayer.AddElement(debugPlayerControl);
+
+            TextureAnimator debugPlayerAnim = new TextureAnimator(debugPlayer.GetElement<MeshRenderer>(), true);
+            debugPlayer.AddElement(debugPlayerAnim);
+
+            GameMaster.gameMaster.playerEntity = debugPlayer;
+
+            Entity text = new Entity("FPSCounter", new Vector3(.5f, -.5f, 0), Vector3.Zero, Vector3.One);
+
+            /*TextRenderer textRend = new TextRenderer();
+            textRend.SetDrawingColor(255, 0, 0, 255);
+            textRend.textToWrite = "FPS:";
+            textRend.font = new QuickFont.QFont("Fonts/WitchingHour.ttf", 72, new QuickFont.Configuration.QFontBuilderConfiguration());
+            textRend.SetUp();
+            text.AddElement(textRend);*/
+            Console.WriteLine(debugPlayer.ToString());
+
+            /*Entity newBullet = new Entity("Bullet", debugPlayer, new Vector3(20, 0, 0), Vector3.Zero, Vector3.One);
+
+            MeshRenderer renderer = new MeshRenderer();
+            renderer.tex = GameMaster.gameMaster.bulletSprites["butterfly"].sprites[0].tex;
+            renderer.shader = GameMaster.gameMaster.spriteShader;
+            renderer.mesh = Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles);
+            renderer.mesh.SetUp(OpenTK.Graphics.ES30.BufferUsageHint.DynamicDraw);
+
+            newBullet.AddElement(renderer);
+            newBullet.AddElement(new TextureAnimator(BulletElement.GetBulletAnim("butterfly", (int)BulletElement.BulletColor.Red), renderer, true));
+
+            newBullet.AddElement(new RotateElement(180, true, true));*/
+
+
+            EnemyElement.SpawnEnemy(GameMaster.gameMaster.loadedEnemyData["blueenemy1"], Vector3.Zero);
+
+
+            GL.Enable(EnableCap.Blend);
+            GL.BlendFunc(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha);
+            GL.Enable(EnableCap.DepthTest);
+            /*GL.Enable(EnableCap.StencilTest);
+            GL.StencilFunc(StencilFunction.Equal, GameMaster.gameMaster.spriteShader.Handle, 0xFF);
+            GL.StencilOp(StencilOp.Keep, StencilOp.Keep, StencilOp.Replace);
+            GL.StencilMask(0xFF);*/
+        }
+
+
         protected override void OnUpdateFrame(FrameEventArgs e)
         {
             KeyboardState input = Keyboard.GetState();
+
+            GameMaster.gameMaster.GameMasterUpdate();
 
             if (Focused)
             {
@@ -93,6 +190,43 @@ namespace DawnmakuEngine
                     TargetUpdateFrequency = 240;
                 if (input.IsKeyDown(Key.L))
                     TargetUpdateFrequency = 60;
+
+
+                if(input.IsKeyDown(Key.H))
+                {
+                    GameMaster.gameMaster.timeScaleUpdate = 0.5f;
+                }
+                else if(input.IsKeyDown(Key.R))
+                {
+                    GameMaster.gameMaster.timeScaleUpdate = 1f;
+                }
+
+                if (InputScript.specialDown)
+                {
+                    if (InputScript.Focus)
+                        GameMaster.gameMaster.currentPowerLevel--;
+                    else
+                        GameMaster.gameMaster.currentPowerLevel++;
+                }
+
+                if (input.IsKeyDown(Key.G))
+                {
+                    GameMaster gameMaster = GameMaster.gameMaster;
+                    BulletElement.BulletStage[] stages = new BulletElement.BulletStage[1];
+                    stages[0] = new BulletElement.BulletStage();
+                    stages[0].spriteType = gameMaster.bulletTypes[BulletElement.Random(0, gameMaster.bulletTypes.Count)];
+                    //stages[0].spriteType = "bigdrop";
+                    stages[0].bulletColor = BulletElement.Random(0, gameMaster.bulletData[stages[0].spriteType].spriteColors - 2);
+                    //stages[0].bulletColor = 20;
+                    stages[0].startingSpeed = 200;
+                    stages[0].endingSpeed = 75;
+                    stages[0].framesToChangeSpeed = 30;
+                    stages[0].movementDirection = DawnMath.RandomCircle();
+                    //stages[0].movementDirection = DawnMath.RandomCircle();
+                    stages[0].rotate = BulletElement.ShouldTurn(stages[0].spriteType);
+                    //stages[0].rotate = false;
+                    BulletElement.SpawnBullet(stages, Entity.FindEntity("Bullet").WorldPosition, BulletElement.ShouldSpin(stages[0].spriteType));
+                }
 
                 if (input.IsKeyDown(Key.Plus))
                 {
@@ -156,136 +290,6 @@ namespace DawnmakuEngine
             base.OnUpdateFrame(e);
         }
 
-        protected override void OnLoad(EventArgs e)
-        {
-            DataLoader loader = new DataLoader("1");
-            //loader.EnemyLoader();
-            loader.EnemyPatternLoader();
-
-            GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-            /*vertexBufferObject = GL.GenBuffer();
-            elementBufferObject = GL.GenBuffer();
-            vertexArrayObject = GL.GenVertexArray();
-
-            GL.BindVertexArray(vertexArrayObject);
-
-            GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBufferObject);
-            GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.DynamicDraw);
-
-            GL.BindBuffer(BufferTarget.ElementArrayBuffer, elementBufferObject);
-            GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(uint), indices, BufferUsageHint.DynamicDraw);*/
-
-            /*shader = new Shader("Shaders/Shader.vert", "Shaders/TransparentShader.frag");
-
-            texture1 = new Texture("Wood.jpg", false);
-            texture2 = new Texture("PlsRember.png", false);
-            shader.SetInt("texture0", 0);
-            shader.SetInt("texture1", 1);*/
-
-
-            /*int positionLocation = shader.GetAttribLocation("aPosition");
-            GL.VertexAttribPointer(positionLocation, 3, VertexAttribPointerType.Float, false, 5 * sizeof(float), 0);
-            GL.EnableVertexAttribArray(positionLocation);
-            int texCoordLocation = shader.GetAttribLocation("aTexCoord");
-            GL.EnableVertexAttribArray(texCoordLocation);
-            GL.VertexAttribPointer(texCoordLocation, 2, VertexAttribPointerType.Float, false, 5 * sizeof(float), 3 * sizeof(float));*/
-
-
-            Texture reimuSprite1 = new Texture("Reimu1.png", false), reimuSprite2 = new Texture("Reimu2.png", false),
-                reimuSprite3 = new Texture("Reimu3.png", false), reimuSprite4 = new Texture("Reimu4.png", false);
-
-            MeshRenderer newRenderer1 = new MeshRenderer(), newRenderer2 = new MeshRenderer();
-            newRenderer1.mesh = new Mesh(Mesh.Primitives.TallPlane);
-            newRenderer1.mesh.SetUp(BufferUsageHint.DynamicDraw);
-            newRenderer1.shader = GameMaster.gameMaster.spriteShader;
-            //newRenderer1.tex = new Texture("Wood.jpg", true);
-            newRenderer1.tex = reimuSprite1;
-            newRenderer1.shader.SetInt("texture0", 0);
-            newRenderer1.shader.SetInt("texture1", 1);
-
-            newRenderer2.mesh = new Mesh(Mesh.Primitives.Pyramid);
-            newRenderer2.mesh.SetUp(BufferUsageHint.DynamicDraw);
-            newRenderer2.shader = new Shader("Shaders/Shader.vert", "Shaders/Shader.frag");
-            newRenderer2.tex = new Texture("Fire.png", true);
-            newRenderer2.shader.SetInt("texture0", 0);
-            newRenderer2.shader.SetInt("texture1", 1);
-
-            Entity debugEntity = new Entity("Player"), debugChild = new Entity("Pyramid", debugEntity, new Vector3(500f, 0, 0), Vector3.Zero, Vector3.One * 0.5f);
-            debugEntity.AddElement(newRenderer1);
-            debugChild.AddElement(newRenderer2);
-
-            PlayerController debugPlayerControl = new PlayerController();
-            debugPlayerControl.MoveSpeed = 1.75f;
-            debugPlayerControl.FocusSpeedPercent = 65;
-            debugEntity.AddElement(debugPlayerControl);
-
-            TextureAnimator.AnimationState[] animStates = new TextureAnimator.AnimationState[3];
-            animStates[0] = new TextureAnimator.AnimationState();
-            animStates[1] = new TextureAnimator.AnimationState();
-            animStates[2] = new TextureAnimator.AnimationState();
-
-            /*animStates[0].animFrames = new TextureAnimator.AnimationFrame[4];
-            animStates[0].animFrames[0] = TextureAnimator.CreateAnimFrames(1, reimuSprite1, new float[] { 8f },
-                new float[] { 0, 1, 1, 1, 1, 0, 0, 0 })[0];
-            animStates[0].animFrames[1] = TextureAnimator.CreateAnimFrames(1, reimuSprite2, new float[] { 8f },
-                new float[] { 0, 1, 1, 1, 1, 0, 0, 0 })[0];
-            animStates[0].animFrames[2] = TextureAnimator.CreateAnimFrames(1, reimuSprite3, new float[] { 8f },
-                new float[] { 0, 1, 1, 1, 1, 0, 0, 0 })[0];
-            animStates[0].animFrames[3] = TextureAnimator.CreateAnimFrames(1, reimuSprite4, new float[] { 8f },
-                new float[] { 0, 1, 1, 1, 1, 0, 0, 0 })[0];
-
-            animStates[1].animFrames = TextureAnimator.CreateAnimFrames(1, reimuSprite3, new float[] { 8f },
-                new float[] { 0, 1, 1, 1, 1, 0, 0, 0 });
-            animStates[2].animFrames = TextureAnimator.CreateAnimFrames(1, reimuSprite4, new float[] { 8f },
-                new float[] { 0, 1, 1, 1, 1, 0, 0, 0 });*/
-
-            Texture reimuSprite = new Texture("Reimu.png", false);
-            animStates[0].animFrames = TextureAnimator.CreateAnimFrames(4, reimuSprite, new float[]{ 8f, 8f, 8f, 8f},
-                new float[] {0,1 ,0.25f,1, 0.25f,0,  0,1, 0.25f,0, 0,0,
-                    0.25f,1, 0.5f,1, 0.5f,0,  0.25f,1, 0.5f,0, 0.25f,0,
-                    0.5f,1, 0.75f,1, 0.75f,0,  0.5f,1, 0.75f,0, 0.5f,0,
-                    0.75f,1, 1,1, 1,0,  0.75f,1, 1,0, 0.75f,0});
-            animStates[1].animFrames = TextureAnimator.CreateAnimFrames(1, reimuSprite, new float[] { 8f },
-                new float[] {0.5f,1, 0.75f,1, 0.75f,0,  0.5f,1, 0.75f,0, 0.5f,0});
-            animStates[2].animFrames = TextureAnimator.CreateAnimFrames(1, reimuSprite, new float[] { 8f },
-                new float[] {0.75f,1, 1,1, 1,0,  0.75f,1, 1,0, 0.75f,0 });
-            TextureAnimator debugPlayerAnim = new TextureAnimator(animStates, debugEntity.GetElement<MeshRenderer>(), true);
-            debugEntity.AddElement(debugPlayerAnim);
-
-            Entity text = new Entity("FPSCounter", new Vector3(.5f, -.5f, 0), Vector3.Zero, Vector3.One);
-
-            /*TextRenderer textRend = new TextRenderer();
-            textRend.SetDrawingColor(255, 0, 0, 255);
-            textRend.textToWrite = "FPS:";
-            textRend.font = new QuickFont.QFont("Fonts/WitchingHour.ttf", 72, new QuickFont.Configuration.QFontBuilderConfiguration());
-            textRend.SetUp();
-            text.AddElement(textRend);*/
-            Console.WriteLine(debugEntity.ToString());
-
-            Entity newBullet = new Entity("Bullet");
-
-            MeshRenderer renderer = new MeshRenderer();
-            renderer.tex = GameMaster.gameMaster.bulletSheet;
-            renderer.shader = GameMaster.gameMaster.spriteShader;
-            renderer.mesh = new Mesh(Mesh.Primitives.SqrPlane);
-            renderer.mesh.SetUp(OpenTK.Graphics.ES30.BufferUsageHint.DynamicDraw);
-
-            newBullet.AddElement(renderer);
-            newBullet.AddElement(new TextureAnimator(BulletElement.GetBulletAnim(BulletElement.BulletType.Butterfly, BulletElement.BulletColor.Red, GameMaster.gameMaster.bulletSheet), renderer, true));
-
-            newBullet.AddElement(new RotateElement(180, true, true));
-
-
-
-            GL.Enable(EnableCap.Blend);
-            GL.BlendFunc(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha);
-            GL.Enable(EnableCap.DepthTest);
-            /*GL.Enable(EnableCap.StencilTest);
-            GL.StencilFunc(StencilFunction.Equal, GameMaster.gameMaster.spriteShader.Handle, 0xFF);
-            GL.StencilOp(StencilOp.Keep, StencilOp.Keep, StencilOp.Replace);
-            GL.StencilMask(0xFF);*/
-        }
-
         protected override void OnRenderFrame(FrameEventArgs e)
         {
             time += 32 * (float)e.Time;
@@ -306,19 +310,23 @@ namespace DawnmakuEngine
                 Element.allElements[index].PreRender();
             }
 
+            MeshRenderer thisRenderer;
             count = MeshRenderer.meshRenderers.Count;
             for (index = 0; index < count; index++)
             {
-                MeshRenderer.meshRenderers[index].BindRendering();
-                MeshRenderer.meshRenderers[index].shader.SetMatrix4("view", view);
+                thisRenderer = MeshRenderer.meshRenderers[index];
+                thisRenderer.BindRendering();
+                thisRenderer.shader.SetMatrix4("view", view);
 
                 if (!ortho)
-                    MeshRenderer.meshRenderers[index].shader.SetMatrix4("projection", projection);
+                    thisRenderer.shader.SetMatrix4("projection", projection);
                 else
-                    MeshRenderer.meshRenderers[index].shader.SetMatrix4("projection", orthoProjection);
+                    thisRenderer.shader.SetMatrix4("projection", orthoProjection);
 
-
-                GL.DrawArrays(PrimitiveType.Triangles, 0, MeshRenderer.meshRenderers[index].mesh.vertices.Length);
+                if(thisRenderer.mesh.triangleData == null || thisRenderer.mesh.triangleData.Length == 0)
+                    GL.DrawArrays(PrimitiveType.Triangles, 0, thisRenderer.mesh.vertices.Length);
+                else
+                    GL.DrawElements(PrimitiveType.Triangles, thisRenderer.mesh.triangleData.Length, DrawElementsType.UnsignedInt, IntPtr.Zero);
             }
             /*count = TextRenderer.textRenderers.Count;
             for (index = 0; index < count; index++)

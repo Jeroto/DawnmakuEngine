@@ -9,6 +9,7 @@ namespace DawnmakuEngine.Elements
     class BulletElement : Element
     {
         static float maxBoundsExit = 16;
+        public bool firedByPlayer;
 
         public static byte newKillzoneIndex;
         public byte killzoneDetectIndex;
@@ -37,21 +38,36 @@ namespace DawnmakuEngine.Elements
         public class BulletStage
         {
             //Change Condition
-            public float framesToLast;
+            public float framesToLast = 60;
             //Bullet Type
-            public BulletType spriteType;
-            public BulletColor bulletColor;
+            public string spriteType = "round";
+            public int bulletColor = 0;
             public bool animatedSprite;
-            public Texture customSprite;
-            public TextureAnimator.AnimationState[] customAnim;
-            public float renderScale;
+            public float renderScale = 1;
+            public byte r = 255, g = 255, b = 255, a = 255;
+            public float framesToChangeTint = 0;
+
+            public Vector4 Color {
+                set
+                {
+                    r = (byte)value.X;
+                    g = (byte)value.Y;
+                    b = (byte)value.Z;
+                    a = (byte)value.W;
+                }
+                get
+                {
+                    return new Vector4(r, g, b, a);
+                }
+            }
+
             //Movement
-            public Vector2 movementDirection;
-            public float startingSpeed, endingSpeed, framesToChangeSpeed;
-            public bool rotate, aimAtPlayer, keepOldAngle, modifyAngle;
+            public Vector2 movementDirection = DawnMath.vec2Up;
+            public float startingSpeed = 200, endingSpeed = 100, framesToChangeSpeed = 60;
+            public bool rotate, reAim, keepOldAngle, modifyAngle;
             //Stage Change
             public bool turnAtStart;
-            public float initialMoveDelay;
+            public float initialMoveDelay = 0;
             public bool turnAfterDelay;
             //Spawn Effect Burst
             public bool hasEffect;
@@ -68,16 +84,15 @@ namespace DawnmakuEngine.Elements
                 copy.spriteType = spriteType;
                 copy.bulletColor = bulletColor;
                 copy.animatedSprite = animatedSprite;
-                copy.customSprite = customSprite;
-                copy.customAnim = customAnim;
 
                 copy.movementDirection = movementDirection;
                 copy.startingSpeed = startingSpeed;
                 copy.endingSpeed = endingSpeed;
                 copy.framesToChangeSpeed = framesToChangeSpeed;
                 copy.rotate = rotate;
-                copy.aimAtPlayer = aimAtPlayer;
+                copy.reAim = reAim;
                 copy.keepOldAngle = keepOldAngle;
+                copy.modifyAngle = modifyAngle;
 
                 copy.turnAtStart = turnAtStart;
                 copy.initialMoveDelay = initialMoveDelay;
@@ -116,17 +131,6 @@ namespace DawnmakuEngine.Elements
             WhiteInvInv, RedInvInv, BlackInvInv, GreenInvInv, TealInvInv, BlueInvInv, PinkInvInv, OrangeInvInv, YellowInvInv, PurpleInvInv,
             Flame, FlameInvert, Special, SpecialInvert
         };
-        [System.Serializable]
-        public enum BulletType
-        {
-            Custom, Round, Wave, SmallShard,
-            ThickShard, Crystal, Kunai, Shell, Pellet,
-            RoundOutlined, Dagger, Star, BigDrop, SmallDrop,
-            Charm, CharmWhite, BeamOnePxWide, BeamOnePx,
-            BeamTwoPx, BeamThreePx, BeamFourPx, Heart, Popcorn,
-            DarkPopcorn, Coin, Droplet, Arrow, Rest, /*Giant,*/
-            Butterfly, Fire, MusicNote,
-        };
 
         // Start is called before the first frame update
         public override void PostCreate()
@@ -143,19 +147,19 @@ namespace DawnmakuEngine.Elements
             if (bulletStages[stageIndex].turnAtStart)
                 /*facingAngleRad = DawnMath.FindAngleRad(bulletStages[stageIndex].movementDirection) - ((EntityAttachedTo.parent != null) ?
                     EntityAttachedTo.parent.WorldRotation.Z + EntityAttachedTo.WorldRotation.Z : EntityAttachedTo.WorldRotation.Z);*/
-                entityAttachedTo .LocalRotationRad = new Vector3(0, 0, DawnMath.FindAngleRad(bulletStages[stageIndex].movementDirection) - ((EntityAttachedTo.parent != null) ?
-                    EntityAttachedTo.parent.WorldRotation.Z + EntityAttachedTo.WorldRotation.Z : EntityAttachedTo.WorldRotation.Z));
+                entityAttachedTo .LocalRotationRad = new Vector3(0, 0, DawnMath.FindAngleRad(bulletStages[stageIndex].movementDirection) - ((EntityAttachedTo.Parent != null) ?
+                    EntityAttachedTo.Parent.WorldRotation.Z + EntityAttachedTo.WorldRotation.Z : EntityAttachedTo.WorldRotation.Z));
 
 
                 meshRenderer = EntityAttachedTo.GetElement<MeshRenderer>();
             spriteAnimator = EntityAttachedTo.GetElement<TextureAnimator>();
 
             startScale = bulletStages[stageIndex].renderScale;
-            startColor = meshRenderer.ColorByte;
+            startColor = new Vector4(bulletStages[0].r, bulletStages[0].g, bulletStages[0].b, bulletStages[0].a);
 
             UpdateSprite();
 
-            meshRenderer.ColorByte = new Vector4(255, 255, 255, 0);
+            meshRenderer.ColorByte = new Vector4(startColor.X, startColor.Y, startColor.Z, 0);
             renderScale *= spawnEffectStartScale;
 
             if (bulletStages[0].hasEffect)
@@ -181,13 +185,19 @@ namespace DawnmakuEngine.Elements
                     else
                         bulletStages[stageIndex].movementDirection = bulletStages[stageIndex - 1].movementDirection;
                 }
-                else if (bulletStages[stageIndex].aimAtPlayer)
+                else if (bulletStages[stageIndex].reAim)
                 {
+                    Entity aimTarget;
+                    if (!firedByPlayer)
+                        aimTarget = gameMaster.playerEntity;
+                    else
+                        aimTarget = DawnMath.FindNearestEnemy(entityAttachedTo.WorldPosition.Xy);
+
                     if (bulletStages[stageIndex].modifyAngle)
-                        bulletStages[stageIndex].movementDirection = DawnMath.CalculateCircleRad(DawnMath.FindAngleToPlayerRad(EntityAttachedTo.WorldPosition.Xy) +
+                        bulletStages[stageIndex].movementDirection = DawnMath.CalculateCircleRad(DawnMath.FindAngleToObjectRad(EntityAttachedTo.WorldPosition.Xy, aimTarget) +
                             DawnMath.FindAngleRad(bulletStages[stageIndex].movementDirection));
                     else
-                        bulletStages[stageIndex].movementDirection = DawnMath.FindDirectionToPlayer(EntityAttachedTo.WorldPosition.Xy);
+                        bulletStages[stageIndex].movementDirection = DawnMath.FindDirectionToObject(EntityAttachedTo.WorldPosition.Xy, aimTarget);
                 }
                 else if (bulletStages[stageIndex].modifyAngle)
                     bulletStages[stageIndex].movementDirection = DawnMath.CalculateCircleDeg(DawnMath.FindAngleRad(bulletStages[stageIndex - 1].movementDirection) +
@@ -197,8 +207,8 @@ namespace DawnmakuEngine.Elements
                 if (bulletStages[stageIndex].turnAtStart)
                     /*facingAngleRad = DawnMath.FindAngleRad(bulletStages[stageIndex].movementDirection) - ((EntityAttachedTo.parent != null) ?
                         EntityAttachedTo.parent.WorldRotation.Z + EntityAttachedTo.WorldRotation.Z : EntityAttachedTo.WorldRotation.Z);*/
-                    entityAttachedTo.LocalRotationRad = new Vector3(0, 0 , DawnMath.FindAngleRad(bulletStages[stageIndex].movementDirection) - ((EntityAttachedTo.parent != null) ?
-                        EntityAttachedTo.parent.WorldRotation.Z + EntityAttachedTo.WorldRotation.Z : EntityAttachedTo.WorldRotation.Z));
+                    entityAttachedTo.LocalRotationRad = new Vector3(0, 0 , DawnMath.FindAngleRad(bulletStages[stageIndex].movementDirection) - ((EntityAttachedTo.Parent != null) ?
+                        EntityAttachedTo.Parent.WorldRotation.Z + EntityAttachedTo.WorldRotation.Z : EntityAttachedTo.WorldRotation.Z));
 
                 if (!ShouldSpin(bulletStages[stageIndex].spriteType))
                     EntityAttachedTo.GetElement<RotateElement>().Disable();
@@ -207,6 +217,8 @@ namespace DawnmakuEngine.Elements
 
                 if (bulletStages[stageIndex].hasEffect)
                     SpawnEffect();
+
+                startColor = meshRenderer.ColorByte;
 
                 timePassed = 0;
 
@@ -232,6 +244,13 @@ namespace DawnmakuEngine.Elements
             if (bulletStages[stageIndex].rotate)
                 Rotate();
             DetectDestroy();
+
+            if (spawnTimeCurrent >= spawnTime)
+                if (bulletStages[stageIndex].framesToChangeTint < timePassed)
+                {
+                    meshRenderer.ColorByte = DawnMath.Lerp(startColor, bulletStages[stageIndex].Color, timePassed / bulletStages[stageIndex].framesToChangeTint);
+                }
+
             prevPos = EntityAttachedTo.WorldPosition.Xy;
         }
 
@@ -411,19 +430,10 @@ namespace DawnmakuEngine.Elements
             return GameMaster.gameMaster.bulletSpawns[(int)type - 1];
         }*/
 
-        //Check if should use anim or sprite
-        public bool CheckForAnimatedType(bool custom)
-        {
-            if (bulletStages[stageIndex].spriteType == BulletType.Custom)
-                return custom;
-
-            return (bulletStages[stageIndex].spriteType > BulletType.Rest);
-        }
-
         //Updates sprite by checking if it's animated, and then changing either the Sprite or RuntimeAnimatorController
         public void UpdateSprite()
         {
-            spriteAnimator.animationStates = GetBulletAnim(bulletStages[stageIndex].spriteType, bulletStages[stageIndex].bulletColor, gameMaster.bulletSheet);
+            spriteAnimator.animationStates = GetBulletAnim(bulletStages[stageIndex].spriteType, bulletStages[stageIndex].bulletColor);
             /*if (!CheckForAnimatedType(bulletStages[stageIndex].animatedSprite))
             {
                 meshRenderer.mesh.SetUVs(GetBulletSprite(bulletStages[stageIndex].spriteType, bulletStages[stageIndex].bulletColor, gameMaster.bulletSheet));
@@ -435,391 +445,50 @@ namespace DawnmakuEngine.Elements
         }
 
         //Gets a bullet sprite by getting the index of the type by the list of the color -- or uses a custom sprite that is set
-        public static float[] GetBulletSprite(BulletType type, BulletColor color, Texture tex, int spriteNum = 0)
+        public static SpriteSet.Sprite GetBulletSprite(string type, int color)
         {
             GameMaster gameMaster = GameMaster.gameMaster;
-            float left = gameMaster.bulletColumns[(int)color], 
-                right = gameMaster.bulletColumns[(int)color + 1],
-                top = 1, 
-                bottom = 0;
-
-            switch (type)
+            byte randomizeNum = 0;
+            if (gameMaster.bulletData[type].randomizeSprite)
             {
-                case BulletType.Round:
-                    top = gameMaster.roundBulletSprites[0];
-                    bottom = gameMaster.roundBulletSprites[1];
-                    break;
-                case BulletType.Wave:
-                    top = gameMaster.waveBulletSprites[0];
-                    bottom = gameMaster.waveBulletSprites[1];
-                    break;
-                case BulletType.SmallShard:
-                    top = gameMaster.smallShardSprites[0];
-                    bottom = gameMaster.smallShardSprites[1];
-                    break;
-                case BulletType.ThickShard:
-                    top = gameMaster.thickShardSprites[0];
-                    bottom = gameMaster.thickShardSprites[1];
-                    break;
-                case BulletType.Crystal:
-                    top = gameMaster.crystalBulletSprites[0];
-                    bottom = gameMaster.crystalBulletSprites[1];
-                    break;
-                case BulletType.Kunai:
-                    top = gameMaster.kunaiBulletSprites[0];
-                    bottom = gameMaster.kunaiBulletSprites[1];
-                    break;
-                case BulletType.Shell:
-                    top = gameMaster.shellBulletSprites[0];
-                    bottom = gameMaster.shellBulletSprites[1];
-                    break;
-                case BulletType.Pellet:
-                    top = gameMaster.pelletBulletSprites[0];
-                    bottom = gameMaster.pelletBulletSprites[1];
-                    break;
-                case BulletType.RoundOutlined:
-                    top = gameMaster.roundOultineSprites[0];
-                    bottom = gameMaster.roundOultineSprites[1];
-                    break;
-                case BulletType.Dagger:
-                    top = gameMaster.daggerBulletSprites[0];
-                    bottom = gameMaster.daggerBulletSprites[1];
-                    break;
-                case BulletType.Star:
-                    top = gameMaster.starBulletSprites[0];
-                    bottom = gameMaster.starBulletSprites[1];
-                    break;
-                case BulletType.Fire:
-                    switch(spriteNum)
-                    {
-                        case 0:
-                            top = gameMaster.fireBulletSprites1[0];
-                            bottom = gameMaster.fireBulletSprites1[1];
-                            break;
-                        case 1:
-                            top = gameMaster.fireBulletSprites2[0];
-                            bottom = gameMaster.fireBulletSprites2[1];
-                            break;
-                        case 2:
-                            top = gameMaster.fireBulletSprites3[0];
-                            bottom = gameMaster.fireBulletSprites3[1];
-                            break;
-                        case 3:
-                            top = gameMaster.fireBulletSprites4[0];
-                            bottom = gameMaster.fireBulletSprites4[1];
-                            break;
-                    }
-                    break;
-                case BulletType.BigDrop:
-                    if(Random(0,2) == 0)
-                    {
-                        if(Random(0,2) == 0)
-                        {
-                            top = gameMaster.bigDropBulletSprites3[0];
-                            bottom = gameMaster.bigDropBulletSprites3[1];
-                        }
-                        else
-                        {
-                            top = gameMaster.bigDropBulletSprites1[0];
-                            bottom = gameMaster.bigDropBulletSprites1[1];
-                        }
-                    }
-                    else
-                    {
-                        top = gameMaster.bigDropBulletSprites2[0];
-                        bottom = gameMaster.bigDropBulletSprites2[1];
-                    }
-                    break;
-                case BulletType.SmallDrop:
-                    if (Random(0, 2) == 0)
-                    {
-                        if (Random(0, 2) == 0)
-                        {
-                            top = gameMaster.smallDropBulletSprites3[0];
-                            bottom = gameMaster.smallDropBulletSprites3[1];
-                        }
-                        else
-                        {
-                            top = gameMaster.smallDropBulletSprites1[0];
-                            bottom = gameMaster.smallDropBulletSprites1[1];
-                        }
-                    }
-                    else
-                    {
-                        top = gameMaster.smallDropBulletSprites2[0];
-                        bottom = gameMaster.smallDropBulletSprites2[1];
-                    }
-                    break;
-                case BulletType.Charm:
-                    top = gameMaster.charmBulletSprites[0];
-                    bottom = gameMaster.charmBulletSprites[1];
-                    break;
-                case BulletType.CharmWhite:
-                    top = gameMaster.charmWhiteBulletSprites[0];
-                    bottom = gameMaster.charmWhiteBulletSprites[1];
-                    break;
-                case BulletType.BeamOnePxWide:
-                    top = gameMaster.beamWideSprites[0];
-                    bottom = gameMaster.beamWideSprites[1];
-                    break;
-                case BulletType.BeamTwoPx:
-                    top = gameMaster.beam2pxSprites[0];
-                    bottom = gameMaster.beam2pxSprites[1];
-                    break;
-                case BulletType.BeamThreePx:
-                    top = gameMaster.beam3pxSprites[0];
-                    bottom = gameMaster.beam3pxSprites[1];
-                    break;
-                case BulletType.BeamFourPx:
-                    top = gameMaster.beam4pxSprites[0];
-                    bottom = gameMaster.beam4pxSprites[1];
-                    break;
-                case BulletType.BeamOnePx:
-                    top = gameMaster.beam1pxSprites[0];
-                    bottom = gameMaster.beam1pxSprites[1];
-                    break;
-                case BulletType.Heart:
-                    top = gameMaster.heartBulletSprites[0];
-                    bottom = gameMaster.heartBulletSprites[1];
-                    break;
-                case BulletType.Butterfly:
-                    switch (spriteNum)
-                    {
-                        case 0:
-                            top = gameMaster.butterflyBulletSprites1[0];
-                            bottom = gameMaster.butterflyBulletSprites1[1];
-                            break;
-                        case 1:
-                            top = gameMaster.butterflyBulletSprites2[0];
-                            bottom = gameMaster.butterflyBulletSprites2[1];
-                            break;
-                        case 2:
-                            top = gameMaster.butterflyBulletSprites3[0];
-                            bottom = gameMaster.butterflyBulletSprites3[1];
-                            break;
-                        case 3:
-                            top = gameMaster.butterflyBulletSprites4[0];
-                            bottom = gameMaster.butterflyBulletSprites4[1];
-                            break;
-                    }
-                    break;
-                case BulletType.Popcorn:
-                    top = gameMaster.popcornBulletSprites[0];
-                    bottom = gameMaster.popcornBulletSprites[1];
-                    break;
-                case BulletType.DarkPopcorn:
-                    top = gameMaster.popcornDarkBulletSprites[0];
-                    bottom = gameMaster.popcornDarkBulletSprites[1];
-                    break;
-                case BulletType.Coin:
-                    top = gameMaster.coinBulletSprites[0];
-                    bottom = gameMaster.coinBulletSprites[1];
-                    break;
-                case BulletType.Droplet:
-                    top = gameMaster.dropletBulletSprites[0];
-                    bottom = gameMaster.dropletBulletSprites[1];
-                    break;
-                case BulletType.Arrow:
-                    top = gameMaster.arrowBulletSprites[0];
-                    bottom = gameMaster.arrowBulletSprites[1];
-                    break;
-                case BulletType.Rest:
-                    top = gameMaster.restBulletSprites[0];
-                    bottom = gameMaster.restBulletSprites[1];
-                    break;
-                case BulletType.MusicNote:
-                    switch (spriteNum)
-                    {
-                        case 0:
-                            top = gameMaster.noteBulletSprites1[0];
-                            bottom = gameMaster.noteBulletSprites1[1];
-                            break;
-                        case 1:
-                            top = gameMaster.noteBulletSprites2[0];
-                            bottom = gameMaster.noteBulletSprites2[1];
-                            break;
-                        case 2:
-                            top = gameMaster.noteBulletSprites3[0];
-                            bottom = gameMaster.noteBulletSprites3[1];
-                            break;
-                    }
-                    break;
+                randomizeNum = (byte)Random(0, MathF.Floor(gameMaster.bulletSprites[type].sprites.Count / gameMaster.bulletData[type].spriteColors));
             }
 
-            return new float[] { left, top,  right, top,  right, bottom,   left, top,  right, bottom,  left, bottom };
+            return gameMaster.bulletSprites[type].sprites[Math.Clamp(color + gameMaster.bulletData[type].spriteColors * randomizeNum, 0, gameMaster.bulletSprites[type].sprites.Count - 1)];
         }
 
         //Gets a RuntimeAnimatorController by getting the index of the type by the list of the color -- or uses a custom animator that is set
-        public static TextureAnimator.AnimationState[] GetBulletAnim(BulletType type, BulletColor color, Texture tex, TextureAnimator.AnimationState[] customAnimController = null)
+        public static TextureAnimator.AnimationState[] GetBulletAnim(string type, int color)
         {
-            if (type == BulletType.Custom)
-                return customAnimController;
+            TextureAnimator.AnimationState[] state = new TextureAnimator.AnimationState[] { new TextureAnimator.AnimationState() };
+            state[0].animFrames = new TextureAnimator.AnimationFrame[1];
+
+
+            if (!GameMaster.gameMaster.bulletData[type].isAnimated)
+            {
+                state[0].animFrames[0] = new TextureAnimator.AnimationFrame();
+                state[0].animFrames[0].frameDuration = 120;
+                state[0].animFrames[0].sprite = GetBulletSprite(type, color);
+            }
             else
             {
-                TextureAnimator.AnimationState[] state = new TextureAnimator.AnimationState[] { new TextureAnimator.AnimationState() };
-                state[0].animFrames = new TextureAnimator.AnimationFrame[1];
-                switch (type)
-                {
-                    case BulletType.Round:
-                    case BulletType.Wave:
-                    case BulletType.SmallShard:
-                    case BulletType.ThickShard:
-                    case BulletType.Crystal:
-                    case BulletType.Kunai:
-                    case BulletType.Shell:
-                    case BulletType.Pellet:
-                    case BulletType.RoundOutlined:
-                    case BulletType.Dagger:
-                    case BulletType.Star:
-                    case BulletType.BigDrop:
-                    case BulletType.SmallDrop:
-                    case BulletType.Charm:
-                    case BulletType.CharmWhite:
-                    case BulletType.BeamOnePxWide:
-                    case BulletType.BeamTwoPx:
-                    case BulletType.BeamThreePx:
-                    case BulletType.BeamFourPx:
-                    case BulletType.BeamOnePx:
-                    case BulletType.Heart:
-                    case BulletType.Popcorn:
-                    case BulletType.DarkPopcorn:
-                    case BulletType.Coin:
-                    case BulletType.Droplet:
-                    case BulletType.Arrow:
-                    case BulletType.Rest:
-                        state[0].animFrames = new TextureAnimator.AnimationFrame[1];
-                        state[0].animFrames[0] = new TextureAnimator.AnimationFrame();
-                        state[0].animFrames[0].tex = tex; state[0].animFrames[0].frameDuration = 120;
-                        state[0].animFrames[0].textureRects = GetBulletSprite(type, color, tex, 0);
-                        break;
-                    case BulletType.Fire:
-                        state[0].animFrames = new TextureAnimator.AnimationFrame[4];
-                        state[0].animFrames[0] = new TextureAnimator.AnimationFrame();
-                        state[0].animFrames[1] = new TextureAnimator.AnimationFrame();
-                        state[0].animFrames[2] = new TextureAnimator.AnimationFrame();
-                        state[0].animFrames[3] = new TextureAnimator.AnimationFrame();
-                        state[0].animFrames[0].tex = tex; state[0].animFrames[1].tex = tex; state[0].animFrames[2].tex = tex; state[0].animFrames[3].tex = tex;
-                        state[0].animFrames[0].frameDuration = 8; state[0].animFrames[1].frameDuration = 8; state[0].animFrames[2].frameDuration = 8; state[0].animFrames[3].frameDuration = 8;
-
-                        state[0].animFrames[0].textureRects = GetBulletSprite(type, color, tex, 0);
-                        state[0].animFrames[1].textureRects = GetBulletSprite(type, color, tex, 1);
-                        state[0].animFrames[2].textureRects = GetBulletSprite(type, color, tex, 2);
-                        state[0].animFrames[3].textureRects = GetBulletSprite(type, color, tex, 3);
-                        break;
-                    case BulletType.Butterfly:
-                        state[0].animFrames = new TextureAnimator.AnimationFrame[4];
-                        state[0].animFrames[0] = new TextureAnimator.AnimationFrame();
-                        state[0].animFrames[1] = new TextureAnimator.AnimationFrame();
-                        state[0].animFrames[2] = new TextureAnimator.AnimationFrame();
-                        state[0].animFrames[3] = new TextureAnimator.AnimationFrame();
-                        state[0].animFrames[0].tex = tex; state[0].animFrames[1].tex = tex; state[0].animFrames[2].tex = tex; state[0].animFrames[3].tex = tex;
-                        state[0].animFrames[0].frameDuration = 8; state[0].animFrames[1].frameDuration = 8; state[0].animFrames[2].frameDuration = 8; state[0].animFrames[3].frameDuration = 8;
-
-                        state[0].animFrames[0].textureRects = GetBulletSprite(type, color, tex, 0);
-                        state[0].animFrames[1].textureRects = GetBulletSprite(type, color, tex, 1);
-                        state[0].animFrames[2].textureRects = GetBulletSprite(type, color, tex, 2);
-                        state[0].animFrames[3].textureRects = GetBulletSprite(type, color, tex, 3);
-                        break;
-                    case BulletType.MusicNote:
-                        state[0].animFrames = new TextureAnimator.AnimationFrame[4];
-                        state[0].animFrames[0] = new TextureAnimator.AnimationFrame();
-                        state[0].animFrames[1] = new TextureAnimator.AnimationFrame();
-                        state[0].animFrames[2] = new TextureAnimator.AnimationFrame();
-                        state[0].animFrames[3] = new TextureAnimator.AnimationFrame();
-                        state[0].animFrames[0].tex = tex; state[0].animFrames[1].tex = tex; state[0].animFrames[2].tex = tex; state[0].animFrames[3].tex = tex;
-                        state[0].animFrames[0].frameDuration = 30; state[0].animFrames[1].frameDuration = 30; state[0].animFrames[2].frameDuration = 30; state[0].animFrames[3].frameDuration = 30;
-
-                        state[0].animFrames[0].textureRects = GetBulletSprite(type, color, tex, 0);
-                        state[0].animFrames[1].textureRects = GetBulletSprite(type, color, tex, 1);
-                        state[0].animFrames[2].textureRects = GetBulletSprite(type, color, tex, 0);
-                        state[0].animFrames[3].textureRects = GetBulletSprite(type, color, tex, 2);
-                        break;
-                }
-                return state;
+                color = Math.Clamp(color, 0, GameMaster.gameMaster.bulletData[type].animStates.Length - 1);
+                state = GameMaster.gameMaster.bulletData[type].animStates[color];
             }
+
+            if (state[0] == null)
+                Console.WriteLine(type + " " + color.ToString() + "'s state returned null");
+            return state;
         }
 
-        public static bool ShouldSpin (BulletType type)
+        public static bool ShouldSpin (string type)
         {
-            switch(type)
-            {
-
-
-                case BulletType.Round:
-                case BulletType.Wave:
-                case BulletType.SmallShard:
-                case BulletType.ThickShard:
-                case BulletType.Crystal:
-                case BulletType.Kunai:
-                case BulletType.Shell:
-                case BulletType.Pellet:
-                case BulletType.RoundOutlined:
-                case BulletType.Dagger:
-                case BulletType.Fire:
-                case BulletType.BigDrop:
-                case BulletType.SmallDrop:
-                case BulletType.Charm:
-                case BulletType.CharmWhite:
-                case BulletType.BeamOnePxWide:
-                case BulletType.BeamTwoPx:
-                case BulletType.BeamThreePx:
-                case BulletType.BeamFourPx:
-                case BulletType.BeamOnePx:
-                case BulletType.Heart:
-                case BulletType.Butterfly:
-                case BulletType.Droplet:
-                case BulletType.Arrow:
-                case BulletType.Rest:
-                case BulletType.MusicNote:
-                default:
-                    return false;
-                case BulletType.Star:
-                case BulletType.Popcorn:
-                case BulletType.DarkPopcorn:
-                case BulletType.Coin:
-                    return true;
-            }
+            return GameMaster.gameMaster.bulletData[type].shouldSpin;
         }
 
-        public static bool ShouldTurn (BulletType type)
+        public static bool ShouldTurn (string type)
         {
-            switch(type)
-            {
-                case BulletType.Round:
-                case BulletType.Pellet:
-                case BulletType.RoundOutlined:
-                case BulletType.Star:
-                case BulletType.Popcorn:
-                case BulletType.DarkPopcorn:
-                case BulletType.Coin:
-                case BulletType.MusicNote:
-                    return false;
-
-                case BulletType.Wave:
-                case BulletType.SmallShard:
-                case BulletType.ThickShard:
-                case BulletType.Crystal:
-                case BulletType.Kunai:
-                case BulletType.Shell:
-                case BulletType.Dagger:
-                case BulletType.Fire:
-                case BulletType.BigDrop:
-                case BulletType.SmallDrop:
-                case BulletType.Charm:
-                case BulletType.CharmWhite:
-                case BulletType.BeamOnePxWide:
-                case BulletType.BeamTwoPx:
-                case BulletType.BeamThreePx:
-                case BulletType.BeamFourPx:
-                case BulletType.BeamOnePx:
-                case BulletType.Heart:
-                case BulletType.Butterfly:
-                case BulletType.Droplet:
-                case BulletType.Arrow:
-                case BulletType.Rest:
-                default:
-                    return true;
-            }
+            return GameMaster.gameMaster.bulletData[type].shouldTurn;
         }
 
         public BulletElement() : base()
@@ -828,18 +497,20 @@ namespace DawnmakuEngine.Elements
         }
 
 
-        public static Entity SpawnBullet(BulletStage[] stages, Vector3 position, bool shouldSpin = false, ushort damage = 1, int stage = 0)
+        public static Entity SpawnBullet(BulletStage[] stages, Vector3 position, bool shouldSpin = false, ushort damage = 1, int stage = 0, bool player = false)
         {
             Entity newBullet = new Entity(stages[0].bulletColor.ToString() + " "+ stages[0].spriteType.ToString());
             newBullet.LocalPosition = position;
+            if (OpenTK.Input.Keyboard.GetState().IsKeyDown(OpenTK.Input.Key.ControlLeft))
+                newBullet.LocalScale = Vector3.One * 2;
             MeshRenderer renderer = new MeshRenderer();
-            renderer.tex = GameMaster.gameMaster.bulletSheet;
+            renderer.tex = GameMaster.gameMaster.bulletSprites[stages[0].spriteType].sprites[stages[0].bulletColor].tex;
             renderer.shader = GameMaster.gameMaster.spriteShader;
-            renderer.mesh = new Mesh(Mesh.Primitives.SqrPlane);
+            renderer.mesh = Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles);
             renderer.mesh.SetUp(OpenTK.Graphics.ES30.BufferUsageHint.DynamicDraw);
 
             newBullet.AddElement(renderer);
-            newBullet.AddElement(new TextureAnimator(GetBulletAnim(stages[stage].spriteType, stages[stage].bulletColor, renderer.tex), renderer, true));
+            newBullet.AddElement(new TextureAnimator(GetBulletAnim(stages[stage].spriteType, stages[stage].bulletColor), renderer, true));
 
             newBullet.AddElement(new RotateElement(180, true, true));
             if(!shouldSpin)
@@ -853,6 +524,7 @@ namespace DawnmakuEngine.Elements
             }
             bullet.spriteAnimator = newBullet.GetElement<TextureAnimator>();
             bullet.meshRenderer = renderer;
+            bullet.firedByPlayer = player;
             newBullet.AddElement(bullet);
             Console.WriteLine("New bullet: {0}", newBullet.Name);
 

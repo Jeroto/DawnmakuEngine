@@ -133,29 +133,74 @@ namespace DawnmakuEngine.Elements
                 }
             }
 
-            refRenderer.tex = animationStates[StateIndex].animFrames[FrameIndex].tex;
+            refRenderer.tex = animationStates[StateIndex].animFrames[FrameIndex].sprite.tex;
 
-            if(resizePlane)
-                for (int i = 0; i < 6 * 5; i += 5)
+            if (resizePlane)
+            {
+                if(refRenderer.mesh.triangleData != null)
                 {
-                    refRenderer.mesh.vertices[i] = refRenderer.tex.Width / 2 * 
-                        Math.Abs(animationStates[StateIndex].animFrames[FrameIndex].textureRects[0] - animationStates[StateIndex].animFrames[FrameIndex].textureRects[2])
-                        * (i / 5 == 0 || i / 5 == 3 || i / 5 == 5 ? -1 : 1);
-                    refRenderer.mesh.vertices[i + 1] = refRenderer.tex.Height / 2 *
-                        Math.Abs(animationStates[StateIndex].animFrames[FrameIndex].textureRects[3] - animationStates[StateIndex].animFrames[FrameIndex].textureRects[5])
-                        * (i / 5 == 2 || i / 5 == 4 || i / 5 == 5 ? -1 : 1);
-                    refRenderer.mesh.vertices[i + 2] = 0;
-                    /*Console.Write(refRenderer.mesh.vertices[i] + "," + refRenderer.mesh.vertices[i + 1] + ","
-                        + refRenderer.mesh.vertices[i + 2] + ",");*/
+                    for (int i = 0; i < refRenderer.mesh.vertices.Length; i+=5)
+                    {
+                        refRenderer.mesh.vertices[i] = refRenderer.tex.Width / 2 *
+                            Math.Abs(animationStates[StateIndex].animFrames[FrameIndex].sprite.right - animationStates[StateIndex].animFrames[FrameIndex].sprite.left)
+                            * (i / 5 == 0 || i / 5 == 3 ? -1 : 1);
+                        refRenderer.mesh.vertices[i + 1] = refRenderer.tex.Height / 2 *
+                            Math.Abs(animationStates[StateIndex].animFrames[FrameIndex].sprite.bottom - animationStates[StateIndex].animFrames[FrameIndex].sprite.top)
+                            * (i / 5 == 2 || i / 5 == 3 ? -1 : 1);
+                        refRenderer.mesh.vertices[i + 2] = 0;
+                    }
                 }
+                else
+                {
+                    for (int i = 0; i < refRenderer.mesh.vertices.Length; i += 5)
+                    {
+                        refRenderer.mesh.vertices[i] = refRenderer.tex.Width / 2 *
+                            Math.Abs(animationStates[StateIndex].animFrames[FrameIndex].sprite.right - animationStates[StateIndex].animFrames[FrameIndex].sprite.left)
+                            * (i / 5 == 0 || i / 5 == 3 || i / 5 == 5 ? -1 : 1);
+                        refRenderer.mesh.vertices[i + 1] = refRenderer.tex.Height / 2 *
+                            Math.Abs(animationStates[StateIndex].animFrames[FrameIndex].sprite.bottom - animationStates[StateIndex].animFrames[FrameIndex].sprite.top)
+                            * (i / 5 == 2 || i / 5 == 4 || i / 5 == 5 ? -1 : 1);
+                        refRenderer.mesh.vertices[i + 2] = 0;
+                        /*Console.Write(refRenderer.mesh.vertices[i] + "," + refRenderer.mesh.vertices[i + 1] + ","
+                            + refRenderer.mesh.vertices[i + 2] + ",");*/
+                    }
+                }
+            }
             //Console.Write("\n");
 
-            if(animationStates[StateIndex].animFrames[FrameIndex].textureRects.Length > 0)
-                for (int i = 0; i < 12; i+=2)
+            if(animationStates[StateIndex].animFrames[FrameIndex].sprite != null)
+            {
+                if(refRenderer.mesh.triangleData != null)
                 {
-                    refRenderer.mesh.vertices[(i / 2) * 5 + 3] = animationStates[StateIndex].animFrames[FrameIndex].textureRects[i];
-                    refRenderer.mesh.vertices[(i / 2) * 5 + 4] = animationStates[StateIndex].animFrames[FrameIndex].textureRects[i + 1];
+                    for (int i = 0; i < refRenderer.mesh.vertices.Length; i += 5)
+                    {
+                        if (i / 5 == 0 || i / 5 == 3)
+                            refRenderer.mesh.vertices[i + 3] = animationStates[StateIndex].animFrames[FrameIndex].sprite.left;
+                        else
+                            refRenderer.mesh.vertices[i + 3] = animationStates[StateIndex].animFrames[FrameIndex].sprite.right;
+
+                        if (i / 5 == 2 || i / 5 == 3)
+                            refRenderer.mesh.vertices[i + 4] = animationStates[StateIndex].animFrames[FrameIndex].sprite.bottom;
+                        else
+                            refRenderer.mesh.vertices[i + 4] = animationStates[StateIndex].animFrames[FrameIndex].sprite.top;
+                    }
                 }
+                else
+                {
+                    for (int i = 0; (i / 2) * 5 < refRenderer.mesh.vertices.Length; i += 2)
+                    {
+                        if (i / 5 == 0 || i / 5 == 3 || i / 5 == 5)
+                            refRenderer.mesh.vertices[(i / 2) * 5 + 3] = animationStates[StateIndex].animFrames[FrameIndex].sprite.left;
+                        else
+                            refRenderer.mesh.vertices[(i / 2) * 5 + 3] = animationStates[StateIndex].animFrames[FrameIndex].sprite.right;
+
+                        if (i / 5 == 2 || i / 5 == 4 || i / 5 == 5)
+                            refRenderer.mesh.vertices[(i / 2) * 5 + 4] = animationStates[StateIndex].animFrames[FrameIndex].sprite.bottom;
+                        else
+                            refRenderer.mesh.vertices[(i / 2) * 5 + 4] = animationStates[StateIndex].animFrames[FrameIndex].sprite.top;
+                    }
+                }
+            }
             animFramesRemaining += animationStates[StateIndex].animFrames[FrameIndex].frameDuration;
             refRenderer.mesh.SetUp(BufferUsageHint.DynamicDraw);
         }
@@ -167,7 +212,7 @@ namespace DawnmakuEngine.Elements
             UpdateAnim(false);
         }
 
-        public static AnimationFrame[] CreateAnimFrames(int count, Texture image, float[] durations, float[] rects)
+        /*public static AnimationFrame[] CreateAnimFrames(int count, Texture image, float[] durations, float[] rects)
         {
             AnimationFrame[] tempFrames = new AnimationFrame[count];
             for (int i = 0; i < count; i++)
@@ -181,14 +226,25 @@ namespace DawnmakuEngine.Elements
                     rects[i * 12 + 9],rects[i * 12 + 10],rects[i * 12 + 11]};
             }
             return tempFrames;
+        }*/
+
+        public static AnimationFrame[] CreateAnimFrames(int count, float[] durations, SpriteSet.Sprite[] sprites)
+        {
+            AnimationFrame[] tempFrames = new AnimationFrame[count];
+            for (int i = 0; i < count; i++)
+            {
+                tempFrames[i] = new AnimationFrame();
+                tempFrames[i].frameDuration = durations[OpenTK.MathHelper.Clamp(i, 0, durations.Length - 1)];
+                tempFrames[i].sprite = sprites[i];
+            }
+            return tempFrames;
         }
 
         [System.Serializable]
         public class AnimationFrame
         {
             public float frameDuration;
-            public Texture tex;
-            public float[] textureRects;
+            public SpriteSet.Sprite sprite;
         }
 
         [System.Serializable]
