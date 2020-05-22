@@ -52,7 +52,7 @@ namespace DawnmakuEngine.Elements
         private Vector2 movementVelocity = Vector2.Zero;
 
 
-        public PlayerController() : base()
+        public PlayerController() : base(true)
         {
             gameMaster = GameMaster.gameMaster;
         }
@@ -100,17 +100,25 @@ namespace DawnmakuEngine.Elements
             if (InputScript.focusDown || InputScript.focusUp || gameMaster.PowerLevelChange)
                 SetPatternVars();
 
+            Pattern pattern;
             if (InputScript.Shoot)
             {
-                Pattern pattern;
                 for (int i = 0; i < orbData.Length; i++)
                 {
-                    if (!orbData[i].activePowerLevels[gameMaster.currentPowerLevel] || patternVariables[i].burstsRemaining == 0)
+                    pattern = InputScript.Focus ? orbData[i].focusedPatterns[gameMaster.currentPowerLevel] : orbData[i].unfocusedPatterns[gameMaster.currentPowerLevel];
+                    if (patternVariables[i].burstsRemaining == 0 && InputScript.shootDown)
+                        patternVariables[i].fireDelay = pattern.initialDelay;
+                    patternVariables[i].burstsRemaining = pattern.burstCount;
+                }
+            }
+
+            for (int i = 0; i < orbData.Length; i++)
+            {
+                if (!orbData[i].activePowerLevels[gameMaster.currentPowerLevel] || patternVariables[i].burstsRemaining == 0)
                     continue;
 
-                    pattern = InputScript.Focus ? orbData[i].focusedPatterns[gameMaster.currentPowerLevel] : orbData[i].unfocusedPatterns[gameMaster.currentPowerLevel];
-                    pattern.ProcessPattern(spawnedOrbs[i], true, ref patternVariables[i]);
-                }
+                pattern = InputScript.Focus ? orbData[i].focusedPatterns[gameMaster.currentPowerLevel] : orbData[i].unfocusedPatterns[gameMaster.currentPowerLevel];
+                pattern.ProcessPattern(spawnedOrbs[i], true, ref patternVariables[i]);
             }
         }
 
@@ -313,6 +321,8 @@ namespace DawnmakuEngine.Elements
                         patternVariables[i] = new PatternBullets.BulletPatternVars((PatternBullets)pattern);
                         break;
                 }
+                patternVariables[i].burstsRemaining = 0;
+                patternVariables[i].fireDelay = pattern.initialDelay;
             }
         }
 

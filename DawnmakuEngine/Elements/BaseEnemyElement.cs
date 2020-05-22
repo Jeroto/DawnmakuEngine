@@ -50,7 +50,7 @@ namespace DawnmakuEngine.Elements
         Vector2 destroyExtentsX = new Vector2(-600, 600);
         Vector2 destroyExtentsY = new Vector2(-600, 600);
 
-        public BaseEnemyElement(EnemyData enemyToSpawn) : base()
+        public BaseEnemyElement(EnemyData enemyToSpawn) : base(true, true, true)
         {
             enemyData = enemyToSpawn;
         }

@@ -163,7 +163,7 @@ namespace DawnmakuEngine.Data
                     }
                     else if (perBulletDelay[bulletVars.delayIndex] > 0)
                     {
-                        ///Console.WriteLine(perBulletDelay[delayIndex]);
+                        //Console.WriteLine(perBulletDelay[delayIndex]);
                         //fireDelay -= bulletSpawnWait;
                         bulletVars.fireDelay += perBulletDelay[bulletVars.delayIndex];
                         bulletVars.delayIndex = DawnMath.Repeat(bulletVars.delayIndex + 1, perBulletDelay.Count - 1);

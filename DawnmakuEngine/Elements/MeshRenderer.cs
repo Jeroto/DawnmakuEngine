@@ -70,7 +70,7 @@ namespace DawnmakuEngine.Elements
             shader.SetVector4("colorModInput", ColorFloat);
         }
 
-        public MeshRenderer() : base()
+        public MeshRenderer() : base(false, false)
         {
 
         }
@@ -92,11 +92,13 @@ namespace DawnmakuEngine.Elements
         protected override void OnEnableAndCreate()
         {
             meshRenderers.Add(this);
+            base.OnEnableAndCreate();
         }
 
         protected override void OnDisableAndDestroy()
         {
             meshRenderers.Remove(this);
+            base.OnDisableAndDestroy();
         }
 
         public override void Remove()

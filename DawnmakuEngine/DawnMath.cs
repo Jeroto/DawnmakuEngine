@@ -8,19 +8,45 @@ namespace DawnmakuEngine
 {
     public static class DawnMath
     { //Note: All angles are calculated with 0 degrees being the vector 0,1,0 -- straight up
+        /// <summary>
+        /// Vector2(0,1)
+        /// </summary>
         public static Vector2 vec2Up = new Vector2(0, 1);
+        /// <summary>
+        /// Vector2(1,0)
+        /// </summary>
         public static Vector2 vec2Right = new Vector2(1, 0);
+        /// <summary>
+        /// Vector2(0,-1)
+        /// </summary>
         public static Vector2 vec2Down = new Vector2(0, -1);
+        /// <summary>
+        /// Vector2(-1,0)
+        /// </summary>
         public static Vector2 vec2Left = new Vector2(-1,0);
 
+        /// <summary>
+        /// Repeats a float value, keeping it at or below the max value 
+        /// and at or below the minimum value (default minVal = 0)
+        /// </summary>
         public static float Repeat(float curVal, float maxVal, float minVal = 0)
         {
-            while(curVal < minVal)
+            while (curVal < minVal)
+                curVal = Math.Abs(curVal - (minVal - 1)) + maxVal;
+
+            while (curVal > maxVal)
+                curVal = Math.Abs(curVal - (maxVal + 1)) + minVal;
+
+            /*while(curVal < minVal)
                 curVal += maxVal;
             while (curVal > maxVal)
-                curVal -= maxVal;
+                curVal -= maxVal;*/
             return curVal;
         }
+        /// <summary>
+        /// Repeats an integer value, keeping it at or below the max value 
+        /// and at or below the minimum value (default minVal = 0)
+        /// </summary>
         public static int Repeat(int curVal, int maxVal, int minVal = 0)
         {
             while (curVal < minVal)
@@ -30,55 +56,93 @@ namespace DawnmakuEngine
                 curVal = Math.Abs(curVal - (maxVal + 1)) + minVal;
             return curVal;
         }
+        /// <summary>
+        /// Repeats a long value, keeping it at or below the max value 
+        /// and at or below the minimum value (default minVal = 0)
+        /// </summary>
         public static long Repeat(long curVal, long maxVal, long minVal = 0)
         {
             while (curVal < minVal)
+                curVal = Math.Abs(curVal - (minVal - 1)) + maxVal;
+
+            while (curVal > maxVal)
+                curVal = Math.Abs(curVal - (maxVal + 1)) + minVal;
+            /*while (curVal < minVal)
                 curVal += maxVal;
             while (curVal > maxVal)
-                curVal -= maxVal;
+                curVal -= maxVal;*/
             return curVal;
         }
-
+        /// <summary>
+        /// Rounds a float to the nearest integer, and returns as an integer
+        /// </summary>
         public static int Round(float value)
         {
             return (int)Math.Round(value);
         }
+        /// <summary>
+        /// Rounds a float down to the nearest integer, and returns as an integer
+        /// </summary>
         public static int Floor(float value)
         {
             return (int)Math.Floor(value);
         }
+        /// <summary>
+        /// Rounds a float up to the nearest integer, and returns as an integer
+        /// </summary>
         public static int Ceil(float value)
         {
             return (int)Math.Ceiling(value);
         }
 
+        /// <summary>
+        /// returns the sine of an angle
+        /// </summary>
         public static float Sin(float angle)
         {
             return MathF.Sin(angle);
         }
+        /// <summary>
+        /// returns the cosine of an angle
+        /// </summary>
         public static float Cos(float angle)
         {
             return MathF.Cos(angle);
         }
+        /// <summary>
+        /// returns the sine of an angle, rounded to the nearest integer
+        /// </summary>
         public static int SinRounded(float angle)
         {
             return Round(Sin(angle));
         }
+        /// <summary>
+        /// returns the cosine of an angle, rounded to the nearest integer
+        /// </summary>
         public static int CosRounded(float angle)
         {
             return Round(Cos(angle));
         }
 
+        /// <summary>
+        /// Linearly interpolates between a start and end float by t, which should remain at or between 0 and 1
+        /// </summary>
         public static float Lerp(float start, float end, float t)
         {
             t = Math.Clamp(t, 0, 1);
             return start * (1 - t) + end * t;
         }
+        /// <summary>
+        /// Linearly interpolates between a start and end int, rounded, by t, which should remain at or between 0 and 1
+        /// </summary>
         public static int LerpInt(int start, int end, float t)
         {
             t = Math.Clamp(t, 0, 1);
             return Round(start * (1 - t) + end * t);
         }
+        /// <summary>
+        /// Linearly interpolates between a start and end two-component vector by t, which should remain at or between 0 and 1
+        /// </summary>
         public static Vector2 Lerp(Vector2 start, Vector2 end, float t)
         {
             t = Math.Clamp(t, 0, 1);
@@ -86,6 +150,9 @@ namespace DawnmakuEngine
             start.Y = start.Y * (1 - t) + end.Y * t;
             return start;
         }
+        /// <summary>
+        /// Linearly interpolates between a start and end three-component vector by t, which should remain at or between 0 and 1
+        /// </summary>
         public static Vector3 Lerp(Vector3 start, Vector3 end, float t)
         {
             t = Math.Clamp(t, 0, 1);
@@ -94,6 +161,9 @@ namespace DawnmakuEngine
             start.Z = start.Z * (1 - t) + end.Z * t;
             return start;
         }
+        /// <summary>
+        /// Linearly interpolates between a start and end four-component vector by t, which should remain at or between 0 and 1
+        /// </summary>
         public static Vector4 Lerp(Vector4 start, Vector4 end, float t)
         {
             t = Math.Clamp(t, 0, 1);
@@ -105,11 +175,17 @@ namespace DawnmakuEngine
         }
 
 
+        /// <summary>
+        /// Returns the dot product of 2 two-component vectors
+        /// </summary>
         public static float Dot(Vector2 first, Vector2 second)
         {
             return first.X * second.X + first.Y * second.Y;
         }
 
+        /// <summary>
+        /// Gets the unsigned (only positive) angle difference between 2 two-component vectors in radians
+        /// </summary>
         public static float GetUnsignedAngleRad(Vector2 start, Vector2 end)
         {
             float dem = (float)Math.Sqrt(start.LengthFast * end.LengthFast);
@@ -119,11 +195,17 @@ namespace DawnmakuEngine
 
             return MathF.Acos(dot);
         }
+        /// <summary>
+        /// Gets the signed (positive or negative) angle difference between 2 two-component vectors in radians
+        /// </summary>
         public static float GetSignedAngleRad(Vector2 start, Vector2 end)
         {
             return GetUnsignedAngleRad(start, end) * Math.Sign(start.X * end.Y - start.Y * end.X);
         }
 
+        /// <summary>
+        /// Gets the unsigned (only positive) angle difference between 2 two-component vectors in degrees
+        /// </summary>
         public static float GetUnsignedAngleDeg(Vector2 start, Vector2 end)
         {
             float dem = (float)Math.Sqrt(start.LengthFast * end.LengthFast);
@@ -133,13 +215,19 @@ namespace DawnmakuEngine
 
             return MathHelper.RadiansToDegrees(MathF.Acos(dot));
         }
+        /// <summary>
+        /// Gets the signed (positive or negative) angle difference between 2 two-component vectors in degrees
+        /// </summary>
         public static float GetSignedAngleDeg(Vector2 start, Vector2 end)
         {
             return MathHelper.RadiansToDegrees(GetUnsignedAngleRad(start, end) * Math.Sign(start.X * end.Y - start.Y * end.X));
         }
 
 
-        //Calculates a position in a circle by generating a random angle value with a set radius and centerpoint
+        /// <summary>
+        /// Calculates a position in a circle by generating a random angle value with a set radius and centerpoint
+        /// Uses the direction 0,1 as 0 degrees.
+        /// </summary>
         public static Vector2 RandomCircle(Vector3 center, float radius)
         {
             //Creates random angle between 0 and 360 (0 and 2pi)
@@ -151,7 +239,11 @@ namespace DawnmakuEngine
             return pos;
         }
 
-        //Same as above, except the center point is 0,0 -- good for if you only need relative coordinates
+        /// <summary>
+        /// Calculates a position in a circle by generating a random angle value with a set radius and a centerpoint of 0,0.
+        /// Uses the direction 0,1 as 0 degrees.
+        /// Good for if you only need relative coordinates
+        /// </summary>
         public static Vector2 RandomCircle(float radius)
         {
             //Creates random angle between 0 and 360
@@ -163,7 +255,11 @@ namespace DawnmakuEngine
             return pos;
         }
 
-        //Same as above, except the center point is 0,0 and the radius is 1 -- good for if you only need the direction
+        /// <summary>
+        /// Calculates a position in a circle by generating a random angle value with a radius of 1 and a centerpoint of 0,0.
+        /// Uses the direction 0,1 as 0 degrees.
+        /// Good for if you only need the direction
+        /// </summary>
         public static Vector2 RandomCircle()
         {
             //Creates random angle between 0 and 360
@@ -175,7 +271,10 @@ namespace DawnmakuEngine
             return pos;
         }
 
-        //Calculates a position in a circle by taking an exact angle and uses a centerpoint and radius
+        /// <summary>
+        /// Calculates a position in a circle by taking an exact angle in radians and uses a centerpoint and radius (default = 1).
+        /// Uses the direction 0,1 as 0 degrees
+        /// </summary>
         public static Vector2 CalculateCircleRad(Vector2 center, float angle, float radius = 1)
         {
             Vector2 pos;
@@ -185,7 +284,11 @@ namespace DawnmakuEngine
             return pos;
         }
 
-        //Same as above, except the center point is 0,0 -- good for if you only need relative coordinates 
+        /// <summary>
+        /// Calculates a position in a circle by taking an exact angle in raidians and uses a radius (default = 1) and a center of 0,0.
+        /// Uses the direction 0,1 as 0 degrees.
+        /// Good for if you only need relative coordinates
+        /// </summary>
         public static Vector2 CalculateCircleRad(float angle, float radius = 1)
         {
             Vector2 pos;
@@ -195,7 +298,10 @@ namespace DawnmakuEngine
             return pos;
         }
 
-        //Calculates a position in a circle by taking an exact angle and uses a centerpoint and radius
+        /// <summary>
+        /// Calculates a position in a circle by taking an exact angle in raidians and uses a centerpoint and radius (default = 1).
+        /// Uses the direction 0,1 as 0 degrees
+        /// </summary>
         public static Vector2 CalculateCircleDeg(Vector2 center, float angle, float radius = 1)
         {
             angle = MathHelper.DegreesToRadians(angle);
@@ -206,7 +312,11 @@ namespace DawnmakuEngine
             return pos;
         }
 
-        //Same as above, except the center point is 0,0 -- good for if you only need relative coordinates 
+        /// <summary>
+        /// Calculates a position in a circle by taking an exact angle in raidians and uses a radius (default = 1) and a center of 0,0.
+        /// Uses the direction 0,1 as 0 degrees.
+        /// Good for if you only need relative coordinates
+        /// </summary>
         public static Vector2 CalculateCircleDeg(float angle, float radius = 1)
         {
             angle = MathHelper.DegreesToRadians(angle);
@@ -217,84 +327,177 @@ namespace DawnmakuEngine
             return pos;
         }
 
-
-        //Finds the direction to the center of the play area -- change the vector value as needed
+        /// <summary>
+        /// Finds the direction to the center of the play area.
+        /// [not yet implemented]
+        /// </summary>
         public static Vector2 FindDirectionToCenter(Vector2 startingPosition)
         {
             return -startingPosition.Normalized();
         }
 
-        //Uses the above function to find the direction, and then converts it to an angle
+        /// <summary>
+        /// Finds the angle in radians to the center of the play area.
+        /// Uses FindDirectionToCenter() and converts result to an angle in radians, using the direction (0,1) as 0.
+        /// [not yet implemented]
+        /// </summary>
         public static float FindAngleToCenterRad(Vector2 startingPosition)
         {
             Vector2 directionToCenter = FindDirectionToCenter(startingPosition);
             return GetSignedAngleRad(directionToCenter, vec2Up);
         }
-        //Uses the above function to find the direction, and then converts it to an angle
+        /// <summary>
+        /// Finds the angle in degrees to the center of the play area.
+        /// Uses FindDirectionToCenter() and converts result to an angle in degrees, using the direction (0,1) as 0.
+        /// [not yet implemented]
+        /// </summary>
         public static float FindAngleToCenterDeg(Vector2 startingPosition)
         {
             Vector2 directionToCenter = FindDirectionToCenter(startingPosition);
             return GetSignedAngleDeg(directionToCenter, vec2Up);
         }
 
-        //Finds the direction to the player object stored in the GameMaster
+        /// <summary>
+        /// Finds the direction to the player object stored in the GameMaster
+        /// </summary>
         public static Vector2 FindDirectionToPlayer(Vector2 startingPosition)
         {
             return (GameMaster.gameMaster.playerEntity.WorldPosition.Xy - startingPosition).Normalized();
         }
 
-        //Uses the above function to find the angle to the player object stored in the GameMaster
+        /// <summary>
+        /// Finds the angle in radians to the player object stored in the GameMaster, using the direction (0,1) as 0. 
+        /// Uses FindDirectionToPlayer() and converts result to an angle in radians
+        /// </summary>
         public static float FindAngleToPlayerRad(Vector2 startingPosition)
         {
             Vector2 directionToPlayer = FindDirectionToPlayer(startingPosition);
             return GetSignedAngleRad(directionToPlayer, vec2Up);
         }
-        //Uses the above function to find the angle to the player object stored in the GameMaster
+        /// <summary>
+        /// Finds the angle in degrees to the player object stored in the GameMaster, using the direction (0,1) as 0. 
+        /// Uses FindDirectionToPlayer() and converts result to an angle in degrees
+        /// </summary>
         public static float FindAngleToPlayerDeg(Vector2 startingPosition)
         {
             Vector2 directionToPlayer = FindDirectionToPlayer(startingPosition);
             return GetSignedAngleDeg(directionToPlayer, vec2Up);
         }
 
-        //Finds the direction between an object's x and z and the starting position's x and z -- mainly used for background effects and turning sprites towards the camera
+        /// <summary>
+        /// Finds the direction between an object's x and z and the starting position's x and z.
+        /// Mainly used for background effects and turning sprites towards the camera
+        /// [unused]
+        /// </summary>
         public static Vector3 FindDirectionToObject3D(Vector3 startingPosition, Entity otherObject)
         {
             return (new Vector3(otherObject.WorldPosition.X, 0, otherObject.WorldPosition.Z) - 
                 new Vector3(startingPosition.X, 0, startingPosition.Z)).Normalized();
         }
 
-        //Uses the transform of an object to find the direction towards it from the starting position
+        /// <summary>
+        /// Uses the position of an object to find the direction towards it from the starting position
+        /// </summary>
         public static Vector2 FindDirectionToObject(Vector2 startingPosition, Entity otherObject)
         {
             return (otherObject.WorldPosition.Xy - startingPosition).Normalized();
         }
-
-        //Uses the function above to find the angle towards another object from the starting position
+        /// <summary>
+        /// Uses the position of an object to find the direction towards it from the starting object
+        /// </summary>
+        public static Vector2 FindDirectionToObject(Entity startingObject, Entity otherObject)
+        {
+            return (otherObject.WorldPosition.Xy - startingObject.WorldPosition.Xy).Normalized();
+        }
+        /// <summary>
+        /// Uses the position of an object to find the angle in radians towards it from the starting position, using the direction (0,1) as 0.
+        /// Uses FindDirectionToObject() and converts result to an angle in radians
+        /// </summary>
         public static float FindAngleToObjectRad(Vector2 startingPosition, Entity otherObject)
         {
             Vector2 directionToObject = FindDirectionToObject(startingPosition, otherObject);
             return GetSignedAngleRad(directionToObject, vec2Up);
         }
+        /// <summary>
+        /// Uses the position of an object to find the angle in degrees towards it from the starting position, using the direction (0,1) as 0.
+        /// Uses FindDirectionToObject() and converts result to an angle in degrees
+        /// </summary>
+        public static float FindAngleToObjectDeg(Vector2 startingPosition, Entity otherObject)
+        {
+            Vector2 directionToObject = FindDirectionToObject(startingPosition, otherObject);
+            return GetSignedAngleDeg(directionToObject, vec2Up);
+        }
 
-        //Finds the angle between two positions
+        /// <summary>
+        /// Uses the position of an object to find the angle in radians towards it from the starting object, using the direction (0,1) as 0.
+        /// Uses FindDirectionToObject() and converts result to an angle in radians
+        /// </summary>
+        public static float FindAngleToObjectRad(Entity startingObject, Entity otherObject)
+        {
+            Vector2 directionToObject = FindDirectionToObject(startingObject, otherObject);
+            return GetSignedAngleRad(directionToObject, vec2Up);
+        }
+        /// <summary>
+        /// Uses the position of an object to find the angle in degrees towards it from the starting object, using the direction (0,1) as 0.
+        /// Uses FindDirectionToObject() and converts result to an angle in degrees
+        /// </summary>
+        public static float FindAngleToObjectDeg(Entity startingObject, Entity otherObject)
+        {
+            Vector2 directionToObject = FindDirectionToObject(startingObject, otherObject);
+            return GetSignedAngleDeg(directionToObject, vec2Up);
+        }
+
+
+        /// <summary>
+        /// Finds the angle in radians between two positions, using the direction (0,1) as 0 
+        /// </summary>
         public static float FindAngleRad(Vector2 startPoint, Vector2 endPoint)
         {
             Vector2 direction = endPoint - startPoint;
             return GetSignedAngleRad(direction, vec2Up);
         }
+        /// <summary>
+        /// Finds the angle in degrees between two positions, using the direction (0,1) as 0 
+        /// </summary>
+        public static float FindAngleDeg(Vector2 startPoint, Vector2 endPoint)
+        {
+            Vector2 direction = endPoint - startPoint;
+            return GetSignedAngleDeg(direction, vec2Up);
+        }
 
-        //Finds the angle difference between two directions
+        /// <summary>
+        /// Finds the angle difference in radians between two directions
+        /// </summary>
         public static float FindAngleBetweenRad(Vector2 startPoint, Vector2 endPoint)
         {
             return GetSignedAngleRad(startPoint, endPoint);
         }
-
-        //Finds the angle of the direction, based off of 0,1
-        public static float FindAngleRad(Vector2 direction)
+        /// <summary>
+        /// Finds the angle difference in degrees between two directions
+        /// </summary>
+        public static float FindAngleBetweenDeg(Vector2 startPoint, Vector2 endPoint)
         {
-            return GetSignedAngleRad(direction,vec2Up);
+            return GetSignedAngleDeg(startPoint, endPoint);
         }
 
+        /// <summary>
+        /// Finds the angle of the direction in radians, using the direction (0,1) as 0
+        /// </summary>
+        public static float FindAngleRad(Vector2 direction)
+        {
+            return GetSignedAngleRad(direction, vec2Up);
+        }
+        /// <summary>
+        /// Finds the angle of the direction in degrees, using the direction (0,1) as 0
+        /// </summary>
+        public static float FindAngleDeg(Vector2 direction)
+        {
+            return GetSignedAngleDeg(direction, vec2Up);
+        }
+
+        /// <summary>
+        /// Converts a quaternion rotation to a euler rotation
+        /// </summary>
         public static Vector3 QuaternionToEuler(Quaternion quat)
         {
             Vector3 euler = new Vector3();
@@ -312,34 +515,9 @@ namespace DawnmakuEngine
         }
 
 
-        //Uses the function above to find the angle towards another object from the starting position
-        public static float FindAngleToObjectDeg(Vector2 startingPosition, Entity otherObject)
-        {
-            Vector2 directionToObject = FindDirectionToObject(startingPosition, otherObject);
-            return GetSignedAngleDeg(directionToObject, vec2Up);
-        }
-
-        //Finds the angle between two positions
-        public static float FindAngleDeg(Vector2 startPoint, Vector2 endPoint)
-        {
-            Vector2 direction = endPoint - startPoint;
-            return GetSignedAngleDeg(direction, vec2Up);
-        }
-
-        //Finds the angle difference between two directions
-        public static float FindAngleBetweenDeg(Vector2 startPoint, Vector2 endPoint)
-        {
-            return GetSignedAngleDeg(startPoint, endPoint);
-        }
-
-        //Finds the angle of the direction, based off of 0,1
-        public static float FindAngleDeg(Vector2 direction)
-        {
-            return GetSignedAngleDeg(direction, vec2Up);
-        }
-
-
-
+        /// <summary>
+        /// Finds the nearest entity to the given position, within a max radius, ignoring the calling object if it is passed
+        /// </summary>
         public static Entity FindNearestEntity(Vector2 worldPos, float maxDist = float.MaxValue,  Entity thisObject = null)
         {
             int nearest = -1, i, entities = Entity.allEntities.Count;
@@ -360,10 +538,10 @@ namespace DawnmakuEngine
                 return null;
         }
 
-        //Runs through every enemy position under the enemy container, and finds the nearest to the position within a maximum distance of the max radius
-        //And returns the shortest distance as an out
-        //This accounts for bosses under the if statements below the main for loop
-         public static Entity FindNearestEnemy(Vector2 position, float maxRadius, out float shortestDist)
+        /// <summary>
+        /// Runs through each enemy, and finds the nearest position within the maximum radius, and returns the shortest distance
+        /// </summary>
+        public static Entity FindNearestEnemy(Vector2 position, float maxRadius, out float shortestDist)
          {
              shortestDist = float.MaxValue;
              float tempDist;
@@ -420,8 +598,11 @@ namespace DawnmakuEngine
              //Returns the nearest enemy's transform
              return newTarget;
          }
-         
-        //Same the above function, and even uses it, but doesn't return the shortest distance
+
+        /// <summary>
+        /// Runs through each enemy, and finds the nearest position within the maximum radius, but does not return the shortest distance
+        /// Calls most similar FindNearestEnemy() with an out float
+        /// </summary>
         public static Entity FindNearestEnemy(Vector2 position, float maxRadius)
         {
             float outDeletion;
@@ -429,9 +610,9 @@ namespace DawnmakuEngine
         }
 
 
-        //Runs through every enemy position under the enemy container, and finds the nearest to the position
-        //And returns the shortest distance as an out
-        //This accounts for bosses under the if statements below the main for loop
+        /// <summary>
+        /// Runs through each enemy, and finds the nearest position, and returns the shortest distance
+        /// </summary>
         public static Entity FindNearestEnemy(Vector2 position, out float shortestDist)
         {
             shortestDist = float.MaxValue;
@@ -489,7 +670,10 @@ namespace DawnmakuEngine
             return newTarget;
         }
 
-        //Same the above function, and even uses it, but doesn't return the shortest distance
+        /// <summary>
+        /// Runs through each enemy, and finds the nearest position, but does not return the shortest distance.
+        /// Calls most similar FindNearestEnemy() with an out float
+        /// </summary>
         public static Entity FindNearestEnemy(Vector2 position)
         {
             float outDeletion;

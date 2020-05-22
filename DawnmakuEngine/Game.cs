@@ -169,8 +169,9 @@ namespace DawnmakuEngine
         protected override void OnUpdateFrame(FrameEventArgs e)
         {
             KeyboardState input = Keyboard.GetState();
+            GameMaster gameMaster = GameMaster.gameMaster;
 
-            GameMaster.gameMaster.GameMasterUpdate();
+            gameMaster.GameMasterUpdate();
 
             if (Focused)
             {
@@ -191,41 +192,33 @@ namespace DawnmakuEngine
                 if (input.IsKeyDown(Key.L))
                     TargetUpdateFrequency = 60;
 
-
-                if(input.IsKeyDown(Key.H))
+                if(input.IsKeyDown(Key.Y))
                 {
-                    GameMaster.gameMaster.timeScaleUpdate = 0.5f;
+                    BulletElement.BulletStage[] stage = new BulletElement.BulletStage[] { new BulletElement.BulletStage() };
+                    stage[0].spriteType = gameMaster.bulletTypes[BulletElement.Random(0, gameMaster.bulletTypes.Count - 1)];
+                    stage[0].bulletColor = BulletElement.Random(0, gameMaster.bulletSprites[stage[0].spriteType].sprites.Count - 1);
+                    stage[0].movementDirection = DawnMath.RandomCircle();
+                    stage[0].startingSpeed = 100;
+                    stage[0].endingSpeed = 50;
+                    stage[0].framesToChangeSpeed = 60;
+                    BulletElement.SpawnBullet(stage, gameMaster.playerEntity.WorldPosition, BulletElement.ShouldSpin(stage[0].spriteType));
+                }
+
+                if (input.IsKeyDown(Key.H))
+                {
+                    gameMaster.timeScaleUpdate = 0.5f;
                 }
                 else if(input.IsKeyDown(Key.R))
                 {
-                    GameMaster.gameMaster.timeScaleUpdate = 1f;
+                    gameMaster.timeScaleUpdate = 1f;
                 }
 
                 if (InputScript.specialDown)
                 {
                     if (InputScript.Focus)
-                        GameMaster.gameMaster.currentPowerLevel--;
+                        gameMaster.currentPowerLevel--;
                     else
-                        GameMaster.gameMaster.currentPowerLevel++;
-                }
-
-                if (input.IsKeyDown(Key.G))
-                {
-                    GameMaster gameMaster = GameMaster.gameMaster;
-                    BulletElement.BulletStage[] stages = new BulletElement.BulletStage[1];
-                    stages[0] = new BulletElement.BulletStage();
-                    stages[0].spriteType = gameMaster.bulletTypes[BulletElement.Random(0, gameMaster.bulletTypes.Count)];
-                    //stages[0].spriteType = "bigdrop";
-                    stages[0].bulletColor = BulletElement.Random(0, gameMaster.bulletData[stages[0].spriteType].spriteColors - 2);
-                    //stages[0].bulletColor = 20;
-                    stages[0].startingSpeed = 200;
-                    stages[0].endingSpeed = 75;
-                    stages[0].framesToChangeSpeed = 30;
-                    stages[0].movementDirection = DawnMath.RandomCircle();
-                    //stages[0].movementDirection = DawnMath.RandomCircle();
-                    stages[0].rotate = BulletElement.ShouldTurn(stages[0].spriteType);
-                    //stages[0].rotate = false;
-                    BulletElement.SpawnBullet(stages, Entity.FindEntity("Bullet").WorldPosition, BulletElement.ShouldSpin(stages[0].spriteType));
+                        gameMaster.currentPowerLevel++;
                 }
 
                 if (input.IsKeyDown(Key.Plus))
@@ -262,17 +255,8 @@ namespace DawnmakuEngine
 
             //Entity.FindEntity("FPSCounter").GetElement<TextRenderer>().textToWrite = "FPS:" + UpdateFrequency.ToString("0.00");
 
-            int elementCount = Element.allElements.Count;
-            Element currentElement;
-            for (int i = 0; i < elementCount; i++)
-            {
-                currentElement = Element.allElements[i];
-                if (!currentElement.enabled || !currentElement.EntityAttachedTo.enabled)
-                    continue;
-                if (!currentElement.PostCreateRan)
-                    currentElement.PostCreate();
-                currentElement.OnUpdate();
-            }
+            gameMaster.ElementUpdate();
+            
 
             /*if (input.IsKeyDown(Key.D))
                 Entity.allEntities[0].Rotate(new Vector3(0, .02f, 0));
@@ -294,6 +278,7 @@ namespace DawnmakuEngine
         {
             time += 32 * (float)e.Time;
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
+
             //GL.BindVertexArray(vertexArrayObject);
 
             /*texture1.Use(TextureUnit.Texture0);
@@ -304,11 +289,8 @@ namespace DawnmakuEngine
                 projection = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(45f), Width / (float)Height, 0.1f, 100f),
                 orthoProjection = Matrix4.CreateOrthographic(Width / 2, Height / 2, 0.1f, 100f);
             int index, count;
-            count = Element.allElements.Count;
-            for (index = 0; index < count; index++)
-            {
-                Element.allElements[index].PreRender();
-            }
+
+            GameMaster.gameMaster.ElementPreRender();
 
             MeshRenderer thisRenderer;
             count = MeshRenderer.meshRenderers.Count;

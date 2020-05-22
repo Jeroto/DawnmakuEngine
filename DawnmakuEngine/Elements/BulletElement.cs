@@ -434,6 +434,7 @@ namespace DawnmakuEngine.Elements
         public void UpdateSprite()
         {
             spriteAnimator.animationStates = GetBulletAnim(bulletStages[stageIndex].spriteType, bulletStages[stageIndex].bulletColor);
+            spriteAnimator.UpdateAnim(false);
             /*if (!CheckForAnimatedType(bulletStages[stageIndex].animatedSprite))
             {
                 meshRenderer.mesh.SetUVs(GetBulletSprite(bulletStages[stageIndex].spriteType, bulletStages[stageIndex].bulletColor, gameMaster.bulletSheet));
@@ -491,7 +492,7 @@ namespace DawnmakuEngine.Elements
             return GameMaster.gameMaster.bulletData[type].shouldTurn;
         }
 
-        public BulletElement() : base()
+        public BulletElement() : base(true)
         {
 
         }

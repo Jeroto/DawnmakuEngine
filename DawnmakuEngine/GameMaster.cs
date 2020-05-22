@@ -29,17 +29,31 @@ namespace DawnmakuEngine
         public Entity playerEntity;
         public int playerTypeIndex, playerShotIndex;
 
+        public delegate void ElementFunction();
+
+        public event ElementFunction PostCreate;
+        public event ElementFunction OnUpdate;
+        public event ElementFunction PreRender;
+
 
         public Shader spriteShader = new Shader("Shaders/Shader.vert", "Shaders/TransparentShader.frag");
 
-        
-        //Loaded Enemy Data
-        public Dictionary<string, Texture> loadedEnemyTextures = new Dictionary<string, Texture>();
-        public Dictionary<string, SpriteSet> enemySprites = new Dictionary<string, SpriteSet>();
-        public Dictionary<string, TextureAnimator.AnimationState> loadedEnemyAnimStates = new Dictionary<string, TextureAnimator.AnimationState>();
-        public Dictionary<string, Bezier> enemyMovementPaths = new Dictionary<string, Bezier>();
-        public Dictionary<string, EnemyData> loadedEnemyData = new Dictionary<string, EnemyData>();
-        public Dictionary<string, Pattern> loadedEnemyPatterns = new Dictionary<string, Pattern>();
+
+
+        //Loaded Bullet Data
+        public List<string> bulletTypes = new List<string>();
+        public Dictionary<string, Texture> bulletSheets = new Dictionary<string, Texture>();
+        public Dictionary<string, SpriteSet> bulletSprites = new Dictionary<string, SpriteSet>();
+        public Dictionary<string, Entity> bulletSpawns = new Dictionary<string, Entity>();
+        public Dictionary<string, BulletData> bulletData = new Dictionary<string, BulletData>();
+        public Dictionary<string, Texture> loadedBulletTextures = new Dictionary<string, Texture>();
+        public Dictionary<string, TextureAnimator.AnimationState> loadedBulletAnimStates = new Dictionary<string, TextureAnimator.AnimationState>();
+
+        //Player Orbs
+        public Dictionary<string, Texture> loadedPlayerOrbTextures = new Dictionary<string, Texture>();
+        public Dictionary<string, SpriteSet> playerOrbSprites = new Dictionary<string, SpriteSet>();
+        public Dictionary<string, TextureAnimator.AnimationState> loadedPlayerOrbAnimStates = new Dictionary<string, TextureAnimator.AnimationState>();
+        public Dictionary<string, PlayerOrbData> loadedPlayerOrbData = new Dictionary<string, PlayerOrbData>();
 
         //Loaded Player Data
         public Dictionary<string, Texture> loadedPlayerTextures = new Dictionary<string, Texture>();
@@ -50,20 +64,17 @@ namespace DawnmakuEngine
         public Dictionary<string, PlayerShotData> loadedPlayerShot = new Dictionary<string, PlayerShotData>();
         public Dictionary<string, Pattern> loadedPlayerPatterns = new Dictionary<string, Pattern>();
 
-        //Player Orbs
-        public Dictionary<string, Texture> loadedPlayerOrbTextures = new Dictionary<string, Texture>();
-        public Dictionary<string, SpriteSet> playerOrbSprites = new Dictionary<string, SpriteSet>();
-        public Dictionary<string, TextureAnimator.AnimationState> loadedPlayerOrbAnimStates = new Dictionary<string, TextureAnimator.AnimationState>();
-        public Dictionary<string, PlayerOrbData> loadedPlayerOrbData = new Dictionary<string, PlayerOrbData>();
+        //Loaded Enemy Data
+        public Dictionary<string, Texture> loadedEnemyTextures = new Dictionary<string, Texture>();
+        public Dictionary<string, SpriteSet> enemySprites = new Dictionary<string, SpriteSet>();
+        public Dictionary<string, TextureAnimator.AnimationState> loadedEnemyAnimStates = new Dictionary<string, TextureAnimator.AnimationState>();
+        public Dictionary<string, Bezier> enemyMovementPaths = new Dictionary<string, Bezier>();
+        public Dictionary<string, EnemyData> loadedEnemyData = new Dictionary<string, EnemyData>();
+        public Dictionary<string, Pattern> loadedEnemyPatterns = new Dictionary<string, Pattern>();
 
-        //Loaded Bullet Data
-        public List<string> bulletTypes = new List<string>();
-        public Dictionary<string, Texture> bulletSheets = new Dictionary<string, Texture>();
-        public Dictionary<string, SpriteSet> bulletSprites = new Dictionary<string, SpriteSet>();
-        public Dictionary<string, Entity> bulletSpawns = new Dictionary<string, Entity>();
-        public Dictionary<string, BulletData> bulletData = new Dictionary<string, BulletData>();
-        public Dictionary<string, Texture> loadedBulletTextures = new Dictionary<string, Texture>();
-        public Dictionary<string, TextureAnimator.AnimationState> loadedBulletAnimStates = new Dictionary<string, TextureAnimator.AnimationState>();
+        //Loaded Background Data
+        public Dictionary<string, Mesh> backgroundModels = new Dictionary<string, Mesh>();
+        public Dictionary<string, Texture> backgroundTextures = new Dictionary<string, Texture>();
 
 
 
@@ -75,7 +86,16 @@ namespace DawnmakuEngine
             prevPowerLevel = currentPowerLevel;
         }
 
+        public void ElementUpdate()
+        {
+            PostCreate?.Invoke();
+            OnUpdate?.Invoke();
+        }
 
+        public void ElementPreRender()
+        {
+            PreRender?.Invoke();
+        }
 
 
 

@@ -17,7 +17,7 @@ namespace DawnmakuEngine
         public string directory, generalDir, bulletDataDir, playerDataDir, generalTexDir, bulletTexDir, playerTexDir, playerOrbTexDir, enemyTexDir, UITexDir,
             generalAnimDir, bulletAnimDir, playerAnimDir, playerOrbAnimDir, enemyAnimDir, texAnimDir,
             playerPatternDir, playerOrbDir,
-            stageDir, curStageDir, enemyDir, enemyPatternDir, enemyMovementDir;
+            stageDir, curStageDir, enemyDir, enemyPatternDir, enemyMovementDir, backgroundDir, backgroundModelDir, backgroundTexDir;
 
         public DataLoader(string stageName)
         {
@@ -147,7 +147,10 @@ namespace DawnmakuEngine
                 {
                     enemyDir = dirs[i].FullName;
                     dirs = dirs[i].GetDirectories();
-                    break;
+                }
+                if (dirs[i].Name == "Background")
+                {
+                    backgroundDir = dirs[i].FullName;
                 }
             }
             for (i = 0; i < dirs.Length; i++)
@@ -162,6 +165,21 @@ namespace DawnmakuEngine
                         break;
                 }
             }
+
+            dirs = new DirectoryInfo(backgroundDir).GetDirectories();
+            for (i = 0; i < dirs.Length; i++)
+            {
+                switch (dirs[i].Name)
+                {
+                    case "Models":
+                        backgroundModelDir = dirs[i].FullName;
+                        break;
+                    case "Textures":
+                        backgroundTexDir = dirs[i].FullName;
+                        break;
+                }
+            }
+
             dirs = dirs[0].Parent.Parent.GetDirectories();
         }
 
@@ -258,7 +276,7 @@ namespace DawnmakuEngine
             Console.WriteLine("\nBullet Data:");
             for (int i = 0; i < files.Length; i++)
             {
-                gameMaster.bulletData.Add(GetFileNameOnly(files[i]), ReadBulletData(File.ReadAllText(files[i])));
+                gameMaster.bulletData.Add(GetFileNameOnly(files[i]), ReadBulletData(files[i]));
                 Console.WriteLine(GetFileNameOnly(files[i]));
             }
         }
@@ -501,75 +519,158 @@ namespace DawnmakuEngine
             return new int[] { indexStart, indexEnd  };
         }
 
-
-        public BulletData ReadBulletData(string data)
+        public float ParseFloat(int[] indexes, string data)
         {
-            data = data.Replace(" ", "").Replace("\n", "").Replace("\r", "").Replace("{", "").Replace("}", "").ToLower();
+            float numVal = 0;
+            float.TryParse(data.Substring(indexes[0], indexes[1] - indexes[0]), out numVal);
+            return numVal;
+        }
+        public float ParseFloat(string data)
+        {
+            float numVal = 0;
+            float.TryParse(data, out numVal);
+            return numVal;
+        }
+        public bool TryParseFloat(int[] indexes, string data, out float numVal)
+        {
+            return float.TryParse(data.Substring(indexes[0], indexes[1] - indexes[0]), out numVal);
+        }
+        public bool TryParseFloat(string data, out float numVal)
+        {
+            return float.TryParse(data, out numVal);
+        }
+        public int ParseRoundedNum(int[] indexes, string data)
+        {
+            return Round(ParseFloat(indexes, data));
+        }
+        public int ParseRoundedNum(string data)
+        {
+            return Round(ParseFloat(data));
+        }
+        public bool TryParseRoundedNum(string data, out int numVal)
+        {
+            float floatVal = 0;
+            bool boolVal = float.TryParse(data, out floatVal);
+            numVal = Round(floatVal);
+            return boolVal;
+        }
+        public bool TryParseRoundedNum(int[] indexes, string data, out int numVal)
+        {
+            float floatVal = 0;
+            bool boolVal = float.TryParse(data.Substring(indexes[0], indexes[1] - indexes[0]), out floatVal);
+            numVal = Round(floatVal);
+            return boolVal;
+        }
+        public bool ParseBool(int[] indexes, string data)
+        {
+            bool boolVal = false;
+            bool.TryParse(data.Substring(indexes[0], indexes[1] - indexes[0]), out boolVal);
+            return boolVal;
+        }
+        public bool ParseBool(string data)
+        {
+            bool boolVal = false;
+            bool.TryParse(data, out boolVal);
+            return boolVal;
+        }
+        public bool TryParseBool(int[] indexes, string data, out bool boolVal)
+        {
+            bool parsed = bool.TryParse(data.Substring(indexes[0], indexes[1] - indexes[0]), out boolVal);
+            return parsed;
+        }
+        public bool TryParseBool(string data, out bool boolVal)
+        {
+            bool parsed = bool.TryParse(data, out boolVal);
+            return parsed;
+        }
+
+        public BulletData ReadBulletData(string file)
+        {
             BulletData thisData = new BulletData();
             int i, s;
             int[] indexes = { 0, 0 };
-            bool boolVal;
-            float numVal;
             string[] tempStrings, stateStrings;
             TextureAnimator.AnimationState state;
+            string data, searchingFor = "";
 
-            try
+            FileStream fileStream = File.OpenRead(file);
+            StreamReader streamReader = new StreamReader(fileStream);
+
+            while (!streamReader.EndOfStream)
             {
-                indexes = FindIndexes(data, "isanimated=");
-                bool.TryParse(data.Substring(indexes[0], indexes[1] - indexes[0]), out boolVal);
-                thisData.isAnimated = boolVal;
 
-                indexes = FindIndexes(data, "shouldspin=");
-                bool.TryParse(data.Substring(indexes[0], indexes[1] - indexes[0]), out boolVal);
-                thisData.shouldSpin = boolVal;
-
-                indexes = FindIndexes(data, "shouldturn=");
-                bool.TryParse(data.Substring(indexes[0], indexes[1] - indexes[0]), out boolVal);
-                thisData.shouldTurn = boolVal;
-
-                indexes = FindIndexes(data, "collidersize=");
-                float.TryParse(data.Substring(indexes[0], indexes[1] - indexes[0]), out numVal);
-                thisData.colliderSize = numVal;
-
-                indexes = FindIndexes(data, "collideroffset=");
-                tempStrings = data.Substring(indexes[0], indexes[1] - indexes[0]).Split(',', StringSplitOptions.RemoveEmptyEntries);
-                float.TryParse(tempStrings[0], out numVal);
-                thisData.colliderOffsetX = numVal;
-                float.TryParse(tempStrings[1], out numVal);
-                thisData.colliderOffsetY = numVal;
-
-                indexes = FindIndexes(data, "spritecolorcount=");
-                float.TryParse(data.Substring(indexes[0], indexes[1] - indexes[0]), out numVal);
-                thisData.spriteColors = (ushort)Round(numVal);
-
-                indexes = FindIndexes(data, "randomizesprite=");
-                bool.TryParse(data.Substring(indexes[0], indexes[1] - indexes[0]), out boolVal);
-                thisData.randomizeSprite = boolVal;
-
-                if (thisData.isAnimated)
+                data = streamReader.ReadLine();
+                data = data.Replace(" ", "").Replace("\n", "").Replace("\r", "").Replace("{", "").Replace("}", "").ToLower();
+                try
                 {
-                    indexes = FindIndexes(data, "animstates=");
-                    stateStrings = data.Substring(indexes[0], indexes[1] - indexes[0]).Split(':', StringSplitOptions.RemoveEmptyEntries);
-                    thisData.animStates = new TextureAnimator.AnimationState[stateStrings.Length][];
-                    for (i = 0; i < stateStrings.Length; i++)
+                    indexes = FindIndexes(data, "isanimated=");
+                    thisData.isAnimated = ParseBool(indexes, data);
+
+                    indexes = FindIndexes(data, "shouldspin=");
+                    thisData.shouldSpin = ParseBool(indexes, data);
+
+                    indexes = FindIndexes(data, "shouldturn=");
+                    thisData.shouldTurn = ParseBool(indexes, data);
+
+                    indexes = FindIndexes(data, "collidersize=");
+                    thisData.colliderSize = ParseFloat(indexes, data);
+
+                    indexes = FindIndexes(data, "collideroffset=");
+                    tempStrings = data.Substring(indexes[0], indexes[1] - indexes[0]).Split(',', StringSplitOptions.RemoveEmptyEntries);
+                    thisData.colliderOffsetX = ParseFloat(tempStrings[0]);
+                    thisData.colliderOffsetY = ParseFloat(tempStrings[1]);
+
+                    indexes = FindIndexes(data, "spritecolorcount=");
+                    thisData.spriteColors = (ushort)ParseRoundedNum(indexes, data);
+
+                    indexes = FindIndexes(data, "randomizesprite=");
+                    thisData.randomizeSprite = ParseBool(indexes, data);
+
+                    if (thisData.isAnimated)
                     {
-                        tempStrings = stateStrings[i].Split(',', StringSplitOptions.RemoveEmptyEntries);
-                        thisData.animStates[i] = new TextureAnimator.AnimationState[tempStrings.Length];
-                        for (s = 0; s < tempStrings.Length; s++)
+                        if(searchingFor == "animstates")
                         {
-                            gameMaster.loadedBulletAnimStates.TryGetValue(tempStrings[s], out state);
-                            thisData.animStates[i][s] = state;
+                            indexes = FindIndexes(data, data[0].ToString());
+                            indexes[0] = 0;
+                        }
+                        else
+                        {
+                            indexes = FindIndexes(data, "animstates=");
+
+                            if (indexes[0] != data.Length - 1 || indexes[1] != data.Length)
+                                searchingFor = "animstates";
+                        }
+                        stateStrings = data.Substring(indexes[0], indexes[1] - indexes[0]).Split(':', StringSplitOptions.RemoveEmptyEntries);
+                        int initialLength = thisData.animStates.Length;
+                        TextureAnimator.AnimationState[][] tempStates = thisData.animStates;
+                        thisData.animStates = new TextureAnimator.AnimationState[thisData.animStates.Length + stateStrings.Length][];
+
+                        for (i = 0; i < initialLength; i++)
+                        {
+                            thisData.animStates[i] = tempStates[i];
+                        }
+                        
+                        for (i = 0; i < stateStrings.Length; i++)
+                        {
+                            tempStrings = stateStrings[i].Split(',', StringSplitOptions.RemoveEmptyEntries);
+                            thisData.animStates[i] = new TextureAnimator.AnimationState[tempStrings.Length];
+                            for (s = 0; s < tempStrings.Length; s++)
+                            {
+                                gameMaster.loadedBulletAnimStates.TryGetValue(tempStrings[s], out state);
+                                thisData.animStates[i][s] = state;
+                            }
                         }
                     }
+                    else
+                        thisData.animStates = new TextureAnimator.AnimationState[0][];
                 }
-                else
-                    thisData.animStates = new TextureAnimator.AnimationState[0][];
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("There was an error loading this bezier!");
-                Console.WriteLine(e.Message);
-            }
+                catch (Exception e)
+                {
+                    Console.WriteLine("There was an error loading this bullet data!");
+                    Console.WriteLine(e.Message);
+                }
+
+            }//End of while
 
             return thisData;
         }
@@ -579,19 +680,16 @@ namespace DawnmakuEngine
             data = data.Replace(" ", "").Replace("\n", "").Replace("\r", "").Replace("{", "").Replace("}", "").ToLower();
             Bezier thisBezier = new Bezier();
             int[] indexes = {0,0};
-            float numVal1, numVal2, numVal3, numVal4;
+            float numVal1, numVal2, numVal3;
             ushort shortVal;
-            bool boolVal;
             string[] tempStrings, tempSubstrings; 
             try
             {
                 indexes = FindIndexes(data, "scale=");
-                float.TryParse(data.Substring(indexes[0], indexes[1] - indexes[0]), out numVal1);
-                thisBezier.scale = Round(numVal1);
+                thisBezier.scale = ParseRoundedNum(indexes, data);
 
                 indexes = FindIndexes(data, "autosetpoints=", indexes[1]);
-                bool.TryParse(data.Substring(indexes[0], indexes[1] - indexes[0]), out boolVal);
-                thisBezier.AutoSetPoints = boolVal;
+                thisBezier.AutoSetPoints = ParseBool(indexes, data);
 
                 indexes = FindIndexes(data, "points=", indexes[1], "end");
                 tempStrings = data.Substring(indexes[0], data.Length - indexes[0]).Split(':', StringSplitOptions.RemoveEmptyEntries);
@@ -601,15 +699,14 @@ namespace DawnmakuEngine
                 {
                     indexes = FindIndexes(tempStrings[i], "pos=");
                     tempSubstrings = tempStrings[i].Substring(indexes[0], indexes[1] - indexes[0]).Split(',', StringSplitOptions.RemoveEmptyEntries);
-                    float.TryParse(tempSubstrings[0], out numVal1);
-                    float.TryParse(tempSubstrings[1], out numVal2);
+                    numVal1 = ParseFloat(tempSubstrings[0]);
+                    numVal2 = ParseFloat(tempSubstrings[1]);
 
                     indexes = FindIndexes(tempStrings[i], "time=", indexes[1]);
-                    float.TryParse(tempStrings[i].Substring(indexes[0], indexes[1] - indexes[0]), out numVal3);
+                    numVal3 = ParseFloat(indexes, tempStrings[i]);
 
                     indexes = FindIndexes(tempStrings[i], "waittime=", indexes[1]);
-                    float.TryParse(tempStrings[i].Substring(indexes[0], indexes[1] - indexes[0]), out numVal4);
-                    shortVal = (ushort)Round(numVal4);
+                    shortVal = (ushort)ParseRoundedNum(indexes, tempStrings[i]); ;
 
                     thisBezier.points.Add(new Bezier.Point(new Vector2(numVal1, numVal2), numVal3, shortVal));
                 }
@@ -651,13 +748,13 @@ namespace DawnmakuEngine
                     {
                         value.sprites.Add(new SpriteSet.Sprite());
                         spriteValues = sprites[s].Split(",", StringSplitOptions.RemoveEmptyEntries);
-                        float.TryParse(spriteValues[0], out coordinate);
+                        coordinate = ParseFloat(spriteValues[0]);
                         value.sprites[s].left = coordinate / tex.Width;
-                        float.TryParse(spriteValues[1], out coordinate);
+                        coordinate = ParseFloat(spriteValues[1]);
                         value.sprites[s].top = 1 - (coordinate / tex.Height);
-                        float.TryParse(spriteValues[2], out coordinate);
+                        coordinate = ParseFloat(spriteValues[2]);
                         value.sprites[s].right = coordinate / tex.Width;
-                        float.TryParse(spriteValues[3], out coordinate);
+                        coordinate = ParseFloat(spriteValues[3]);
                         value.sprites[s].bottom = 1 - (coordinate / tex.Height);
 
                         value.sprites[s].tex = tex;
@@ -681,8 +778,6 @@ namespace DawnmakuEngine
             int i = 0, s = 0;
             int[] indexes = { 0, 0 };
             string[] animStates, frameSets;
-            float numVal;
-            bool boolVal;
             string stringVal, key;
             SpriteSet set;
             TextureAnimator.AnimationState thisState;
@@ -698,12 +793,10 @@ namespace DawnmakuEngine
                     key = animStates[s].Substring(indexes[0], indexes[1] - indexes[0]);
 
                     indexes = FindIndexes(animStates[s], "autotransition=", indexes[1]);
-                    float.TryParse(animStates[s].Substring(indexes[0], indexes[1] - indexes[0]), out numVal);
-                    thisState.autoTransition = Round(numVal);
+                    thisState.autoTransition = ParseRoundedNum(indexes, animStates[s]);
 
                     indexes = FindIndexes(animStates[s], "loop=", indexes[1]);
-                    bool.TryParse(animStates[s].Substring(indexes[0], indexes[1] - indexes[0]), out boolVal);
-                    thisState.loop = boolVal;
+                    thisState.loop = ParseBool(indexes, animStates[s]);
 
                     indexes = FindIndexes(animStates[s], "frames=", indexes[1], "end");
                     frameSets = animStates[s].Substring(indexes[0], indexes[1] - indexes[0]).Split(':', StringSplitOptions.RemoveEmptyEntries);
@@ -712,17 +805,15 @@ namespace DawnmakuEngine
                     {
                         thisState.animFrames[i] = new TextureAnimator.AnimationFrame();
                         indexes = FindIndexes(frameSets[i], "duration=");
-                        float.TryParse(frameSets[i].Substring(indexes[0], indexes[1] - indexes[0]), out numVal);
-                        thisState.animFrames[i].frameDuration = numVal;
+                        thisState.animFrames[i].frameDuration = ParseFloat(indexes, frameSets[i]);
 
                         indexes = FindIndexes(frameSets[i], "spriteset=", indexes[1]);
                         stringVal = frameSets[i].Substring(indexes[0], indexes[1] - indexes[0]);
 
                         indexes = FindIndexes(frameSets[i], "sprite=", indexes[1]);
-                        float.TryParse(frameSets[i].Substring(indexes[0], indexes[1] - indexes[0]), out numVal);
                         sprites.TryGetValue(stringVal, out set);
                         if (set != null)
-                            thisState.animFrames[i].sprite = set.sprites[Round(numVal)];
+                            thisState.animFrames[i].sprite = set.sprites[ParseRoundedNum(indexes, frameSets[i])];
                     }
 
                     animPairs.Add(new KeyValuePair<string, TextureAnimator.AnimationState>(key, thisState));
@@ -743,8 +834,7 @@ namespace DawnmakuEngine
             PlayerOrbData thisData = new PlayerOrbData();
             int i = 0;
             int[] indexes = { 0, 0 };
-            float numVal = 0, numVal2 = 0;
-            bool boolVal;
+            float numVal = 0;
             string[] tempStrings, subTempStrings;
 
             try
@@ -754,29 +844,22 @@ namespace DawnmakuEngine
                 thisData.activePowerLevels = new bool[tempStrings.Length];
                 for (i = 0; i < tempStrings.Length; i++)
                 {
-                    bool.TryParse(tempStrings[i], out boolVal);
-                    thisData.activePowerLevels[i] = boolVal;
+                    thisData.activePowerLevels[i] = ParseBool(tempStrings[i]);
                 }
 
                 indexes = FindIndexes(data, "unfocuspos=");
                 subTempStrings = data.Substring(indexes[0], indexes[1] - indexes[0]).Split(',', StringSplitOptions.RemoveEmptyEntries);
-                float.TryParse(subTempStrings[0], out numVal);
-                float.TryParse(subTempStrings[1], out numVal2);
-                thisData.unfocusPosition = new Vector2(numVal, numVal2);
+                thisData.unfocusPosition = new Vector2(ParseFloat(subTempStrings[0]), ParseFloat(subTempStrings[1]));
 
                 indexes = FindIndexes(data, "focuspos=", indexes[1]);
                 subTempStrings = data.Substring(indexes[0], indexes[1] - indexes[0]).Split(',', StringSplitOptions.RemoveEmptyEntries);
-                float.TryParse(subTempStrings[0], out numVal);
-                float.TryParse(subTempStrings[1], out numVal2);
-                thisData.focusPosition = new Vector2(numVal, numVal2);
+                thisData.focusPosition = new Vector2(ParseFloat(subTempStrings[0]), ParseFloat(subTempStrings[1]));
 
                 indexes = FindIndexes(data, "framestomove=");
-                float.TryParse(data.Substring(indexes[0], indexes[1] - indexes[0]), out numVal);
-                thisData.framesToMove = numVal;
+                thisData.framesToMove = ParseFloat(indexes, data);
 
                 indexes = FindIndexes(data, "rotatedegreespersecond=");
-                float.TryParse(data.Substring(indexes[0], indexes[1] - indexes[0]), out numVal);
-                thisData.rotateDegreesPerSecond = numVal;
+                thisData.rotateDegreesPerSecond = ParseFloat(indexes, data);
 
                 indexes = FindIndexes(data, "animstates=");
                 tempStrings = data.Substring(indexes[0], indexes[1] - indexes[0]).Split(",");
@@ -787,8 +870,7 @@ namespace DawnmakuEngine
                 }
 
                 indexes = FindIndexes(data, "startanimframe=");
-                float.TryParse(data.Substring(indexes[0], indexes[1] - indexes[0]), out numVal);
-                thisData.startAnimFrame = Round(numVal);
+                thisData.startAnimFrame = ParseRoundedNum(indexes, data);
 
                 indexes = FindIndexes(data, "leavebehind=");
                 switch(data.Substring(indexes[0], indexes[1] - indexes[0]))
@@ -812,13 +894,12 @@ namespace DawnmakuEngine
                 }
 
                 indexes = FindIndexes(data, "followprevious=");
-                bool.TryParse(data.Substring(indexes[0], indexes[1] - indexes[0]), out boolVal);
-                thisData.followPrevious = boolVal;
+                thisData.followPrevious = ParseBool(indexes, data);
 
                 if(thisData.followPrevious)
                 {
                     indexes = FindIndexes(data, "followdist=");
-                    float.TryParse(data.Substring(indexes[0], indexes[1] - indexes[0]), out numVal);
+                    numVal = ParseFloat(indexes, data);
                     thisData.followDist = numVal;
                     thisData.followDistSq = numVal * numVal;
                 }
@@ -854,7 +935,6 @@ namespace DawnmakuEngine
             PlayerShotData thisData = new PlayerShotData();
             int i = 0;
             int[] indexes = { 0, 0 };
-            float numVal = 0, numVal2 = 0;
             string[] tempStrings, subTempStrings;
 
             try
@@ -868,22 +948,17 @@ namespace DawnmakuEngine
                 }
 
                 indexes = FindIndexes(data, "movespeed=");
-                float.TryParse(data.Substring(indexes[0], indexes[1] - indexes[0]), out numVal);
-                thisData.moveSpeed = numVal;
+                thisData.moveSpeed = ParseFloat(indexes, data);
 
                 indexes = FindIndexes(data, "focusspeedpercent=");
-                float.TryParse(data.Substring(indexes[0], indexes[1] - indexes[0]), out numVal);
-                thisData.focusModifier = numVal;
+                thisData.focusModifier = ParseFloat(indexes, data);
 
                 indexes = FindIndexes(data, "collidersize=");
-                float.TryParse(data.Substring(indexes[0], indexes[1] - indexes[0]), out numVal);
-                thisData.colliderSize = numVal;
+                thisData.colliderSize = ParseFloat(indexes, data);
 
                 indexes = FindIndexes(data, "collideroffset=");
                 subTempStrings = data.Substring(indexes[0], indexes[1] - indexes[0]).Split(',', StringSplitOptions.RemoveEmptyEntries);
-                float.TryParse(subTempStrings[0], out numVal);
-                float.TryParse(subTempStrings[1], out numVal2);
-                thisData.colliderOffset = new Vector2(numVal, numVal2);
+                thisData.colliderOffset = new Vector2(ParseFloat(subTempStrings[0]), ParseFloat(subTempStrings[1]));
 
 
                 indexes = FindIndexes(data, "orbs=");
@@ -909,8 +984,7 @@ namespace DawnmakuEngine
             PlayerTypeData thisData = new PlayerTypeData();
             int i = 0;
             int[] indexes = { 0, 0 };
-            float numVal = 0, numVal2 = 0;
-            string[] tempStrings, subTempStrings;
+            string[] tempStrings;
 
             try
             {
@@ -952,7 +1026,6 @@ namespace DawnmakuEngine
             PlayerCharData thisData = new PlayerCharData();
             int i = 0;
             int[] indexes = { 0, 0 };
-            float numVal = 0, numVal2 = 0;
             string[] tempStrings, subTempStrings;
 
             try
@@ -963,22 +1036,17 @@ namespace DawnmakuEngine
                 thisData.jpName = data.Substring(indexes[0], indexes[1] - indexes[0]).Replace('_', ' ');
 
                 indexes = FindIndexes(data, "movespeed=");
-                float.TryParse(data.Substring(indexes[0], indexes[1] - indexes[0]), out numVal);
-                thisData.moveSpeed = numVal;
+                thisData.moveSpeed = ParseFloat(indexes, data);
 
                 indexes = FindIndexes(data, "focusspeedpercent=");
-                float.TryParse(data.Substring(indexes[0], indexes[1] - indexes[0]), out numVal);
-                thisData.focusModifier = numVal;
+                thisData.focusModifier = ParseFloat(indexes, data);
 
                 indexes = FindIndexes(data, "collidersize=");
-                float.TryParse(data.Substring(indexes[0], indexes[1] - indexes[0]), out numVal);
-                thisData.colliderSize = numVal;
+                thisData.colliderSize = ParseFloat(indexes, data);
 
                 indexes = FindIndexes(data, "collideroffset=");
                 subTempStrings = data.Substring(indexes[0], indexes[1] - indexes[0]).Split(',', StringSplitOptions.RemoveEmptyEntries);
-                float.TryParse(subTempStrings[0], out numVal);
-                float.TryParse(subTempStrings[1], out numVal2);
-                thisData.colliderOffset = new Vector2(numVal, numVal2);
+                thisData.colliderOffset = new Vector2(ParseFloat(subTempStrings[0]), ParseFloat(subTempStrings[1]));
 
                 indexes = FindIndexes(data, "shottypes=");
                 tempStrings = data.Substring(indexes[0], indexes[1] - indexes[0]).Split(",");
@@ -1011,7 +1079,6 @@ namespace DawnmakuEngine
             EnemyData thisData = new EnemyData();
             int i = 0;
             int[] indexes;
-            float numVal = 0, numVal2 = 0;
             string[] tempStrings, subTempStrings;
 
             try
@@ -1019,26 +1086,20 @@ namespace DawnmakuEngine
                 thisData.enemyName = filename;
 
                 indexes = FindIndexes(data, "health=");
-                float.TryParse(data.Substring(indexes[0], indexes[1] - indexes[0]), out numVal);
-                thisData.health = Round(numVal);
+                thisData.health = ParseRoundedNum(indexes, data);
 
                 indexes = FindIndexes(data, "iframes=");
-                float.TryParse(data.Substring(indexes[0], indexes[1] - indexes[0]), out numVal);
-                thisData.invTime = Round(numVal);
+                thisData.invTime = ParseRoundedNum(indexes, data);
 
                 indexes = FindIndexes(data, "deathscore=");
-                float.TryParse(data.Substring(indexes[0], indexes[1] - indexes[0]), out numVal);
-                thisData.deathScoreValue = Round(numVal);
+                thisData.deathScoreValue = ParseRoundedNum(indexes, data);
 
                 indexes = FindIndexes(data, "collidersize=");
-                float.TryParse(data.Substring(indexes[0], indexes[1] - indexes[0]), out numVal);
-                thisData.colliderSize = numVal;
+                thisData.colliderSize = ParseFloat(indexes, data);
 
                 indexes = FindIndexes(data, "collideroffset=");
                 subTempStrings = data.Substring(indexes[0], indexes[1] - indexes[0]).Split(',', StringSplitOptions.RemoveEmptyEntries);
-                float.TryParse(subTempStrings[0], out numVal);
-                float.TryParse(subTempStrings[1], out numVal2);
-                thisData.colliderOffset = new Vector2(numVal, numVal2);
+                thisData.colliderOffset = new Vector2(ParseFloat(subTempStrings[0]), ParseFloat(subTempStrings[1]));
 
                 indexes = FindIndexes(data, "movementcurve=");
                 thisData.movementCurve = gameMaster.enemyMovementPaths[data.Substring(indexes[0], indexes[1] - indexes[0])];
@@ -1076,17 +1137,25 @@ namespace DawnmakuEngine
             return thisData;
         }
 
-        public Pattern ReadPatternData(string data, Dictionary<string, Pattern> patternDic)
+        public Pattern ReadPatternData(string file, Dictionary<string, Pattern> patternDic)
         {
-            data = data.Replace(" ", "").Replace("\n", "").Replace("\r", "").Replace("{", "").Replace("}", "").ToLower();
             Pattern finalPattern = new Pattern();
             int i = 0;
             int[] indexes;
             float numVal = 0;
+            int intVal = 0;
             bool boolVal = false;
             int patternType = 0;
             string[] tempStrings, subTempStrings;
-            string patternBase = null;
+            string patternBase = null,
+                data;
+
+            FileStream fileStream = File.OpenRead(file);
+            StreamReader streamReader = new StreamReader(fileStream);
+
+            data = streamReader.ReadToEnd();
+            
+            data = data.Replace(" ", "").Replace("\n", "").Replace("\r", "").Replace("{", "").Replace("}", "").ToLower();
             try
             {
                 if (data.Contains("patternbase="))
@@ -1128,35 +1197,35 @@ namespace DawnmakuEngine
                 }
 
                 indexes = FindIndexes(data, "burstcount=");
-                if(float.TryParse(data.Substring(indexes[0], indexes[1] - indexes[0]), out numVal))
-                    finalPattern.burstCount = Round(numVal);
+                if(TryParseRoundedNum(indexes, data, out intVal))
+                    finalPattern.burstCount = intVal;
 
                 indexes = FindIndexes(data, "bulletsinburst=");
-                if(float.TryParse(data.Substring(indexes[0], indexes[1] - indexes[0]), out numVal))
-                    finalPattern.bulletsInBurst = Round(numVal);
+                if (TryParseRoundedNum(indexes, data, out intVal))
+                    finalPattern.bulletsInBurst = intVal;
 
                 indexes = FindIndexes(data, "overalldegrees=");
-                if(float.TryParse(data.Substring(indexes[0], indexes[1] - indexes[0]), out numVal))
+                if (TryParseFloat(indexes, data, out numVal))
                     finalPattern.overallDegrees = numVal;
 
                 indexes = FindIndexes(data, "degreeoffset=");
-                if(float.TryParse(data.Substring(indexes[0], indexes[1] - indexes[0]), out numVal))
+                if (TryParseFloat(indexes, data, out numVal))
                     finalPattern.degreeOffset = numVal;
 
                 indexes = FindIndexes(data, "randomdegreeoffset=");
-                if(float.TryParse(data.Substring(indexes[0], indexes[1] - indexes[0]), out numVal))
+                if (TryParseFloat(indexes, data, out numVal))
                     finalPattern.randomDegreeOffset = numVal;
 
                 indexes = FindIndexes(data, "aimed=");
-                if(bool.TryParse(data.Substring(indexes[0], indexes[1] - indexes[0]), out boolVal))
+                if (TryParseFloat(indexes, data, out numVal))
                     finalPattern.aimed = boolVal;
 
                 indexes = FindIndexes(data, "burstdelay=");
-                if(float.TryParse(data.Substring(indexes[0], indexes[1] - indexes[0]), out numVal))
+                if (TryParseFloat(indexes, data, out numVal))
                     finalPattern.burstDelay = numVal;
 
                 indexes = FindIndexes(data, "initialdelay=");
-                if(float.TryParse(data.Substring(indexes[0], indexes[1] - indexes[0]), out numVal))
+                if (TryParseFloat(indexes, data, out numVal))
                     finalPattern.initialDelay = numVal;
 
                 indexes = FindIndexes(data, "perbulletdelay=");
@@ -1165,10 +1234,7 @@ namespace DawnmakuEngine
                     tempStrings = data.Substring(indexes[0], indexes[1] - indexes[0]).Split(',', StringSplitOptions.RemoveEmptyEntries);
                     finalPattern.perBulletDelay = new List<float>();
                     for (i = 0; i < tempStrings.Length; i++)
-                    {
-                        float.TryParse(tempStrings[i], out numVal);
-                        finalPattern.perBulletDelay.Add(numVal);
-                    }
+                        finalPattern.perBulletDelay.Add(ParseFloat(tempStrings[i]));
                 }
 
                 indexes = FindIndexes(data, "damage=");
@@ -1177,24 +1243,16 @@ namespace DawnmakuEngine
                     tempStrings = data.Substring(indexes[0], indexes[1] - indexes[0]).Split(',', StringSplitOptions.RemoveEmptyEntries);
                     finalPattern.damage = new List<ushort>();
                     for (i = 0; i < tempStrings.Length; i++)
-                    {
-                        float.TryParse(tempStrings[i], out numVal);
-                        finalPattern.damage.Add((ushort)Math.Clamp(Round(numVal), 0, ushort.MaxValue));
-                    }
+                        finalPattern.damage.Add((ushort)Math.Clamp(ParseRoundedNum(tempStrings[i]), 0, ushort.MaxValue));
                 }
 
                 indexes = FindIndexes(data, "offsets=");
                 if (indexes[0] != data.Length - 1 || indexes[1] != data.Length)
                 {
                     tempStrings = data.Substring(indexes[0], indexes[1] - indexes[0]).Split(',', StringSplitOptions.RemoveEmptyEntries);
-                    float xval;
                     finalPattern.offsets = new List<Vector2>();
                     for (i = 0; i < tempStrings.Length; i += 2)
-                    {
-                        float.TryParse(tempStrings[i], out xval);
-                        float.TryParse(tempStrings[i + 1], out numVal);
-                        finalPattern.offsets.Add(new Vector2(xval, numVal));
-                    }
+                        finalPattern.offsets.Add(new Vector2(ParseFloat(tempStrings[i]), ParseFloat(tempStrings[i + 1])));
                 }
 
                 indexes = FindIndexes(data, "turnoffsets=");
@@ -1204,10 +1262,7 @@ namespace DawnmakuEngine
                     tempStrings = data.Substring(indexes[0], indexes[1] - indexes[0]).Split(',', StringSplitOptions.RemoveEmptyEntries);
                     finalPattern.turnOffsets = new List<bool>();
                     for (i = 0; i < tempStrings.Length; i++)
-                    {
-                        bool.TryParse(tempStrings[i], out boolVal);
-                        finalPattern.turnOffsets.Add(boolVal);
-                    }
+                        finalPattern.turnOffsets.Add(ParseBool(tempStrings[i]));
                 }
 
                 switch(patternType)
@@ -1263,7 +1318,7 @@ namespace DawnmakuEngine
                                         thisInstance = thisPattern.bulletStages[b].instances[i];
 
                                         indexes = FindIndexes(subTempStrings[i], "framestolast=");
-                                        if (float.TryParse(subTempStrings[i].Substring(indexes[0], indexes[1] - indexes[0]), out numVal))
+                                        if (TryParseFloat(indexes, subTempStrings[i], out numVal))
                                             thisInstance.framesToLast = numVal;
 
                                         indexes = FindIndexes(subTempStrings[i], "bullettype=");
@@ -1271,17 +1326,17 @@ namespace DawnmakuEngine
                                             thisInstance.spriteType = subTempStrings[i].Substring(indexes[0], indexes[1] - indexes[0]);
 
                                         indexes = FindIndexes(subTempStrings[i], "bulletcolor=");
-                                        if (float.TryParse(subTempStrings[i].Substring(indexes[0], indexes[1] - indexes[0]), out numVal))
+                                        if (TryParseFloat(indexes, subTempStrings[i], out numVal))
                                             thisInstance.bulletColor = Math.Clamp(Round(numVal), 0, Enum.GetValues(typeof(Elements.BulletElement.BulletColor)).Length - 1);
                                         else if (indexes[0] != subTempStrings[i].Length - 1 || indexes[1] != subTempStrings[i].Length)
                                             thisInstance.bulletColor = (int)Enum.Parse<BulletElement.BulletColor>(subTempStrings[i].Substring(indexes[0], indexes[1] - indexes[0]), true);
 
                                         indexes = FindIndexes(subTempStrings[i], "animatedsprite=");
-                                        if (bool.TryParse(data.Substring(indexes[0], indexes[1] - indexes[0]), out boolVal))
+                                        if (TryParseBool(indexes, subTempStrings[i], out boolVal))
                                             thisInstance.animatedSprite = boolVal;
 
                                         indexes = FindIndexes(subTempStrings[i], "renderscale=");
-                                        if (float.TryParse(subTempStrings[i].Substring(indexes[0], indexes[1] - indexes[0]), out numVal))
+                                        if (TryParseFloat(indexes, subTempStrings[i], out numVal))
                                             thisInstance.renderScale = numVal;
 
                                         {
@@ -1290,122 +1345,112 @@ namespace DawnmakuEngine
                                             if (indexes[0] != subTempStrings[i].Length - 1 || indexes[1] != subTempStrings[i].Length)
                                             {
                                                 subSubstrings = subTempStrings[i].Substring(indexes[0], indexes[1] - indexes[0]).Split(',', StringSplitOptions.RemoveEmptyEntries);
-                                                float.TryParse(subSubstrings[0], out xVal);
-                                                float.TryParse(subSubstrings[1], out numVal);
-                                                thisInstance.movementDirection = new Vector2(xVal, numVal);
+                                                thisInstance.movementDirection = new Vector2(ParseFloat(subSubstrings[0]), ParseFloat(subSubstrings[1]));
                                             }
                                         }
 
                                         indexes = FindIndexes(subTempStrings[i], "startingspeed=");
-                                        if (float.TryParse(subTempStrings[i].Substring(indexes[0], indexes[1] - indexes[0]), out numVal))
+                                        if (TryParseFloat(indexes, subTempStrings[i], out numVal))
                                             thisInstance.startingSpeed = numVal;
 
                                         indexes = FindIndexes(subTempStrings[i], "endingspeed=");
-                                        if (float.TryParse(subTempStrings[i].Substring(indexes[0], indexes[1] - indexes[0]), out numVal))
+                                        if (TryParseFloat(indexes, subTempStrings[i], out numVal))
                                             thisInstance.endingSpeed = numVal;
 
                                         indexes = FindIndexes(subTempStrings[i], "framestochangespeed=");
-                                        if (float.TryParse(subTempStrings[i].Substring(indexes[0], indexes[1] - indexes[0]), out numVal))
+                                        if (TryParseFloat(indexes, subTempStrings[i], out numVal))
                                             thisInstance.framesToChangeSpeed = numVal;
 
                                         indexes = FindIndexes(subTempStrings[i], "colorr=");
-                                        if (float.TryParse(subTempStrings[i].Substring(indexes[0], indexes[1] - indexes[0]), out numVal))
+                                        if (TryParseFloat(indexes, subTempStrings[i], out numVal))
                                             thisInstance.r = (byte)Math.Clamp(numVal, 0, 255);
                                         indexes = FindIndexes(subTempStrings[i], "colorg=");
-                                        if (float.TryParse(subTempStrings[i].Substring(indexes[0], indexes[1] - indexes[0]), out numVal))
+                                        if (TryParseFloat(indexes, subTempStrings[i], out numVal))
                                             thisInstance.g = (byte)Math.Clamp(numVal, 0, 255);
                                         indexes = FindIndexes(subTempStrings[i], "colorb=");
-                                        if (float.TryParse(subTempStrings[i].Substring(indexes[0], indexes[1] - indexes[0]), out numVal))
+                                        if (TryParseFloat(indexes, subTempStrings[i], out numVal))
                                             thisInstance.b = (byte)Math.Clamp(numVal, 0, 255);
                                         indexes = FindIndexes(subTempStrings[i], "colora=");
-                                        if (float.TryParse(subTempStrings[i].Substring(indexes[0], indexes[1] - indexes[0]), out numVal))
+                                        if (TryParseFloat(indexes, subTempStrings[i], out numVal))
                                             thisInstance.a = (byte)Math.Clamp(numVal, 0, 255);
 
                                         indexes = FindIndexes(subTempStrings[i], "colortint=");
                                         if (indexes[0] != subTempStrings[i].Length - 1 || indexes[1] != subTempStrings[i].Length)
                                         {
                                             subSubstrings = subTempStrings[i].Substring(indexes[0], indexes[1] - indexes[0]).Split(',', StringSplitOptions.RemoveEmptyEntries);
-                                            float.TryParse(subSubstrings[0], out numVal);
-                                            thisInstance.r = (byte)Math.Clamp(numVal, 0, 255);
-                                            float.TryParse(subSubstrings[1], out numVal);
-                                            thisInstance.g = (byte)Math.Clamp(numVal, 0, 255);
-                                            float.TryParse(subSubstrings[2], out numVal);
-                                            thisInstance.b = (byte)Math.Clamp(numVal, 0, 255);
-                                            float.TryParse(subSubstrings[3], out numVal);
-                                            thisInstance.a = (byte)Math.Clamp(numVal, 0, 255);
+                                            thisInstance.r = (byte)Math.Clamp(ParseFloat(subSubstrings[0]), 0, 255);
+                                            thisInstance.g = (byte)Math.Clamp(ParseFloat(subSubstrings[1]), 0, 255);
+                                            thisInstance.b = (byte)Math.Clamp(ParseFloat(subSubstrings[2]), 0, 255);
+                                            thisInstance.a = (byte)Math.Clamp(ParseFloat(subSubstrings[3]), 0, 255);
                                         }
 
 
                                         indexes = FindIndexes(subTempStrings[i], "framestochangetint=");
-                                        if (float.TryParse(subTempStrings[i].Substring(indexes[0], indexes[1] - indexes[0]), out numVal))
+                                        if (TryParseFloat(indexes, subTempStrings[i], out numVal))
                                             thisInstance.framesToChangeTint = numVal;
 
                                         indexes = FindIndexes(subTempStrings[i], "rotate=");
-                                        if (bool.TryParse(subTempStrings[i].Substring(indexes[0], indexes[1] - indexes[0]), out boolVal))
+                                        if (TryParseBool(indexes, subTempStrings[i], out boolVal))
                                             thisInstance.rotate = boolVal;
 
                                         indexes = FindIndexes(subTempStrings[i], "reaim=");
-                                        if (bool.TryParse(subTempStrings[i].Substring(indexes[0], indexes[1] - indexes[0]), out boolVal))
+                                        if (TryParseBool(indexes, subTempStrings[i], out boolVal))
                                             thisInstance.reAim = boolVal;
 
                                         indexes = FindIndexes(subTempStrings[i], "keepoldangle=");
-                                        if (bool.TryParse(subTempStrings[i].Substring(indexes[0], indexes[1] - indexes[0]), out boolVal))
+                                        if (TryParseBool(indexes, subTempStrings[i], out boolVal))
                                             thisInstance.keepOldAngle = boolVal;
 
                                         indexes = FindIndexes(subTempStrings[i], "modifyangle=");
-                                        if (bool.TryParse(subTempStrings[i].Substring(indexes[0], indexes[1] - indexes[0]), out boolVal))
+                                        if (TryParseBool(indexes, subTempStrings[i], out boolVal))
                                             thisInstance.modifyAngle = boolVal;
 
                                         indexes = FindIndexes(subTempStrings[i], "turnatstart=");
-                                        if (bool.TryParse(subTempStrings[i].Substring(indexes[0], indexes[1] - indexes[0]), out boolVal))
+                                        if (TryParseBool(indexes, subTempStrings[i], out boolVal))
                                             thisInstance.turnAtStart = boolVal;
 
                                         indexes = FindIndexes(subTempStrings[i], "initialmovedelay=");
-                                        if (float.TryParse(subTempStrings[i].Substring(indexes[0], indexes[1] - indexes[0]), out numVal))
+                                        if (TryParseFloat(indexes, subTempStrings[i], out numVal))
                                             thisInstance.initialMoveDelay = numVal;
 
                                         indexes = FindIndexes(subTempStrings[i], "turnafterdelay=");
-                                        if (bool.TryParse(subTempStrings[i].Substring(indexes[0], indexes[1] - indexes[0]), out boolVal))
+                                        if (TryParseBool(indexes, subTempStrings[i], out boolVal))
                                             thisInstance.turnAfterDelay = boolVal;
 
                                         indexes = FindIndexes(subTempStrings[i], "haseffect=");
-                                        if (bool.TryParse(subTempStrings[i].Substring(indexes[0], indexes[1] - indexes[0]), out boolVal))
+                                        if (TryParseBool(indexes, subTempStrings[i], out boolVal))
                                             thisInstance.hasEffect = boolVal;
 
                                         if (thisInstance.hasEffect)
                                         {
 
                                             indexes = FindIndexes(subTempStrings[i], "effectcolor=");
-                                            if (float.TryParse(subTempStrings[i].Substring(indexes[0], indexes[1] - indexes[0]), out numVal))
+                                            if (TryParseFloat(indexes, subTempStrings[i], out numVal))
                                                 thisInstance.effectColor = (Elements.BulletElement.BulletColor)Math.Clamp(Round(numVal), 0, Enum.GetValues(typeof(Elements.BulletElement.BulletColor)).Length - 1);
 
                                             indexes = FindIndexes(subTempStrings[i], "effectduration=");
-                                            if (float.TryParse(subTempStrings[i].Substring(indexes[0], indexes[1] - indexes[0]), out numVal))
+                                            if (TryParseFloat(indexes, subTempStrings[i], out numVal))
                                                 thisInstance.effectDuration = numVal;
 
                                             {
-                                                float xVal;
                                                 indexes = FindIndexes(subTempStrings[i], "effectsize=");
                                                 if (indexes[0] != subTempStrings[i].Length - 1 || indexes[1] != subTempStrings[i].Length)
                                                 {
                                                     subSubstrings = subTempStrings[i].Substring(indexes[0], indexes[1] - indexes[0]).Split(',', StringSplitOptions.RemoveEmptyEntries);
-                                                    float.TryParse(subSubstrings[0], out xVal);
-                                                    float.TryParse(subSubstrings[1], out numVal);
-                                                    thisInstance.effectSize = new Vector2(xVal, numVal);
+                                                    thisInstance.effectSize = new Vector2(ParseFloat(subSubstrings[0]), ParseFloat(subSubstrings[1]));
                                                 }
 
                                                 indexes = FindIndexes(subTempStrings[i], "effectopacity=");
                                                 if (indexes[0] != subTempStrings[i].Length - 1 || indexes[1] != subTempStrings[i].Length)
                                                 {
                                                     subSubstrings = subTempStrings[i].Substring(indexes[0], indexes[1] - indexes[0]).Split(',', StringSplitOptions.RemoveEmptyEntries);
-                                                    float.TryParse(subSubstrings[0], out xVal);
-                                                    float.TryParse(subSubstrings[1], out numVal);
-                                                    thisInstance.effectOpacity = new Vector2(xVal, numVal);
+
+                                                    thisInstance.effectOpacity = new Vector2(ParseFloat(subSubstrings[0]), ParseFloat(subSubstrings[1]));
                                                 }
                                             }
 
                                             indexes = FindIndexes(subTempStrings[i], "affectedbytimescale=");
-                                            if (bool.TryParse(subTempStrings[i].Substring(indexes[0], indexes[1] - indexes[0]), out boolVal))
+                                            if (TryParseBool(indexes, subTempStrings[i], out boolVal))
                                                 thisInstance.affectedByTimescale = boolVal;
 
                                         }

@@ -11,6 +11,6 @@ namespace DawnmakuEngine.Data
         public float colliderSize, colliderOffsetX, colliderOffsetY;
         public ushort spriteColors;
 
-        public TextureAnimator.AnimationState[][] animStates;
+        public TextureAnimator.AnimationState[][] animStates = new TextureAnimator.AnimationState[0][];
     }
 }

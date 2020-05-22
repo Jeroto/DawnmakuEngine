@@ -114,7 +114,7 @@ namespace DawnmakuEngine.Elements
                 animFramesRemaining--;
         }
 
-        void UpdateAnim(bool updateIndex)
+        public void UpdateAnim(bool updateIndex)
         {
             if (animationStates[StateIndex].autoTransition > -1 && frameIndex <= animationStates[StateIndex].animFrames.Length - 1 &&
                animationStates[UpdateStateIndex].autoTransition != stateIndex)
@@ -255,7 +255,7 @@ namespace DawnmakuEngine.Elements
             public bool loop = true;
         }
 
-        public TextureAnimator() : base()
+        public TextureAnimator() : base(true)
         { }
 
         public TextureAnimator(AnimationState[] animStates_) : this()
