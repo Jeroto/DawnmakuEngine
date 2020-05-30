@@ -4,6 +4,7 @@ using System.Text;
 using OpenTK;
 using DawnmakuEngine.Elements;
 using DawnmakuEngine.Data;
+using System.Runtime.InteropServices;
 
 namespace DawnmakuEngine
 {
@@ -12,17 +13,29 @@ namespace DawnmakuEngine
         protected static int randomSeed = 0;
         protected static Random random = new Random();
         public static GameMaster gameMaster = new GameMaster();
+        public static bool debugMode = false;
 
         public float timeScale = 1, timeScaleUpdate = 1, frameTime = 1/60f;
+        public int windowWidth = 1920, windowHeight = 1080;
+
+        public bool paused = false;
 
         public int killzoneDetectIndex;
+
+        public static List<RenderLayer> renderLayerSettings = new List<RenderLayer>();
+        public static Dictionary<string, int> layerIndexes = new Dictionary<string, int>();
 
         public int difficulty;
 
         public int maxPowerLevel = 8,
-            currentPowerLevel = 0, prevPowerLevel;
-        public float maxPower = 800;
-        public float currentPower = 800;
+            currentPowerLevel = 0, prevPowerLevel,
+            maxPower = 800, currentPower = 800,
+            powerLostOnDeath, powerTotalDroppedOnDeath;
+
+        public int[] powerLevelSplits;
+
+        public string[] mainStageNames, exStageNames,
+            languages;
 
         public bool PowerLevelChange { get { return currentPowerLevel != prevPowerLevel; } }
 
@@ -73,17 +86,27 @@ namespace DawnmakuEngine
         public Dictionary<string, Pattern> loadedEnemyPatterns = new Dictionary<string, Pattern>();
 
         //Loaded Background Data
-        public Dictionary<string, Mesh> backgroundModels = new Dictionary<string, Mesh>();
+        public Dictionary<string, Mesh> backgroundMeshes = new Dictionary<string, Mesh>();
         public Dictionary<string, Texture> backgroundTextures = new Dictionary<string, Texture>();
+        public Dictionary<string, TexturedModel> backgroundModels = new Dictionary<string, TexturedModel>();
 
 
 
 
+        public class RenderLayer
+        {
+            public bool hasDepth = false;
+        }
 
 
         public void GameMasterUpdate()
         {
             prevPowerLevel = currentPowerLevel;
+
+            if (!paused)
+                timeScale = timeScaleUpdate;
+            else
+                timeScale = 0;
         }
 
         public void ElementUpdate()
@@ -110,6 +133,20 @@ namespace DawnmakuEngine
             return Vector2.Zero; //Implement
         }
 
+
+
+        [DllImport("kernel32.dll")]
+        static extern IntPtr GetConsoleWindow();
+
+        [DllImport("user32.dll")]
+        static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+        public void ShowConsole(bool show)
+        {
+            const int SW_HIDE = 0;
+            const int SW_SHOW = 5;
+            ShowWindow(GetConsoleWindow(), show ? SW_SHOW : SW_HIDE);
+        }
 
         //All random functions
         public void GenerateRandomSeed()

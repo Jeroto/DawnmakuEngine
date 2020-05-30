@@ -111,7 +111,7 @@ namespace DawnmakuEngine.Elements
             if (animFramesRemaining <= 0)
                 UpdateAnim(true);
             else
-                animFramesRemaining--;
+                animFramesRemaining -= GameMaster.gameMaster.timeScale;
         }
 
         public void UpdateAnim(bool updateIndex)

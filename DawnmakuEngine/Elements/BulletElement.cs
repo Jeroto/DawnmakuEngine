@@ -509,6 +509,7 @@ namespace DawnmakuEngine.Elements
             renderer.shader = GameMaster.gameMaster.spriteShader;
             renderer.mesh = Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles);
             renderer.mesh.SetUp(OpenTK.Graphics.ES30.BufferUsageHint.DynamicDraw);
+            renderer.LayerName = "bullets";
 
             newBullet.AddElement(renderer);
             newBullet.AddElement(new TextureAnimator(GetBulletAnim(stages[stage].spriteType, stages[stage].bulletColor), renderer, true));

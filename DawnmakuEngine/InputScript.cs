@@ -8,12 +8,14 @@ namespace DawnmakuEngine
 {
     class InputScript
     {
+        private static bool pause = false;
         private static Vector2 directionalInput = Vector2.Zero;
         private static bool focus = false;
         private static bool shoot = false;
         private static bool bomb = false;
         private static bool special = false;
 
+        private static bool prevPause = false;
         private static bool prevFocus = false;
         private static bool prevShoot = false;
         private static bool prevBomb = false;
@@ -29,6 +31,10 @@ namespace DawnmakuEngine
         public static Vector2 DirectionalInput
         {
             get { return directionalInput; }
+        }
+        public static bool Pause
+        {
+            get { return pause; }
         }
         public static bool Focus
         {
@@ -47,6 +53,14 @@ namespace DawnmakuEngine
             get { return special; }
         }
 
+        public static bool pauseDown
+        {
+            get { return pause && !prevPause; }
+        }
+        public static bool pauseUp
+        {
+            get { return !pause && prevPause; }
+        }
         public static bool focusDown
         {
             get { return focus && !prevFocus; }
@@ -87,11 +101,13 @@ namespace DawnmakuEngine
             directionalInput.X = keyboardState.IsKeyDown(Key.Left) ? -1 : keyboardState.IsKeyDown(Key.Right) ? 1 : 0;
             directionalInput.Y = keyboardState.IsKeyDown(Key.Down) ? -1 : keyboardState.IsKeyDown(Key.Up) ? 1 : 0;
 
+            prevPause = pause;
             prevFocus = focus;
             prevShoot = shoot;
             prevBomb = bomb;
             prevSpecial = special;
 
+            pause = keyboardState.IsKeyDown(Key.Escape);
             focus = keyboardState.IsKeyDown(Key.ShiftLeft);
             shoot = keyboardState.IsKeyDown(Key.Z);
             bomb = keyboardState.IsKeyDown(Key.X);

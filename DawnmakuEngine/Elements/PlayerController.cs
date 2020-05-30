@@ -72,7 +72,7 @@ namespace DawnmakuEngine.Elements
             if (movementVelocity.LengthSquared > 0)
                 movementVelocity.Normalize();
 
-            movementVelocity *= MoveSpeed;
+            movementVelocity *= MoveSpeed * gameMaster.timeScale;
             if (InputScript.Focus)
                 movementVelocity *= focusModifier;
 
@@ -241,8 +241,8 @@ namespace DawnmakuEngine.Elements
                     else
                     {
                         spawnedOrbs[i] = new Entity("PlayerOrb" + i.ToString(), EntityAttachedTo, Vector3.Zero, Vector3.Zero, Vector3.One);
-                        orbRenderers[i] = new MeshRenderer(Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles), OpenTK.Graphics.ES30.BufferUsageHint.DynamicDraw,
-                            gameMaster.spriteShader, orbData[i].animStates[0].animFrames[0].sprite.tex);
+                        orbRenderers[i] = new MeshRenderer(Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles), "playerorbs",
+                            OpenTK.Graphics.ES30.BufferUsageHint.DynamicDraw, gameMaster.spriteShader, orbData[i].animStates[0].animFrames[0].sprite.tex);
                         orbRenderers[i].colorA = 0;
                         spawnedOrbs[i].AddElement(orbRenderers[i]);
                         

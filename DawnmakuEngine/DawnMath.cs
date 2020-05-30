@@ -8,22 +8,27 @@ namespace DawnmakuEngine
 {
     public static class DawnMath
     { //Note: All angles are calculated with 0 degrees being the vector 0,1,0 -- straight up
-        /// <summary>
-        /// Vector2(0,1)
-        /// </summary>
+        /// <summary>Vector2(0,1)</summary>
         public static Vector2 vec2Up = new Vector2(0, 1);
-        /// <summary>
-        /// Vector2(1,0)
-        /// </summary>
+        /// <summary>Vector2(1,0)</summary>
         public static Vector2 vec2Right = new Vector2(1, 0);
-        /// <summary>
-        /// Vector2(0,-1)
-        /// </summary>
+        /// <summary>Vector2(0,-1)</summary>
         public static Vector2 vec2Down = new Vector2(0, -1);
-        /// <summary>
-        /// Vector2(-1,0)
-        /// </summary>
+        /// <summary>Vector2(-1,0)</summary>
         public static Vector2 vec2Left = new Vector2(-1,0);
+
+        /// <summary>Vector3(0,1,0)</summary>
+        public static Vector3 vec3Up = new Vector3(0, 1, 0);
+        /// <summary>Vector3(1,0,0)</summary>
+        public static Vector3 vec3Right = new Vector3(1, 0, 0);
+        /// <summary>Vector3(0,-1,0)</summary>
+        public static Vector3 vec3Down = new Vector3(0, -1, 0);
+        /// <summary>Vector3(-1,0,0)</summary>
+        public static Vector3 vec3Left = new Vector3(-1, 0, 0);
+        /// <summary>Vector3(0,0,-1)</summary>
+        public static Vector3 vec3Forward = new Vector3(0, 0, -1);
+        /// <summary>Vector3(0,0,1)</summary>
+        public static Vector3 vec3Backward = new Vector3(0, 0, 1);
 
         /// <summary>
         /// Repeats a float value, keeping it at or below the max value 
@@ -181,6 +186,21 @@ namespace DawnmakuEngine
         public static float Dot(Vector2 first, Vector2 second)
         {
             return first.X * second.X + first.Y * second.Y;
+        }
+
+        /// <summary>
+        /// Calculates the normal based on three clockwise points
+        /// </summary>
+        /// <param name="vertOne">First vertex position</param>
+        /// <param name="vertTwo">Second vertex position</param>
+        /// <param name="vertThree">Third vertex position</param>
+        /// <returns></returns>
+        public static Vector3 CalculateNormal(Vector3 vertOne, Vector3 vertTwo, Vector3 vertThree)
+        {
+            Vector3 a, b;
+            a = vertTwo - vertOne;
+            b = vertThree - vertOne;
+            return Vector3.Cross(a, b).Normalized();
         }
 
         /// <summary>

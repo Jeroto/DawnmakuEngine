@@ -1,0 +1,33 @@
+Active Power Levels = false, true, true, true, true, true, true, true, true;
+Unfocus Pos  = 25, 0;
+Focused Pos = 10, 10;
+FramesToMove=10;
+RotateDegreesPerSecond=180;
+AnimStates=ReimuB;
+StartAnimFrame=0;
+LeaveBehind=never;
+FollowPrevious=false;
+
+UnFocus Patterns by Power =
+ReimuBPatternUnfocus1:
+ReimuBPatternUnfocus1:
+ReimuBPatternUnfocus1:
+ReimuBPatternUnfocus1:
+ReimuBPatternUnfocus1:
+ReimuBPatternUnfocus1:
+ReimuBPatternUnfocus1:
+ReimuBPatternUnfocus1:
+ReimuBPatternUnfocus1:
+ReimuBPatternUnfocus1;
+
+Focused Patterns by Power =
+ReimuBPatternFocus4:
+ReimuBPatternFocus4:
+ReimuBPatternFocus4:
+ReimuBPatternFocus4:
+ReimuBPatternFocus4:
+ReimuBPatternFocus4:
+ReimuBPatternFocus4:
+ReimuBPatternFocus4:
+ReimuBPatternFocus4:
+ReimuBPatternFocus4;

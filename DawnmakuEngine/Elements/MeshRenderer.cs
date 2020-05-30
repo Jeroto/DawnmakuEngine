@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing.Drawing2D;
 using System.Text;
 using DawnmakuEngine.Data;
 using OpenTK;
@@ -11,11 +12,35 @@ namespace DawnmakuEngine.Elements
     {
         public static List<MeshRenderer> meshRenderers = new List<MeshRenderer>();
 
+        public static List<List<MeshRenderer>> renderLayers = new List<List<MeshRenderer>>();
+
         public Mesh mesh;
         public Shader shader;
         public Texture tex, tex2;
+        public float modelScale = 1;
+        protected int layer = -1;
+
+        public int Layer
+        {
+            set
+            {
+                if (layer >= 0)
+                    renderLayers[layer].Remove(this);
+                layer = value;
+                renderLayers[layer].Add(this);
+            }
+            get { return layer; }
+        }
+        
+        public string LayerName
+        {
+            set { Layer = GameMaster.layerIndexes[value.ToLower()]; }
+        }
+
         public BufferUsageHint bufferUsageType = BufferUsageHint.DynamicDraw;
         public byte colorR = 255, colorG = 255, colorB = 255, colorA = 255;
+
+
         public Vector4 ColorFloat
         {
             get { return new Vector4(colorR / 255f, colorG / 255f, colorB / 255f, colorA / 255f); }
@@ -52,41 +77,117 @@ namespace DawnmakuEngine.Elements
 
 
             int positionLocation = shader.GetAttribLocation("aPosition");
-            GL.VertexAttribPointer(positionLocation, 3, VertexAttribPointerType.Float, false, 5 * sizeof(float), 0);
             GL.EnableVertexAttribArray(positionLocation);
+            GL.VertexAttribPointer(positionLocation, 3, VertexAttribPointerType.Float, false, 5 * sizeof(float), 0);
             int texCoordLocation = shader.GetAttribLocation("aTexCoord");
             GL.EnableVertexAttribArray(texCoordLocation);
             GL.VertexAttribPointer(texCoordLocation, 2, VertexAttribPointerType.Float, false, 5 * sizeof(float), 3 * sizeof(float));
-            
+
             if (tex != null)
                 tex.Use();
             if (tex2 != null)
                 tex2.Use(TextureUnit.Texture1);
             Quaternion modelRotation = entityAttachedTo.LocalRotation;
             Matrix4 model = Matrix4.Identity *
-                Matrix4.CreateScale(entityAttachedTo.WorldScale) * Matrix4.CreateFromQuaternion(entityAttachedTo.WorldRotation) *
+                Matrix4.CreateScale(entityAttachedTo.WorldScale * modelScale) * Matrix4.CreateFromQuaternion(entityAttachedTo.WorldRotation) *
                 Matrix4.CreateTranslation(entityAttachedTo.WorldPosition);
             shader.SetMatrix4("model", model);
             shader.SetVector4("colorModInput", ColorFloat);
+        }
+
+        /*public void SetShaderPositionAndView(Matrix4 view, Matrix4 proj)
+        {
+            int viewLoc = shader.GetAttribLocation("view");
+            GL.EnableVertexAttribArray(viewLoc);
+            GL.VertexAttribPointer(viewLoc, 3, VertexAttribPointerType.Float, false, 4 * 4 * sizeof(float), 0);
+            int projLoc = shader.GetAttribLocation("projection");
+            GL.EnableVertexAttribArray(projLoc);
+            GL.VertexAttribPointer(projLoc, 3, VertexAttribPointerType.Float, false, 4 * 4 * sizeof(float), 0);
+        }*/
+        
+        public void LoadModel(TexturedModel model)
+        {
+            mesh = model.modelMesh;
+            tex = model.modelTex;
+        }
+        public void LoadModel(string modelName, Dictionary<string, TexturedModel> dic)
+        {
+            TexturedModel model = dic[modelName];
+            mesh = model.modelMesh;
+            tex = model.modelTex;
+        }
+        public void LoadBackgroundModel(string modelName)
+        {
+            TexturedModel model = GameMaster.gameMaster.backgroundModels[modelName];
+            mesh = model.modelMesh;
+            tex = model.modelTex;
         }
 
         public MeshRenderer() : base(false, false)
         {
 
         }
-        public MeshRenderer(Mesh newMesh, BufferUsageHint bufferUsage) : base()
+        public MeshRenderer(Mesh newMesh, BufferUsageHint bufferUsage, float scale = 1) : this()
         {
             mesh = newMesh;
+            modelScale = scale;
             mesh.SetUp(bufferUsage);
         }
-        public MeshRenderer(Mesh newMesh, BufferUsageHint bufferUsage, Texture texture, Texture texture2 = null) : this(newMesh, bufferUsage)
+        public MeshRenderer(Mesh newMesh, int layer_, BufferUsageHint bufferUsage, float scale = 1) : this(newMesh, bufferUsage, scale)
+        {
+            Layer = layer_;
+        }
+        public MeshRenderer(Mesh newMesh, string layer_, BufferUsageHint bufferUsage, float scale = 1) : this(newMesh, bufferUsage, scale)
+        {
+            LayerName = layer_;
+        }
+        public MeshRenderer(Mesh newMesh, BufferUsageHint bufferUsage, Texture texture, float scale = 1, Texture texture2 = null) : this(newMesh, bufferUsage, scale)
         {
             tex = texture;
             tex2 = texture2;
         }
-        public MeshRenderer(Mesh newMesh, BufferUsageHint bufferUsage, Shader newShader, Texture texture, Texture texture2 = null) : this(newMesh, bufferUsage, texture, texture2)
+        public MeshRenderer(Mesh newMesh, int layer_, BufferUsageHint bufferUsage, Texture texture,
+            float scale = 1, Texture texture2 = null) : this(newMesh, bufferUsage, texture, scale, texture2)
+        {
+            Layer = layer_;
+        }
+        public MeshRenderer(Mesh newMesh, string layer_, BufferUsageHint bufferUsage, Texture texture,
+            float scale = 1, Texture texture2 = null) : this(newMesh, bufferUsage, texture, scale, texture2)
+        {
+            LayerName = layer_;
+        }
+        public MeshRenderer(Mesh newMesh, BufferUsageHint bufferUsage, Shader newShader, Texture texture, float scale = 1,
+            Texture texture2 = null) : this(newMesh, bufferUsage, texture, scale, texture2)
         {
             shader = newShader;
+        }
+        public MeshRenderer(Mesh newMesh, int layer_, BufferUsageHint bufferUsage, Shader newShader, Texture texture, float scale = 1,
+            Texture texture2 = null) : this(newMesh, bufferUsage, newShader, texture, scale, texture2)
+        {
+            Layer = layer_;
+        }
+        public MeshRenderer(Mesh newMesh, string layer_, BufferUsageHint bufferUsage, Shader newShader, Texture texture, float scale = 1,
+            Texture texture2 = null) : this(newMesh, bufferUsage, newShader, texture, scale, texture2)
+        {
+            LayerName = layer_;
+        }
+        public MeshRenderer(TexturedModel newMesh, BufferUsageHint bufferUsage, Shader newShader, Texture texture2 = null) : this()
+        {
+            mesh = newMesh.modelMesh;
+            tex = newMesh.modelTex;
+            modelScale = newMesh.scale;
+            mesh.SetUp(bufferUsage);
+            shader = newShader;
+        }
+        public MeshRenderer(TexturedModel newMesh, int layer_, BufferUsageHint bufferUsage,
+            Shader newShader, Texture texture2 = null) : this(newMesh, bufferUsage, newShader, texture2)
+        {
+            Layer = layer_;
+        }
+        public MeshRenderer(TexturedModel newMesh, string layer_, BufferUsageHint bufferUsage,
+            Shader newShader, Texture texture2 = null) : this(newMesh, bufferUsage, newShader, texture2)
+        {
+            LayerName = layer_;
         }
 
         protected override void OnEnableAndCreate()

@@ -1,0 +1,55 @@
+RunInDebugMode=true;
+MaxPower=400;
+PowerLostOnDeath=100;
+PowerTotalDroppedOnDeath=20;
+PowerLevelSplits=100,200,300,400;
+FullPowerForPOC=false;
+ShiftAtTopToCollectItems=false;
+
+MainStages=1;
+ExStages=EX;
+
+languages=english,日本語;
+
+RenderLayerIndexes=
+layerName=background, index=0:
+layerName=backEffects, index=1:
+layerName=playerOrbs, index=2:
+layerName=player, index=3:
+layerName=items, index=4:
+layerName=enemies, index=5:
+layerName=bullets, index=6:
+layerName=gameBorder, index=7:
+layerName=border UI, index=8;
+
+RenderLayerSettings=
+{
+hasDepth=true;
+}:
+{
+hasDepth=false;
+}:
+{
+hasDepth=false;
+}:
+{
+hasDepth=false;
+}:
+{
+hasDepth=false;
+}:
+{
+hasDepth=false;
+}:
+{
+hasDepth=false;
+}:
+{
+hasDepth=false;
+}:
+{
+hasDepth=false;
+}:
+{
+hasDepth=false;
+}

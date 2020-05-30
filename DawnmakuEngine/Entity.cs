@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
 using OpenTK;
 using OpenTK.Audio.OpenAL;
@@ -191,6 +192,19 @@ namespace DawnmakuEngine
                 return rotation;
             }
             //set { rotation = value; }
+        }
+        public Vector3 Forward{
+            get { return (new Vector4(vec3Forward, 0) * Matrix4.CreateFromQuaternion(WorldRotation)).Xyz; }
+        }
+        public Vector3 Right{get { return Vector3.Cross(Forward, vec3Up).Normalized(); }}
+        public Vector3 Up
+        {
+            get
+            {
+                Vector3 forward = Forward, right;
+                right = Vector3.Cross(Forward, vec3Up).Normalized();
+                return Vector3.Cross(right, forward).Normalized();
+            }
         }
         public Vector3 LocalScale
         {

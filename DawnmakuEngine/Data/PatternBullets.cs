@@ -157,9 +157,10 @@ namespace DawnmakuEngine.Data
                     {
                         if (bulletsInBurst < 2)
                             bulletVars.fireDelay += perBulletDelay[bulletVars.delayIndex];
-                        bulletVars.fireDelay += burstDelay;
+                        bulletVars.fireDelay += burstDelay[bulletVars.burstDelayIndex];
                         bulletVars.perBulletIndex = 0;
                         bulletVars.burstsRemaining--;
+                        bulletVars.burstDelayIndex = DawnMath.Repeat(bulletVars.burstDelayIndex + 1, burstDelay.Count - 1);
                     }
                     else if (perBulletDelay[bulletVars.delayIndex] > 0)
                     {

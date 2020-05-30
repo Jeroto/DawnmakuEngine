@@ -1,0 +1,7 @@
+bomb name = Spirit_sign_"Fantasy_Seal",霊符「夢想封印」 ;
+movespeed = 1;
+focus speed percent = 200;
+collider size = -1;
+collider offset = 0,0;
+
+orbs=ReimuAOrb9,ReimuAOrb10;

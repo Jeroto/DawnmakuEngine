@@ -1,0 +1,8 @@
+isanimated=false;
+shouldspin=false;
+shouldturn=true;
+collidersize=10;
+collideroffset=0,0;
+spriteColorCount=44;
+randomizeSprite=true;
+animStates=;

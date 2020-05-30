@@ -1,0 +1,8 @@
+name=Hakurei, Reimu;
+jp name=博麗霊夢;
+move speed=1.75;
+focus speed percent=65;
+collider size = 10;
+collider offset = 0,0;
+shot types = ReimuA;
+animstates = ReimuIdle, ReimuLeft, ReimuRight;

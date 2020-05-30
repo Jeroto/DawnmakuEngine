@@ -1,0 +1,9 @@
+name=redmushroom;
+scale=1;
+model=redmushroom;
+tex=redmushroom;
+
+name=greenmushroom;
+scale=2;
+model=redmushroom;
+tex=greenmushroom;

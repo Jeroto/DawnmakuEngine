@@ -15,7 +15,7 @@ namespace DawnmakuEngine.Data
         public bool perBulletRandomOffset = false;
         public bool aimed = false;
 
-        public float burstDelay = 1;
+        public List<float> burstDelay = new List<float>();
         public float initialDelay = 1;
         public List<float> perBulletDelay = new List<float>();
 
@@ -55,7 +55,7 @@ namespace DawnmakuEngine.Data
 
         public class PatternVariables
         {
-            public int burstsRemaining = 999, perBulletIndex = 0, delayIndex = 0, damageIndex = 0, offsetIndex = 0, turnOffsetIndex = 0;
+            public int burstsRemaining = 999, burstDelayIndex = 0, perBulletIndex = 0, delayIndex = 0, damageIndex = 0, offsetIndex = 0, turnOffsetIndex = 0;
             public float fireDelay;
             virtual public PatternVariables Copy()
             {

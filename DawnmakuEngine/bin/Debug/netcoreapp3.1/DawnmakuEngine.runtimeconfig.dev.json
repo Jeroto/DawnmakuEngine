@@ -1,0 +1,8 @@
+{
+  "runtimeOptions": {
+    "additionalProbingPaths": [
+      "C:\\Users\\Damio\\.dotnet\\store\\|arch|\\|tfm|",
+      "C:\\Users\\Damio\\.nuget\\packages"
+    ]
+  }
+}

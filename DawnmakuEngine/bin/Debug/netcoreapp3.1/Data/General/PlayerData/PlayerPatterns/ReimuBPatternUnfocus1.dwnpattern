@@ -1,0 +1,30 @@
+PatternType=Bullet;
+Burst Count=5;
+Bullets in Burst=1;
+Overall Degrees=0;
+Degree Offset=0;
+Random Degree Offset=0;
+Aimed=false;
+Burst Delay=5;
+Initial Delay=10;
+Per Bullet Delay=0;
+Damage=10;
+Offsets={0,0};
+Turn Offsets=false;
+Bullet Stages=
+{
+Frames to Last=60;
+Bullet Type=charm;
+Bullet Color=orange;
+Starting Speed=300;
+Ending Speed=200;
+Frames to Change Speed=60;
+ColorA=100;
+Rotate=true;
+ReAim=false;
+Keep Old Angle=true;
+Turn at Start=true;
+Initial Move Delay=0;
+Turn After Delay=true;
+Has Effect=false;
+}

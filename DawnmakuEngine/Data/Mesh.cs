@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using OpenTK;
 using OpenTK.Graphics.ES30;
 
 namespace DawnmakuEngine.Data
@@ -170,6 +170,5 @@ namespace DawnmakuEngine.Data
                     return null;
             }
         }
-
     }
 }

@@ -36,9 +36,7 @@ namespace DawnmakuEngine.Elements
         public int segmentIndex = 0;
         protected float moveTimePassed, waitTime;
 
-        protected float[] bulletSpawnWait;
-        protected float[] bulletInitialSpawnDelay;
-        protected float[] currentFireDelay;
+        protected Pattern.PatternVariables[] patternVars;
 
         protected GameMaster gameMaster;
         protected TextureAnimator anim;
@@ -69,16 +67,6 @@ namespace DawnmakuEngine.Elements
 
             waitTime = enemyData.movementCurve.StartWaitTime(segmentIndex);
 
-            bulletSpawnWait = new float[enemyData.patternsByDifficulty[gameMaster.difficulty].patterns.Length];
-            bulletInitialSpawnDelay = new float[bulletSpawnWait.Length];
-            currentFireDelay = new float[bulletSpawnWait.Length];
-            for (int i = 0; i < currentFireDelay.Length; i++)
-            {
-                bulletSpawnWait[i] = enemyData.patternsByDifficulty[gameMaster.difficulty].patterns[i].burstDelay;
-                bulletInitialSpawnDelay[i] = enemyData.patternsByDifficulty[gameMaster.difficulty].patterns[i].initialDelay;
-                currentFireDelay[i] = bulletInitialSpawnDelay[i];
-            }
-
             base.PostCreate();
         }
 
@@ -91,16 +79,7 @@ namespace DawnmakuEngine.Elements
 
             Movement();
 
-            for (int i = 0; i < bulletSpawnWait.Length; i++)
-            {
-                if (currentFireDelay[i] <= 0)
-                {
-                    SpawnBullets(i);
-                    currentFireDelay[i] += bulletSpawnWait[i];
-                }
-                else
-                    currentFireDelay[i] -= gameMaster.timeScale;
-            }
+            SpawnBullets();
 
             BulletCollisions();
 
@@ -159,7 +138,7 @@ namespace DawnmakuEngine.Elements
                 waitTime -= gameMaster.timeScale;
         }
 
-        public virtual void SpawnBullets(int bulletIndex)
+        public virtual void SpawnBullets()
         {
             //Method to be overwritten
         }
