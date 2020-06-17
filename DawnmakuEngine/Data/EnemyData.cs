@@ -6,7 +6,7 @@ using OpenTK;
 
 namespace DawnmakuEngine.Data
 {
-    class EnemyData
+    public class EnemyData
     {
         public string enemyName;
         public int health;

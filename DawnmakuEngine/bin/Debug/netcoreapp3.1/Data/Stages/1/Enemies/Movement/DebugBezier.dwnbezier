@@ -18,5 +18,5 @@ pointslist=
 {pos=-1.7250905,2.1555097; time=240; waitTime=0}:
 {pos=-1.6001929,1.143866; time=300; waitTime=0}:
 {pos=-1.425337,-0.2724297; time=300; waitTime=0}:
-{pos=-0.08576298,0.42419088; time=300; waitTime=0}:
-{pos=1.253811,1.1208115; time=400; waitTime=0}
+{pos=5.08576298,3; time=300; waitTime=0}:
+{pos=20.253811,1.1208115; time=800; waitTime=0}

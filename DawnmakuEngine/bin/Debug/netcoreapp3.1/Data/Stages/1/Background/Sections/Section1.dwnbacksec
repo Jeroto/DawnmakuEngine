@@ -1,0 +1,66 @@
+Section Length=623.4;
+Offset=0,0,0;
+
+Object Setup=
+{
+object=debugGrass;
+pos=0,0,0;
+rot=0,0,0;
+scale=2,1,1;
+}
+:
+{
+object=redmushroom, greenmushroom;
+pos=80,6,15;
+}
+:
+{
+object=redmushroom, greenmushroom;
+pos=-20,5,-40;
+}
+:
+{
+object=redmushroom, greenmushroom;
+pos=90,6,-30;
+}
+:
+{
+object=redmushroom, greenmushroom;
+pos=-100,7,15;
+}
+:
+{
+object=redmushroom, greenmushroom;
+pos=40,2,70;
+scale=0.25,0.25,0.25;
+}
+:
+{
+object=redmushroom, greenmushroom;
+pos=-25,3,-50;
+scale=0.25,0.25,0.25;
+}
+:
+{
+object=redmushroom, greenmushroom;
+pos=15,1,-35;
+scale=0.2,0.2,0.2;
+}
+:
+{
+object=redmushroom, greenmushroom;
+pos=-120,1.5,50;
+scale=0.25,0.25,0.25;
+}
+:
+{
+object=redmushroom, greenmushroom;
+pos=-60,2,-60;
+scale=0.25,0.25,0.25;
+}
+:
+{
+object=redmushroom, greenmushroom;
+pos=60,1.75,10;
+scale=0.25,0.25,0.25;
+}

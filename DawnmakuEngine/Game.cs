@@ -12,60 +12,8 @@ namespace DawnmakuEngine
 {
     class Game : GameWindow
     {
-        //int vertexBufferObject, vertexArrayObject, elementBufferObject;
         bool ortho = true;
-        //Texture texture1, texture2;
         float time;
-        /*float[] vertices =
-        {                     //Tex Coords
-            -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-             0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-             0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-             0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-            -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-
-            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-             0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-             0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-             0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-            -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-
-            -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-            -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-            -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-
-             0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-             0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-             0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-             0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-             0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-             0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-
-            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-             0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-             0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-             0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-
-            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-             0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-             0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-             0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-            -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
-        };
-        uint[] indices =
-        {
-            0, 1, 3,
-            1, 2, 3
-        };
-        Shader shader;*/
 
         public Game(int width, int height, string title) : base(width, height, GraphicsMode.Default, title)
         {
@@ -78,11 +26,7 @@ namespace DawnmakuEngine
         {
             DataLoader loader = new DataLoader("1");
             loader.InitializeGame();
-            loader.LoadBullets();
-            loader.LoadPlayerOrbs();
-            loader.LoadPlayers();
-            loader.LoadEnemies();
-            loader.LoadBackgroundModels();
+            loader.InitializeStage();
 
             GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
             /*vertexBufferObject = GL.GenBuffer();
@@ -120,25 +64,35 @@ namespace DawnmakuEngine
             debugPlayerRenderer.mesh.SetUp(BufferUsageHint.DynamicDraw);
             debugPlayerRenderer.shader = GameMaster.gameMaster.spriteShader;
             debugPlayerRenderer.LayerName = "player";
+            debugPlayerRenderer.resizeSprite = true;
             //newRenderer1.tex = new Texture("Wood.jpg", true);
             debugPlayerRenderer.shader.SetInt("texture0", 0);
             debugPlayerRenderer.shader.SetInt("texture1", 1);
 
-            Entity debugPlayer = new Entity("Player");
+            Entity debugPlayer = new Entity("Player", new Vector3(0, 32, 0));
             debugPlayer.AddElement(debugPlayerRenderer);
 
             PlayerController debugPlayerControl = new PlayerController();
-            debugPlayerControl.playerData = GameMaster.gameMaster.loadedPlayerChars["reimu"];
+            debugPlayerControl.playerData = GameMaster.gameMaster.playerChars["reimu"];
             debugPlayer.AddElement(debugPlayerControl);
 
-            TextureAnimator debugPlayerAnim = new TextureAnimator(debugPlayer.GetElement<MeshRenderer>(), true);
+            TextureAnimator debugPlayerAnim = new TextureAnimator(debugPlayer.GetElement<MeshRenderer>());
             debugPlayer.AddElement(debugPlayerAnim);
 
             GameMaster.gameMaster.playerEntity = debugPlayer;
 
             Entity text = new Entity("FPSCounter", new Vector3(.5f, -.5f, 0), Vector3.Zero, Vector3.One);
 
-            EnemyElement.SpawnEnemy(GameMaster.gameMaster.loadedEnemyData["blueenemy1"], Vector3.Zero);
+            Entity gameBorder = new Entity("GameBorder", new Vector3(96.5f,225.5f, 0));
+            gameBorder.AddElement(new MeshRenderer(Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles), "gameborder", BufferUsageHint.StaticDraw, true));
+            gameBorder.GetElement<MeshRenderer>().shader = GameMaster.gameMaster.spriteShader;
+            TextureAnimator.AnimationState newState = new TextureAnimator.AnimationState();
+            newState.animFrames = new TextureAnimator.AnimationFrame[1] { new TextureAnimator.AnimationFrame() };
+            newState.animFrames[0].frameDuration = 8;
+            newState.animFrames[0].sprite = new SpriteSet.Sprite(0, 0, 1, 1, GameMaster.gameMaster.UITextures["gameborder"], false);
+            newState.autoTransition = -1;
+            gameBorder.AddElement(new TextureAnimator(new TextureAnimator.AnimationState[1] { newState }, gameBorder.GetElement<MeshRenderer>()));
+
             /*TextRenderer textRend = new TextRenderer();
             textRend.SetDrawingColor(255, 0, 0, 255);
             textRend.textToWrite = "FPS:";
@@ -147,31 +101,7 @@ namespace DawnmakuEngine
             text.AddElement(textRend);*/
             Console.WriteLine(debugPlayer.ToString());
 
-            /*Entity newBullet = new Entity("Bullet", debugPlayer, new Vector3(20, 0, 0), Vector3.Zero, Vector3.One);
-
-            MeshRenderer renderer = new MeshRenderer();
-            renderer.tex = GameMaster.gameMaster.bulletSprites["butterfly"].sprites[0].tex;
-            renderer.shader = GameMaster.gameMaster.spriteShader;
-            renderer.mesh = Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles);
-            renderer.mesh.SetUp(OpenTK.Graphics.ES30.BufferUsageHint.DynamicDraw);
-
-            newBullet.AddElement(renderer);
-            newBullet.AddElement(new TextureAnimator(BulletElement.GetBulletAnim("butterfly", (int)BulletElement.BulletColor.Red), renderer, true));
-
-            newBullet.AddElement(new RotateElement(180, true, true));*/
-
-
-
-            Entity redMushroom = new Entity("RedMushroom", new Vector3(100, -50, -10)), greenMushroom = new Entity("RedMushroom", new Vector3(-100, -50, -10));
-            redMushroom.AddElement(new MeshRenderer(GameMaster.gameMaster.backgroundModels["redmushroom"], 0,
-                BufferUsageHint.StaticDraw, GameMaster.gameMaster.spriteShader));
-            redMushroom.AddElement(new RotateElement(60, true, true, new Vector3(.25f, 1, 0).Normalized()));
-            greenMushroom.AddElement(new MeshRenderer(GameMaster.gameMaster.backgroundModels["greenmushroom"], 0,
-                BufferUsageHint.StaticDraw, GameMaster.gameMaster.spriteShader));
-            greenMushroom.AddElement(new RotateElement(-60, true, true, new Vector3(.25f, 1, 0).Normalized()));
-
-
-            Entity debugCam = new Entity("BackgroundCamera", new Vector3(0, 0, 800)), debugCam2 = new Entity("Camera", new Vector3(0,0,3));
+            Entity debugCam = new Entity("BackgroundCamera", new Vector3(0, 25, 100)), debugCam2 = new Entity("Camera", new Vector3(96.5f,225.5f,3));
             debugCam.AddElement(new CameraElement(true));
             debugCam.GetElement<CameraElement>().AddLayer(0);
 
@@ -179,11 +109,51 @@ namespace DawnmakuEngine
             debugCam2.GetElement<CameraElement>().SetAllLayersRenderable();
             debugCam2.GetElement<CameraElement>().RemoveLayer(0);
 
+            Entity stageController = new Entity("StageControl");
+            stageController.AddElement(new StageElement(loader.stageData));
+            
             GL.Enable(EnableCap.Blend);
             GL.BlendFunc(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha);
 
             GL.BlendEquation(BlendEquationMode.FuncAdd);
             GL.DepthFunc(DepthFunction.Less);
+
+            Entity debugText = new Entity("DebugText", new Vector3(300, 450, 0));
+            TextRenderer textRenderer = new TextRenderer();
+            //textRenderer.WriteFontFamilyName = "Arial";
+            textRenderer.WriteFontFamilyName = "Witching Hour";
+            textRenderer.TextSize = 50;
+            textRenderer.Text = "Normal";
+            MeshRenderer textMesh = new MeshRenderer(Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles), "borderui", BufferUsageHint.StaticDraw, 
+                GameMaster.gameMaster.spriteShader, null, true);
+            textMesh.colorR = 150;
+            textMesh.colorG = 150;
+            debugText.AddElement(textMesh);
+            debugText.AddElement(textRenderer);
+
+            /*debugText = new Entity("ScoreLabel", new Vector3(300, 400, 0));
+            textRenderer = new TextRenderer();
+            textRenderer.WriteFontFamilyName = "Witching Hour";
+            textRenderer.TextSize = 50;
+            textRenderer.Text = "Score";
+            textRenderer.HoriAlign = SixLabors.Fonts.HorizontalAlignment.Right;
+            textMesh = new MeshRenderer(Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles), "borderui", BufferUsageHint.StaticDraw,
+                GameMaster.gameMaster.spriteShader, null, true);
+            textMesh.colorR = 150;
+            textMesh.colorG = 150;
+            debugText.AddElement(textMesh);*/
+
+            debugText = new Entity("ScoreVal", new Vector3(300, 400, 0));
+            textRenderer = new TextRenderer();
+            textRenderer.WriteFontFamilyName = "Arial";
+            //textRenderer.WriteFontFamilyName = "Witching Hour";
+            textRenderer.TextSize = 35;
+            textRenderer.Text = "000000000";
+            textRenderer.HoriAlign = SixLabors.Fonts.HorizontalAlignment.Left;
+            textMesh = new MeshRenderer(Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles), "borderui", BufferUsageHint.StaticDraw,
+                GameMaster.gameMaster.spriteShader, null, true);
+            debugText.AddElement(textMesh);
+            debugText.AddElement(textRenderer);
 
             /*GL.Enable(EnableCap.StencilTest);
             GL.StencilFunc(StencilFunction.Equal, GameMaster.gameMaster.spriteShader.Handle, 0xFF);
@@ -212,7 +182,7 @@ namespace DawnmakuEngine
                 if (input.IsKeyDown(Key.L))
                     TargetUpdateFrequency = 60;
 
-                if(input.IsKeyDown(Key.Y))
+                if(input.IsKeyDown(Key.B))
                 {
                     BulletElement.BulletStage[] stage = new BulletElement.BulletStage[] { new BulletElement.BulletStage() };
                     stage[0].spriteType = gameMaster.bulletTypes[BulletElement.Random(0, gameMaster.bulletTypes.Count - 1)];
@@ -224,85 +194,25 @@ namespace DawnmakuEngine
                     stage[0].rotate = BulletElement.ShouldTurn(stage[0].spriteType);
                     BulletElement.SpawnBullet(stage, gameMaster.playerEntity.WorldPosition, BulletElement.ShouldSpin(stage[0].spriteType));
                 }
+                if(input.IsKeyDown(Key.I))
+                {
+                    ItemElement.SpawnItem(gameMaster.itemData[gameMaster.itemTypes[ItemElement.Random(0, gameMaster.itemData.Count)]],
+                        gameMaster.playerEntity.WorldPosition + new Vector3(0, 16, 0));
+                }
 
 
-                Entity cam = Entity.FindEntity("BackgroundCamera");
-                CameraElement camEle = cam.GetElement<CameraElement>();
-                if (input.IsKeyDown(Key.O))
-                {
-                    camEle.perspective = false;
-                    /*Vector3 pos = gameMaster.playerEntity.LocalPosition;
-                    pos.Z += 0.01f;
-                    gameMaster.playerEntity.LocalPosition = pos;*/
-                }
-                if (input.IsKeyDown(Key.P))
-                {
-                    camEle.perspective = true;
-                    /*Vector3 pos = gameMaster.playerEntity.LocalPosition;
-                    pos.Z -= 0.01f;
-                    gameMaster.playerEntity.LocalPosition = pos;*/
-                }
-                Vector3 pos = cam.LocalPosition;
+                uint prevScore = gameMaster.score;
                 if (input.IsKeyDown(Key.W))
                 {
-                    pos += cam.Forward * 1f;
+                    gameMaster.score++;
                 }
                 if (input.IsKeyDown(Key.S))
                 {
-                    pos += cam.Forward * -1f;
-                }
-                if (input.IsKeyDown(Key.D))
-                {
-                    pos += cam.Right * 1f;
-                }
-                if (input.IsKeyDown(Key.A))
-                {
-                    pos += cam.Right * -1f;
-                }
-                if (input.IsKeyDown(Key.E))
-                {
-                    pos += cam.Up * 1f;
-                }
-                if (input.IsKeyDown(Key.Q))
-                {
-                    pos += cam.Up * -1f;
-                }
-                if(input.IsKeyDown(Key.Keypad0))
-                {
-                    camEle.SetLayers(new int[1] { 0 });
-                }
-                if (input.IsKeyDown(Key.Keypad2))
-                {
-                    camEle.SetLayers(new int[1] { 2 });
-                }
-                if (input.IsKeyDown(Key.Keypad3))
-                {
-                    camEle.SetLayers(new int[1] { 3 });
-                }
-                if (input.IsKeyDown(Key.Keypad5))
-                {
-                    camEle.SetLayers(new int[1] { 5 });
-                }
-                if (input.IsKeyDown(Key.Keypad6))
-                {
-                    camEle.SetLayers(new int[1] { 6 });
-                }
-                if (input.IsKeyDown(Key.Keypad9))
-                {
-                    camEle.SetAllLayersRenderable();
+                    gameMaster.score--;
                 }
 
-                if (input.IsKeyDown(Key.KeypadPlus))
-                {
-                    pos.Z = 3;
-                    pos.Xy = GameMaster.gameMaster.playerEntity.WorldPosition.Xy;
-                    camEle.OrthoScale = 0.25f;
-                }
-                else
-                {
-                    camEle.OrthoScale = 1f;
-                }
-                cam.LocalPosition = pos;
+                if(gameMaster.score != prevScore)
+                    Entity.FindEntity("ScoreVal").GetElement<TextRenderer>().Text = gameMaster.score.ToString("000000000");
 
 
 
@@ -394,18 +304,6 @@ namespace DawnmakuEngine
 
             Render();
 
-            /*count = TextRenderer.textRenderers.Count;
-            for (index = 0; index < count; index++)
-            {
-                if (!ortho) 
-                    TextRenderer.textRenderers[index].Draw(projection);
-                else
-                    TextRenderer.textRenderers[index].Draw(orthoProjection);
-
-            }*/
-
-            //GL.DrawElements(PrimitiveType.Triangles, indices.Length, DrawElementsType.UnsignedInt, IntPtr.Zero);
-
             Context.SwapBuffers();
 
             base.OnRenderFrame(e);
@@ -430,6 +328,10 @@ namespace DawnmakuEngine
                     for (m = 0; m < meshCount; m++)
                     {
                         thisRenderer = MeshRenderer.renderLayers[thisCam.renderableLayers[r]][m];
+
+                        if (!thisRenderer.IsEnabled)
+                            continue;
+
                         thisRenderer.BindRendering();
 
                         thisRenderer.shader.SetMatrix4("view", thisCam.ViewMatrix);
@@ -454,6 +356,11 @@ namespace DawnmakuEngine
 
         protected override void OnResize(EventArgs e)
         {
+            if (Height / (float)Width < 960 / 1280f)
+                Height = DawnMath.Round(Width * (960 / 1280f));
+            else if (Width / (float)Height < 1280f / 960)
+                Width = DawnMath.Round(Height * (1280f / 960));
+
             GL.Viewport(0, 0, Width, Height);
             base.OnResize(e);
         }

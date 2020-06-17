@@ -6,7 +6,7 @@ using DawnmakuEngine.Elements;
 
 namespace DawnmakuEngine.Data
 {
-    class PatternBullets : Pattern
+    public class PatternBullets : Pattern
     {
         public List<InstanceList> bulletStages = new List<InstanceList>();
 

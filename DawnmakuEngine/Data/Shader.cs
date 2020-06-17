@@ -8,7 +8,7 @@ using OpenTK.Graphics.ES30;
 
 namespace DawnmakuEngine.Data
 {
-    class Shader : IDisposable
+    public class Shader : IDisposable
     {
         int handle;
         public int Handle { get { return handle; } }

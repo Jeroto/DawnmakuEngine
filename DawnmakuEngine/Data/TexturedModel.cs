@@ -4,7 +4,7 @@ using System.Text;
 
 namespace DawnmakuEngine.Data
 {
-    class TexturedModel
+    public class TexturedModel
     {
         public Mesh modelMesh;
         public Texture modelTex;

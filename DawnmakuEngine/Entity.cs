@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Runtime.CompilerServices;
 using System.Text;
 using OpenTK;
@@ -53,11 +54,17 @@ namespace DawnmakuEngine
         public Entity(string name_, Entity parent_) : this(name_)
         {
             parent = parent_;
+            parent.children.Add(this);
+        }
+        public Entity(string name_, Entity parent_, Vector3 localPosition_) : this(name_, parent_)
+        {
+            LocalPosition = localPosition_;
         }
         public Entity(string name_, Entity parent_, Vector3 localPosition_, Vector3 localRotation_, Vector3 localScale_) : this(name_,
             localPosition_, localRotation_, localScale_)
         {
             parent = parent_;
+            parent.children.Add(this);
         }
 
         //Destructor
@@ -85,6 +92,9 @@ namespace DawnmakuEngine
             get { return parent; }
             set
             {
+                if(parent != null)
+                    parent.children.Remove(this);
+
                 if (value == null)
                 {
                     LocalPosition = WorldPosition;
@@ -100,9 +110,26 @@ namespace DawnmakuEngine
                     newScale.Y /= parentScale.Y;
                     newScale.Z /= parentScale.Z;
                     LocalScale = newScale;
+                    value.children.Add(this);
                 }
 
                 parent = value;
+            }
+        }
+        public bool IsEnabled
+        {
+            get
+            {
+                if (!enabled)
+                    return false;
+                Entity currentEntity = parent;
+                while(currentEntity != null)
+                {
+                    if (!currentEntity.enabled)
+                        return false;
+                    currentEntity = currentEntity.parent;
+                }
+                return true;
             }
         }
         public Vector3 LocalPosition
@@ -310,7 +337,7 @@ namespace DawnmakuEngine
             int count = elements.Count;
             for (int i = 0; i < count; i++)
             {
-                elements[i].Enable();
+                elements[i].Disable();
             }
             enabled = false;
         }
@@ -334,6 +361,35 @@ namespace DawnmakuEngine
             }
             return tempList.ToArray();
         }
+
+        public Entity GetChild(int index)
+        {
+            return children[index];
+        }
+        public Entity GetLastChild()
+        {
+            return children[children.Count - 1];
+        }
+        public Entity FindChild(string name)
+        {
+            for (int i = 0; i < children.Count; i++)
+            {
+                if (children[i].name == name)
+                    return children[i];
+            }
+            return null;
+        }
+        public Entity[] FindChildren(string name)
+        {
+            List<Entity> childrenFound = new List<Entity>();
+            for (int i = 0; i < children.Count; i++)
+            {
+                if (children[i].name == name)
+                    childrenFound.Add(children[i]);
+            }
+            return childrenFound.ToArray();
+        }
+        public int ChildCount { get { return children.Count; } }
 
         public void LookAt()
         {
@@ -371,6 +427,12 @@ namespace DawnmakuEngine
             allEntities.Remove(this);
             Disable();
             DeleteAllElements();
+
+            if (parent != null)
+                parent.children.Remove(this);
+
+            while(children.Count > 0)
+                children[0].AttemptDelete();
         }
     }
 }

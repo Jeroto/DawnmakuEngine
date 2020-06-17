@@ -6,7 +6,7 @@ using static DawnmakuEngine.DawnMath;
 
 namespace DawnmakuEngine.Data
 {
-    class Bezier
+    public class Bezier
     {
         public List<Point> points;
         public float scale = 100;

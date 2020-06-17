@@ -8,7 +8,7 @@ using OpenTK.Graphics.ES30;
 
 namespace DawnmakuEngine.Elements
 {
-    class MeshRenderer : Element
+    public class MeshRenderer : Element
     {
         public static List<MeshRenderer> meshRenderers = new List<MeshRenderer>();
 
@@ -17,8 +17,13 @@ namespace DawnmakuEngine.Elements
         public Mesh mesh;
         public Shader shader;
         public Texture tex, tex2;
-        public float modelScale = 1;
+        public float modelScale = 1,
+            modelScaleX = 1, modelScaleY = 1, modelScaleZ = 1;
         protected int layer = -1;
+        /// <summary>
+        /// Only set true if object is a 2D sprite.
+        /// </summary>
+        public bool resizeSprite;
 
         public int Layer
         {
@@ -64,7 +69,6 @@ namespace DawnmakuEngine.Elements
             }
         }
 
-
         public void BindRendering()
         {
             if (mesh == null)
@@ -72,6 +76,13 @@ namespace DawnmakuEngine.Elements
                 Console.WriteLine("There is no mesh on " + entityAttachedTo.Name + "'s Mesh Renderer Element!");
                 return;
             }
+
+            if (resizeSprite && tex != null)
+            {
+                modelScaleX = Math.Abs(mesh.GetUV(0).X * tex.Width - mesh.GetUV(1).X * tex.Width);
+                modelScaleY = Math.Abs(mesh.GetUV(1).Y * tex.Height - mesh.GetUV(2).Y * tex.Height);
+            }
+
             shader.Use();
             mesh.Use();
 
@@ -89,7 +100,7 @@ namespace DawnmakuEngine.Elements
                 tex2.Use(TextureUnit.Texture1);
             Quaternion modelRotation = entityAttachedTo.LocalRotation;
             Matrix4 model = Matrix4.Identity *
-                Matrix4.CreateScale(entityAttachedTo.WorldScale * modelScale) * Matrix4.CreateFromQuaternion(entityAttachedTo.WorldRotation) *
+                Matrix4.CreateScale(entityAttachedTo.WorldScale * modelScale * new Vector3(modelScaleX, modelScaleY, modelScaleZ)) * Matrix4.CreateFromQuaternion(entityAttachedTo.WorldRotation) *
                 Matrix4.CreateTranslation(entityAttachedTo.WorldPosition);
             shader.SetMatrix4("model", model);
             shader.SetVector4("colorModInput", ColorFloat);
@@ -137,9 +148,17 @@ namespace DawnmakuEngine.Elements
         {
             Layer = layer_;
         }
+        public MeshRenderer(Mesh newMesh, int layer_, BufferUsageHint bufferUsage, bool resizeSprite_, float scale = 1) : this(newMesh, layer_, bufferUsage, scale)
+        {
+            resizeSprite = resizeSprite_;
+        }
         public MeshRenderer(Mesh newMesh, string layer_, BufferUsageHint bufferUsage, float scale = 1) : this(newMesh, bufferUsage, scale)
         {
             LayerName = layer_;
+        }
+        public MeshRenderer(Mesh newMesh, string layer_, BufferUsageHint bufferUsage, bool resizeSprite_, float scale = 1) : this(newMesh, layer_, bufferUsage, scale)
+        {
+            resizeSprite = resizeSprite_;
         }
         public MeshRenderer(Mesh newMesh, BufferUsageHint bufferUsage, Texture texture, float scale = 1, Texture texture2 = null) : this(newMesh, bufferUsage, scale)
         {
@@ -151,10 +170,20 @@ namespace DawnmakuEngine.Elements
         {
             Layer = layer_;
         }
+        public MeshRenderer(Mesh newMesh, int layer_, BufferUsageHint bufferUsage, Texture texture, bool resizeSprite_,
+            float scale = 1, Texture texture2 = null) : this(newMesh, layer_, bufferUsage, texture, scale, texture2)
+        {
+            resizeSprite = resizeSprite_;
+        }
         public MeshRenderer(Mesh newMesh, string layer_, BufferUsageHint bufferUsage, Texture texture,
             float scale = 1, Texture texture2 = null) : this(newMesh, bufferUsage, texture, scale, texture2)
         {
             LayerName = layer_;
+        }
+        public MeshRenderer(Mesh newMesh, string layer_, BufferUsageHint bufferUsage, Texture texture, bool resizeSprite_,
+            float scale = 1, Texture texture2 = null) : this(newMesh, layer_, bufferUsage, texture, scale, texture2)
+        {
+            resizeSprite = resizeSprite_;
         }
         public MeshRenderer(Mesh newMesh, BufferUsageHint bufferUsage, Shader newShader, Texture texture, float scale = 1,
             Texture texture2 = null) : this(newMesh, bufferUsage, texture, scale, texture2)
@@ -166,10 +195,20 @@ namespace DawnmakuEngine.Elements
         {
             Layer = layer_;
         }
+        public MeshRenderer(Mesh newMesh, int layer_, BufferUsageHint bufferUsage, Shader newShader, Texture texture, bool resizeSprite_, float scale = 1,
+            Texture texture2 = null) : this(newMesh, layer_, bufferUsage, newShader, texture, scale, texture2)
+        {
+            resizeSprite = resizeSprite_;
+        }
         public MeshRenderer(Mesh newMesh, string layer_, BufferUsageHint bufferUsage, Shader newShader, Texture texture, float scale = 1,
             Texture texture2 = null) : this(newMesh, bufferUsage, newShader, texture, scale, texture2)
         {
             LayerName = layer_;
+        }
+        public MeshRenderer(Mesh newMesh, string layer_, BufferUsageHint bufferUsage, Shader newShader, Texture texture, bool resizeSprite_, float scale = 1,
+            Texture texture2 = null) : this(newMesh, layer_, bufferUsage, newShader, texture, scale, texture2)
+        {
+            resizeSprite = resizeSprite_;
         }
         public MeshRenderer(TexturedModel newMesh, BufferUsageHint bufferUsage, Shader newShader, Texture texture2 = null) : this()
         {
@@ -184,10 +223,20 @@ namespace DawnmakuEngine.Elements
         {
             Layer = layer_;
         }
+        public MeshRenderer(TexturedModel newMesh, int layer_, BufferUsageHint bufferUsage,
+            Shader newShader, bool resizeSprite_, Texture texture2 = null) : this(newMesh, layer_, bufferUsage, newShader, texture2)
+        {
+            resizeSprite = resizeSprite_;
+        }
         public MeshRenderer(TexturedModel newMesh, string layer_, BufferUsageHint bufferUsage,
             Shader newShader, Texture texture2 = null) : this(newMesh, bufferUsage, newShader, texture2)
         {
             LayerName = layer_;
+        }
+        public MeshRenderer(TexturedModel newMesh, string layer_, BufferUsageHint bufferUsage,
+            Shader newShader, bool resizeSprite_, Texture texture2 = null) : this(newMesh, layer_, bufferUsage, newShader, texture2)
+        {
+            resizeSprite = resizeSprite_;
         }
 
         protected override void OnEnableAndCreate()

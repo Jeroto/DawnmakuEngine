@@ -12,14 +12,25 @@
     <PackageReference Include="QuickFont.Desktop" Version="4.5.7053.25687" />
     <PackageReference Include="SharpFont" Version="4.0.1" />
     <PackageReference Include="SharpFont.Dependencies" Version="2.6.0" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-beta0007" />
+    <PackageReference Include="SixLabors.Fonts" Version="1.0.0-beta0012" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-rc0002" />
+    <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta0009" />
     <PackageReference Include="System.Drawing.Common" Version="4.7.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="PresentationCore">
+      <HintPath>C:\Windows\Microsoft.NET\assembly\GAC_64\PresentationCore\v4.0_4.0.0.0__31bf3856ad364e35\PresentationCore.dll</HintPath>
+    </Reference>
     <Reference Include="SharpFont">
       <HintPath>..\..\..\dll\SharpFont.dll</HintPath>
     </Reference>
+    <Reference Include="PresentationCore" Condition="$(Platform) == 'x64'">
+      <HintPath>C:\Windows\Microsoft.NET\assembly\GAC_32\PresentationCore\v4.0_4.0.0.0__31bf3856ad364e35\PresentationCore.dll</HintPath>
+    </Reference>
+	<Reference Include="PresentationCore" Condition="$(Platform) == 'x86'">
+	   <HintPath>C:\Windows\Microsoft.NET\assembly\GAC_64\PresentationCore\v4.0_4.0.0.0__31bf3856ad364e35\PresentationCore.dll</HintPath>
+	</Reference>
   </ItemGroup>
 
   <ItemGroup>

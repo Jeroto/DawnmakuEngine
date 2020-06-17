@@ -7,3 +7,8 @@ name=greenmushroom;
 scale=2;
 model=redmushroom;
 tex=greenmushroom;
+
+name=debuggrass;
+scale=60;
+model=debuggrass;
+tex=debuggrasstex;

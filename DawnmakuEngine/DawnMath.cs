@@ -180,6 +180,120 @@ namespace DawnmakuEngine
         }
 
 
+        public static float EaseIn(float start, float end, float t, float inAmount = 0.25f)
+        {
+            float final;
+            final = Lerp(start, end, t);
+            if (t <= inAmount)
+                final = Lerp(start, final, t / inAmount);
+            return final;
+        }
+        public static Vector2 EaseIn(Vector2 start, Vector2 end, float t, float inAmount = 0.25f)
+        {
+            Vector2 final;
+            final = Lerp(start, end, t);
+            if (t <= inAmount)
+                final = Lerp(start, final, t / inAmount);
+            return final;
+        }
+        public static Vector3 EaseIn(Vector3 start, Vector3 end, float t, float inAmount = 0.25f)
+        {
+            Vector3 final;
+            final = Lerp(start, end, t);
+            if (t <= inAmount)
+                final = Lerp(start, final, t / inAmount);
+            return final;
+        }
+        public static Vector4 EaseIn(Vector4 start, Vector4 end, float t, float inAmount = 0.25f)
+        {
+            Vector4 final;
+            final = Lerp(start, end, t);
+            if (t <= inAmount)
+                final = Lerp(start, final, t / inAmount);
+            return final;
+        }
+        public static float EaseOut(float start, float end, float t, float outAmount = 0.75f)
+        {
+            float final;
+            final = Lerp(start, end, t);
+            if (t >= outAmount)
+                final = Lerp(final, end, (t - outAmount) / (1 - outAmount));
+            return final;
+        }
+        public static Vector2 EaseOut(Vector2 start, Vector2 end, float t, float outAmount = 0.75f)
+        {
+            Vector2 final;
+            final = Lerp(start, end, t);
+            if (t >= outAmount)
+                final = Lerp(final, end, (t - outAmount) / (1 - outAmount));
+            return final;
+        }
+        public static Vector3 EaseOut(Vector3 start, Vector3 end, float t, float outAmount = 0.75f)
+        {
+            Vector3 final;
+            final = Lerp(start, end, t);
+            if (t >= outAmount)
+                final = Lerp(final, end, (t - outAmount) / (1 - outAmount));
+            return final;
+        }
+        public static Vector4 EaseOut(Vector4 start, Vector4 end, float t, float outAmount = 0.75f)
+        {
+            Vector4 final;
+            final = Lerp(start, end, t);
+            if (t >= outAmount)
+                final = Lerp(final, end, (t - outAmount) / (1 - outAmount));
+            return final;
+        }
+        public static float EaseInOut(float start, float end, float t)
+        {
+            /*float final;
+            final = Lerp(start, end, t);
+            if (t <= inAmount)
+                final = Lerp(start, final, t / inAmount);
+            else if (t >= outAmount)
+                final = Lerp(final, end, (t - outAmount) / (1 - outAmount));
+            return final;*/
+            float amount = -(MathF.Cos(MathHelper.Pi * t) - 1) / 2;
+            return Lerp(start, end, amount);
+        }
+        public static Vector2 EaseInOut(Vector2 start, Vector2 end, float t)
+        {
+            /*Vector2 final;
+            final = Lerp(start, end, t);
+            if (t <= inAmount)
+                final = Lerp(start, final, inAmount);
+            else if (t >= outAmount)
+                final = Lerp(final, end, (t - outAmount) / (1 - outAmount));
+            return final;*/
+            float amount = -(MathF.Cos(MathHelper.Pi * t) - 1) / 2;
+            return Lerp(start, end, amount);
+        }
+        public static Vector3 EaseInOut(Vector3 start, Vector3 end, float t)
+        {
+            /*Vector3 final;
+            final = Lerp(start, end, t);
+            if (t <= inAmount)
+                final = Lerp(start, final, t / inAmount);
+            else if (t >= outAmount)
+                final = Lerp(final, end, (t - outAmount) / (1 - outAmount));
+            return final;*/
+            float amount = -(MathF.Cos(MathHelper.Pi * t) - 1) / 2;
+            return Lerp(start, end, amount);
+        }
+        public static Vector4 EaseInOut(Vector4 start, Vector4 end, float t)
+        {
+            /*Vector4 final;
+            final = Lerp(start, end, t);
+            if (t <= inAmount)
+                final = Lerp(start, final, t / inAmount);
+            else if (t >= outAmount)
+                final = Lerp(final, end, (t - outAmount) / (1 - outAmount));
+            return final;*/
+            float amount = -(MathF.Cos(MathHelper.Pi * t) - 1) / 2;
+            return Lerp(start, end, amount);
+        }
+
+
         /// <summary>
         /// Returns the dot product of 2 two-component vectors
         /// </summary>
@@ -382,7 +496,7 @@ namespace DawnmakuEngine
         /// </summary>
         public static Vector2 FindDirectionToPlayer(Vector2 startingPosition)
         {
-            return (GameMaster.gameMaster.playerEntity.WorldPosition.Xy - startingPosition).Normalized();
+            return (GameMaster.gameMaster.playerWorldPos.Xy - startingPosition).Normalized();
         }
 
         /// <summary>

@@ -17,6 +17,19 @@ namespace DawnmakuEngine
         protected Entity entityAttachedTo;
         public Entity EntityAttachedTo { get { return entityAttachedTo; } set { entityAttachedTo = value; } }
         public bool enabled = true;
+
+        public bool IsEnabled
+        { 
+            get
+            {
+                if (!enabled)
+                    return false;
+                if(entityAttachedTo != null)
+                    return entityAttachedTo.IsEnabled;
+                return false;
+            }
+        }
+
         protected virtual void OnCreate()
         {
             if((requiredSubscriptions & POST_CREATE_SUB) == POST_CREATE_SUB)

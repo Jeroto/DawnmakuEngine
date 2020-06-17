@@ -5,7 +5,7 @@ using OpenTK;
 
 namespace DawnmakuEngine.Data
 {
-    class Pattern
+    public class Pattern
     {
         public int burstCount = int.MaxValue;
         public int bulletsInBurst = 0;

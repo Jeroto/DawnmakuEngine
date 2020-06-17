@@ -16,5 +16,7 @@ namespace DawnmakuEngine.Data
         public Vector2 colliderOffset;
         public PlayerTypeData[] types;
         public TextureAnimator.AnimationState[] animStates;
+        public TextureAnimator.AnimationState hitboxAnim, focusEffectAnim;
+        public float focusEffectRotSpeed;
     }
 }

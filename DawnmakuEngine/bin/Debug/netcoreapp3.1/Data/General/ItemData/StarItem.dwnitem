@@ -1,0 +1,14 @@
+OverrideDefaultValues=false;
+
+ItemRandXVelRange = -2,2;
+ItemRandYVelRange = 2, 5;
+ItemMaxFallSpeed = 3;
+ItemGravAccel = 0.1;
+ItemXDecel = 0.01;
+ItemMagnetDist=0;
+ItemMagnetSpeed=7;
+ItemCollectDist = 0;
+
+canBeAutoCollectedAtTop=true;
+autoMagnetDraw=true;
+animStates=staritem;

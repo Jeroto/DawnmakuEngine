@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using OpenTK;
 
 namespace DawnmakuEngine.Data
 {
@@ -15,5 +16,14 @@ namespace DawnmakuEngine.Data
             languages;
         public Dictionary<string, int> renderLayers = new Dictionary<string, int>();
         public List<GameMaster.RenderLayer> renderLayerSettings = new List<GameMaster.RenderLayer>();
+
+
+        //Default Item Data Values
+        public Vector2 itemRandXRange, itemRandYRange;
+        public float itemMaxFallSpeed, itemGravAccel, itemXDecel,
+            itemMagnetDist, itemMagnetSpeed,
+            itemCollectDist;
+        public int pocHeight, itemDisableHeight;
+        public ushort maxItemCount;
     }
 }

@@ -5,7 +5,7 @@ using OpenTK.Graphics.ES30;
 
 namespace DawnmakuEngine.Data
 {
-    class Mesh
+    public class Mesh
     {
         public float[] vertices;
         public uint[] triangleData;
@@ -32,6 +32,30 @@ namespace DawnmakuEngine.Data
                 GL.BindBuffer(BufferTarget.ElementArrayBuffer, elementBufferHandle);
                 GL.BufferData(BufferTarget.ElementArrayBuffer, triangleData.Length * sizeof(uint), triangleData, bufferUsage);
             }
+        }
+
+        public Vector3 GetVertex(int index)
+        {
+            int startingVert = index * 5;
+            return new Vector3(vertices[startingVert], vertices[startingVert + 1], vertices[startingVert + 2]);
+        }
+        public void SetVertex(int index, Vector3 newVert)
+        {
+            int startingVert = index * 5;
+            vertices[startingVert] = newVert.X;
+            vertices[startingVert + 1] = newVert.Y;
+            vertices[startingVert + 2] = newVert.Z;
+        }
+        public Vector2 GetUV(int index)
+        {
+            int startingVert = index * 5 + 3;
+            return new Vector2(vertices[startingVert], vertices[startingVert + 1]);
+        }
+        public void SetUV(int index, Vector2 newUV)
+        {
+            int startingVert = index * 5 + 3;
+            vertices[startingVert] = newUV.X;
+            vertices[startingVert + 1] = newUV.Y;
         }
 
         public Mesh()
@@ -75,10 +99,10 @@ namespace DawnmakuEngine.Data
             {
                 case Primitives.SqrPlaneWTriangles:
                     return new float[] {
-                        -.5f, 0.5f, 0, 0, 1,
-                        0.5f, 0.5f, 0, 1, 1,
-                        0.5f, -.5f, 0, 1, 0,
-                        -.5f, -.5f, 0, 0, 0,
+                        -.5f, 0.5f, 0, 0, 1, //Top left
+                        0.5f, 0.5f, 0, 1, 1, //Top Right
+                        0.5f, -.5f, 0, 1, 0, //Bottom Right
+                        -.5f, -.5f, 0, 0, 0, //Bottom Left
                     };
 
                 case Primitives.SqrPlane:

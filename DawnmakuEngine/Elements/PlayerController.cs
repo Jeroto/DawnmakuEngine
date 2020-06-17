@@ -26,9 +26,14 @@ namespace DawnmakuEngine.Elements
         int shotSwitchDelay = 10, shotSwitchTime;
         public float colliderSize;
         public Vector2 colliderOffset;
-        protected float moveSpeed;
-        protected float focusModifier;
+        protected float moveSpeed, focusModifier;
+        protected float hitboxScale, hitboxInvisScale;
+        protected float timeSinceFocusChange;
+        protected const byte HITBOX_ANIM_TIME = 15, FOCUS_EFFECT_ANIM_TIME = 30;
+        protected const byte HITBOX_ALPHA = 255, FOCUS_EFFECT_ALPHA = 150;
         Pattern.PatternVariables[] patternVariables;
+
+        MeshRenderer hitbox, focusEffect;
 
         TextureAnimator anim;
         GameMaster gameMaster;
@@ -77,8 +82,14 @@ namespace DawnmakuEngine.Elements
                 movementVelocity *= focusModifier;
 
             if (InputScript.focusDown)
+            {
                 shotSwitchTime = shotSwitchDelay;
-            if(InputScript.shootDown && shotSwitchTime > 0)
+                timeSinceFocusChange = 0;
+            }
+            else if(InputScript.focusUp)
+                timeSinceFocusChange = 0;
+
+            if (InputScript.shootDown && shotSwitchTime > 0)
             {
                 shotSwitchTime = 0;
                 SwitchShot();
@@ -87,6 +98,25 @@ namespace DawnmakuEngine.Elements
             shotSwitchTime--;
 
             entityAttachedTo.LocalPosition += new Vector3(movementVelocity.X, movementVelocity.Y, 0);
+            gameMaster.pointOfCollection = entityAttachedTo.WorldPosition.Y >= gameMaster.pocHeight && 
+                (!gameMaster.fullPowerPOC || (gameMaster.fullPowerPOC && gameMaster.currentPowerLevel == gameMaster.maxPowerLevel)) &&
+                (!gameMaster.shiftForPOC || (gameMaster.shiftForPOC && InputScript.Focus));
+
+            timeSinceFocusChange += gameMaster.timeScale;
+            if (InputScript.Focus)
+            {
+                hitbox.modelScale = DawnMath.Lerp(hitboxInvisScale, hitboxScale, timeSinceFocusChange / HITBOX_ANIM_TIME);
+                hitbox.colorA = (byte)DawnMath.Lerp(0, HITBOX_ALPHA, timeSinceFocusChange / HITBOX_ANIM_TIME);
+                focusEffect.colorA = (byte)DawnMath.Lerp(0, FOCUS_EFFECT_ALPHA, timeSinceFocusChange / FOCUS_EFFECT_ANIM_TIME);
+            }
+            else
+            {
+                hitbox.modelScale = DawnMath.Lerp(hitboxScale, hitboxInvisScale, timeSinceFocusChange / HITBOX_ANIM_TIME);
+                hitbox.colorA = (byte)DawnMath.Lerp(HITBOX_ALPHA, 0, timeSinceFocusChange / HITBOX_ANIM_TIME);
+                focusEffect.colorA = (byte)DawnMath.Lerp(FOCUS_EFFECT_ALPHA, 0, timeSinceFocusChange / FOCUS_EFFECT_ANIM_TIME);
+            }
+
+            DrawAndCollectItems();
 
             if (movementVelocity.X > 0)
                 anim.UpdateStateIndex = 1;
@@ -119,6 +149,43 @@ namespace DawnmakuEngine.Elements
 
                 pattern = InputScript.Focus ? orbData[i].focusedPatterns[gameMaster.currentPowerLevel] : orbData[i].unfocusedPatterns[gameMaster.currentPowerLevel];
                 pattern.ProcessPattern(spawnedOrbs[i], true, ref patternVariables[i]);
+            }
+        }
+
+        public void DrawAndCollectItems()
+        {
+            ushort itemCount = (ushort)ItemElement.itemList.Count;
+            Vector2 dir;
+            Vector2 itemPos, playerPos = entityAttachedTo.WorldPosition.Xy;
+            float dist;
+            ItemElement currentItem;
+            for (int i = 0; i < itemCount; i++)
+            {
+                currentItem = ItemElement.itemList[i];
+                if (!currentItem.IsEnabled)
+                    continue;
+                itemPos = currentItem.EntityAttachedTo.WorldPosition.Xy;
+                dist = Vector2.DistanceSquared(playerPos, itemPos);
+
+
+
+                if (dist <= currentItem.itemData.collectDistSqr)
+                {
+                    currentItem.Collect();
+                    continue;
+                }
+
+                if (dist <= currentItem.itemData.magnetDistSqr)
+                {
+
+                }
+
+                if (currentItem.drawToPlayer)
+                {
+                    dir = (playerPos - itemPos);
+                    dir.NormalizeFast();
+                    currentItem.velocity = dir * currentItem.itemData.magnetSpeed;
+                }
             }
         }
 
@@ -242,11 +309,11 @@ namespace DawnmakuEngine.Elements
                     {
                         spawnedOrbs[i] = new Entity("PlayerOrb" + i.ToString(), EntityAttachedTo, Vector3.Zero, Vector3.Zero, Vector3.One);
                         orbRenderers[i] = new MeshRenderer(Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles), "playerorbs",
-                            OpenTK.Graphics.ES30.BufferUsageHint.DynamicDraw, gameMaster.spriteShader, orbData[i].animStates[0].animFrames[0].sprite.tex);
+                            OpenTK.Graphics.ES30.BufferUsageHint.DynamicDraw, gameMaster.spriteShader, orbData[i].animStates[0].animFrames[0].sprite.tex, true);
                         orbRenderers[i].colorA = 0;
                         spawnedOrbs[i].AddElement(orbRenderers[i]);
                         
-                        orbAnim = new TextureAnimator(orbData[i].animStates, orbRenderers[i], true);
+                        orbAnim = new TextureAnimator(orbData[i].animStates, orbRenderers[i]);
                         orbAnim.FrameIndex = orbData[i].startAnimFrame;
                         spawnedOrbs[i].AddElement(orbAnim);
                         spawnedOrbs[i].AddElement(new RotateElement(orbData[i].rotateDegreesPerSecond, true, true));
@@ -331,6 +398,29 @@ namespace DawnmakuEngine.Elements
             MoveSpeed = playerData.moveSpeed;
             FocusSpeedPercent = playerData.focusModifier;
             anim.animationStates = playerData.animStates;
+
+            if(hitbox == null)
+            {
+                Entity newEntity;
+                newEntity = new Entity("FocusEffect", entityAttachedTo, new Vector3(playerData.colliderOffset));
+                focusEffect = new MeshRenderer(Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles), "effects", OpenTK.Graphics.ES30.BufferUsageHint.DynamicDraw,
+                    gameMaster.spriteShader, playerData.focusEffectAnim.animFrames[0].sprite.tex, true);
+                focusEffect.ColorByte = new Vector4(255, 255, 255,0);
+                newEntity.AddElement(focusEffect);
+                newEntity.AddElement(new TextureAnimator(new TextureAnimator.AnimationState[] { playerData.focusEffectAnim }, focusEffect));
+                newEntity.AddElement(new RotateElement(playerData.focusEffectRotSpeed, true, true));
+
+                newEntity = new Entity("Hitbox", entityAttachedTo, new Vector3(playerData.colliderOffset));
+                hitbox = new MeshRenderer(Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles), "effects", OpenTK.Graphics.ES30.BufferUsageHint.DynamicDraw,
+                    gameMaster.spriteShader, playerData.hitboxAnim.animFrames[0].sprite.tex, true);
+                hitbox.ColorByte = new Vector4(255, 255, 255, 0);
+                hitboxScale = playerData.colliderSize / (hitbox.tex.Height * 
+                    (playerData.hitboxAnim.animFrames[0].sprite.right - playerData.hitboxAnim.animFrames[0].sprite.left));
+                hitboxInvisScale = hitboxScale * 1.5f;
+                hitbox.modelScale = hitboxInvisScale;
+                newEntity.AddElement(hitbox);
+                newEntity.AddElement(new TextureAnimator(new TextureAnimator.AnimationState[] { playerData.hitboxAnim }, hitbox));
+            }
         }
     } //Class end
 }

@@ -6,7 +6,7 @@ using DawnmakuEngine.Data;
 
 namespace DawnmakuEngine.Elements
 {
-    class BulletElement : Element
+    public class BulletElement : Element
     {
         static float maxBoundsExit = 16;
         public bool firedByPlayer;
@@ -510,9 +510,10 @@ namespace DawnmakuEngine.Elements
             renderer.mesh = Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles);
             renderer.mesh.SetUp(OpenTK.Graphics.ES30.BufferUsageHint.DynamicDraw);
             renderer.LayerName = "bullets";
+            renderer.resizeSprite = true;
 
             newBullet.AddElement(renderer);
-            newBullet.AddElement(new TextureAnimator(GetBulletAnim(stages[stage].spriteType, stages[stage].bulletColor), renderer, true));
+            newBullet.AddElement(new TextureAnimator(GetBulletAnim(stages[stage].spriteType, stages[stage].bulletColor), renderer));
 
             newBullet.AddElement(new RotateElement(180, true, true));
             if(!shouldSpin)

@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using OpenTK;
+using System.Runtime.InteropServices;
 using DawnmakuEngine.Elements;
 using DawnmakuEngine.Data;
-using System.Runtime.InteropServices;
+
+using OpenTK;
+using SixLabors.Fonts;
+using SixLabors.ImageSharp;
 
 namespace DawnmakuEngine
 {
@@ -26,6 +29,7 @@ namespace DawnmakuEngine
         public static Dictionary<string, int> layerIndexes = new Dictionary<string, int>();
 
         public int difficulty;
+        public uint highScore, score;
 
         public int maxPowerLevel = 8,
             currentPowerLevel = 0, prevPowerLevel,
@@ -40,7 +44,11 @@ namespace DawnmakuEngine
         public bool PowerLevelChange { get { return currentPowerLevel != prevPowerLevel; } }
 
         public Entity playerEntity;
+        public Vector3 playerWorldPos;
         public int playerTypeIndex, playerShotIndex;
+        public bool pointOfCollection = false,
+            fullPowerPOC = false, shiftForPOC = false;
+        public int pocHeight = 100, itemDisableHeight = -100;
 
         public delegate void ElementFunction();
 
@@ -49,9 +57,17 @@ namespace DawnmakuEngine
         public event ElementFunction PreRender;
 
 
-        public Shader spriteShader = new Shader("Shaders/Shader.vert", "Shaders/TransparentShader.frag");
+        public Shader spriteShader = new Shader("Data/General/Shaders/Shader.vert", "Data/General/Shaders/TransparentShader.frag");
 
+        public ushort maxItemCount = 200;
+        //Default Item Data Values
+        public Vector2 itemRandXRange, itemRandYRange;
+        public float itemMaxFallSpeed, itemGravAccel, itemXDecel,
+            itemMagnetDist, itemMagnetSpeed,
+            itemCollectDist;
 
+        //Loaded Shaders
+        public Dictionary<string, Shader> shaders = new Dictionary<string, Shader>();
 
         //Loaded Bullet Data
         public List<string> bulletTypes = new List<string>();
@@ -59,37 +75,55 @@ namespace DawnmakuEngine
         public Dictionary<string, SpriteSet> bulletSprites = new Dictionary<string, SpriteSet>();
         public Dictionary<string, Entity> bulletSpawns = new Dictionary<string, Entity>();
         public Dictionary<string, BulletData> bulletData = new Dictionary<string, BulletData>();
-        public Dictionary<string, Texture> loadedBulletTextures = new Dictionary<string, Texture>();
-        public Dictionary<string, TextureAnimator.AnimationState> loadedBulletAnimStates = new Dictionary<string, TextureAnimator.AnimationState>();
+        public Dictionary<string, Texture> bulletTextures = new Dictionary<string, Texture>();
+        public Dictionary<string, TextureAnimator.AnimationState> bulletAnimStates = new Dictionary<string, TextureAnimator.AnimationState>();
 
         //Player Orbs
-        public Dictionary<string, Texture> loadedPlayerOrbTextures = new Dictionary<string, Texture>();
+        public Dictionary<string, Texture> playerOrbTextures = new Dictionary<string, Texture>();
         public Dictionary<string, SpriteSet> playerOrbSprites = new Dictionary<string, SpriteSet>();
-        public Dictionary<string, TextureAnimator.AnimationState> loadedPlayerOrbAnimStates = new Dictionary<string, TextureAnimator.AnimationState>();
-        public Dictionary<string, PlayerOrbData> loadedPlayerOrbData = new Dictionary<string, PlayerOrbData>();
+        public Dictionary<string, TextureAnimator.AnimationState> playerOrbAnimStates = new Dictionary<string, TextureAnimator.AnimationState>();
+        public Dictionary<string, PlayerOrbData> playerOrbData = new Dictionary<string, PlayerOrbData>();
 
         //Loaded Player Data
-        public Dictionary<string, Texture> loadedPlayerTextures = new Dictionary<string, Texture>();
+        public Dictionary<string, Texture> playerTextures = new Dictionary<string, Texture>();
         public Dictionary<string, SpriteSet> playerSprites = new Dictionary<string, SpriteSet>();
-        public Dictionary<string, TextureAnimator.AnimationState> loadedPlayerAnimStates = new Dictionary<string, TextureAnimator.AnimationState>();
-        public Dictionary<string, PlayerCharData> loadedPlayerChars = new Dictionary<string, PlayerCharData>();
-        public Dictionary<string, PlayerTypeData> loadedPlayerTypes = new Dictionary<string, PlayerTypeData>();
-        public Dictionary<string, PlayerShotData> loadedPlayerShot = new Dictionary<string, PlayerShotData>();
-        public Dictionary<string, Pattern> loadedPlayerPatterns = new Dictionary<string, Pattern>();
+        public Dictionary<string, TextureAnimator.AnimationState> playerAnimStates = new Dictionary<string, TextureAnimator.AnimationState>();
+        public Dictionary<string, PlayerCharData> playerChars = new Dictionary<string, PlayerCharData>();
+        public Dictionary<string, PlayerTypeData> playerTypes = new Dictionary<string, PlayerTypeData>();
+        public Dictionary<string, PlayerShotData> playerShot = new Dictionary<string, PlayerShotData>();
+        public Dictionary<string, Pattern> playerPatterns = new Dictionary<string, Pattern>();
+
+        public Dictionary<string, Texture> playerEffectTextures = new Dictionary<string, Texture>();
+        public Dictionary<string, SpriteSet> playerEffectSprites = new Dictionary<string, SpriteSet>();
+        public Dictionary<string, TextureAnimator.AnimationState> playerEffectAnimStates = new Dictionary<string, TextureAnimator.AnimationState>();
+
+        //Loaded Item Data
+        public List<string> itemTypes = new List<string>();
+        public Dictionary<string, Texture> itemTextures = new Dictionary<string, Texture>();
+        public Dictionary<string, SpriteSet> itemSprites = new Dictionary<string, SpriteSet>();
+        public Dictionary<string, TextureAnimator.AnimationState> itemAnimStates = new Dictionary<string, TextureAnimator.AnimationState>();
+        public Dictionary<string, ItemData> itemData = new Dictionary<string, ItemData>();
 
         //Loaded Enemy Data
-        public Dictionary<string, Texture> loadedEnemyTextures = new Dictionary<string, Texture>();
+        public Dictionary<string, Texture> enemyTextures = new Dictionary<string, Texture>();
         public Dictionary<string, SpriteSet> enemySprites = new Dictionary<string, SpriteSet>();
-        public Dictionary<string, TextureAnimator.AnimationState> loadedEnemyAnimStates = new Dictionary<string, TextureAnimator.AnimationState>();
+        public Dictionary<string, TextureAnimator.AnimationState> enemyAnimStates = new Dictionary<string, TextureAnimator.AnimationState>();
         public Dictionary<string, Bezier> enemyMovementPaths = new Dictionary<string, Bezier>();
-        public Dictionary<string, EnemyData> loadedEnemyData = new Dictionary<string, EnemyData>();
-        public Dictionary<string, Pattern> loadedEnemyPatterns = new Dictionary<string, Pattern>();
+        public Dictionary<string, EnemyData> enemyData = new Dictionary<string, EnemyData>();
+        public Dictionary<string, Pattern> enemyPatterns = new Dictionary<string, Pattern>();
 
         //Loaded Background Data
         public Dictionary<string, Mesh> backgroundMeshes = new Dictionary<string, Mesh>();
         public Dictionary<string, Texture> backgroundTextures = new Dictionary<string, Texture>();
         public Dictionary<string, TexturedModel> backgroundModels = new Dictionary<string, TexturedModel>();
+        public Dictionary<string, BackgroundSection> backgroundSections = new Dictionary<string, BackgroundSection>();
 
+        //Loaded UI 
+        public Dictionary<string, Texture> UITextures = new Dictionary<string, Texture>();
+        public FontCollection fonts = new FontCollection();
+        public Dictionary<string, FontCharList> fontCharList = new Dictionary<string, FontCharList>();
+        public Dictionary<string, Texture> fontSheets = new Dictionary<string, Texture>();
+        public Dictionary<string, SpriteSet> fontGlyphSprites = new Dictionary<string, SpriteSet>();
 
 
 
@@ -107,6 +141,9 @@ namespace DawnmakuEngine
                 timeScale = timeScaleUpdate;
             else
                 timeScale = 0;
+
+            if(playerEntity != null)
+                playerWorldPos = playerEntity.WorldPosition;
         }
 
         public void ElementUpdate()
