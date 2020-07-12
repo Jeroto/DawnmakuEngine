@@ -8,7 +8,7 @@ namespace DawnmakuEngine.Elements
 {
     public class BulletElement : Element
     {
-        static float maxBoundsExit = 16;
+        public float maxBoundsExit = 16;
         public bool firedByPlayer;
 
         public static byte newKillzoneIndex;
@@ -16,6 +16,11 @@ namespace DawnmakuEngine.Elements
 
         static System.Random bulletRandom = new System.Random(0);
         public static Entity playerTransform;
+
+        //Grazing
+        public bool grazed;
+        public int grazeDelay = 0, //Set greater than 0 to allow repeated grazing
+            grazeDelayCurrent;
 
         //Bullet Stages
         public int stageIndex;
@@ -29,10 +34,14 @@ namespace DawnmakuEngine.Elements
         float spawnTimeCurrent;
 
         //Misc
-        bool destroyingBullet;
-        public bool destroy;
         float facingAngleRad,
             renderScale;
+
+        //Destruction
+        bool destroyingBullet;
+        public bool destroy;
+        int destroyAnimTime = 10;
+        float destroyAnimCurrent = 0;
 
         [System.Serializable]
         public class BulletStage
@@ -140,7 +149,6 @@ namespace DawnmakuEngine.Elements
 
             gameMaster = GameMaster.gameMaster;
 
-            DetectDestroy();
 
             currentSpeed = bulletStages[stageIndex].startingSpeed;
 
@@ -150,6 +158,7 @@ namespace DawnmakuEngine.Elements
                 entityAttachedTo .LocalRotationRad = new Vector3(0, 0, DawnMath.FindAngleRad(bulletStages[stageIndex].movementDirection) - ((EntityAttachedTo.Parent != null) ?
                     EntityAttachedTo.Parent.WorldRotation.Z + EntityAttachedTo.WorldRotation.Z : EntityAttachedTo.WorldRotation.Z));
 
+            maxBoundsExit = gameMaster.bulletData[bulletStages[stageIndex].spriteType].boundsExitDist;
 
                 meshRenderer = EntityAttachedTo.GetElement<MeshRenderer>();
             spriteAnimator = EntityAttachedTo.GetElement<TextureAnimator>();
@@ -158,6 +167,7 @@ namespace DawnmakuEngine.Elements
             startColor = new Vector4(bulletStages[0].r, bulletStages[0].g, bulletStages[0].b, bulletStages[0].a);
 
             UpdateSprite();
+            UpdateColliders(bulletStages[0].spriteType);
 
             meshRenderer.ColorByte = new Vector4(startColor.X, startColor.Y, startColor.Z, 0);
             renderScale *= spawnEffectStartScale;
@@ -168,11 +178,38 @@ namespace DawnmakuEngine.Elements
             prevPos = EntityAttachedTo.WorldPosition.Xy;
 
             base.PostCreate();
+
+            DetectDestroy();
         }
 
         // Update is called once per frame
         public override void OnUpdate()
         {
+            //Trigers destroy animation, if it is destroying, exit out of code immediately
+            if (destroy)
+            {
+                if(!destroyingBullet)
+                {
+                    destroyingBullet = true;
+                    RemoveColliders();
+                    grazed = true;
+                    startScale = bulletStages[stageIndex].renderScale;
+                    startColor = bulletStages[stageIndex].Color;
+                }
+                destroyAnimCurrent += gameMaster.timeScale;
+
+                renderScale = startScale * DawnMath.Lerp(1, spawnEffectStartScale, destroyAnimCurrent / destroyAnimTime);
+                meshRenderer.colorA = (byte)Math.Clamp(DawnMath.Round(DawnMath.Lerp(startColor.W, 0, destroyAnimCurrent / destroyAnimTime)),0, 255);
+
+                meshRenderer.modelScale = renderScale;
+
+                if(destroyAnimCurrent >= destroyAnimTime)
+                {
+                    entityAttachedTo.AttemptDelete();
+                }
+                return;
+            }
+
             if (stageIndex + 1 < bulletStages.Length && bulletStages[stageIndex].framesToLast <= 0)
             {
                 stageIndex++;
@@ -219,23 +256,25 @@ namespace DawnmakuEngine.Elements
                     SpawnEffect();
 
                 startColor = meshRenderer.ColorByte;
+                meshRenderer.shader = gameMaster.bulletData[bulletStages[stageIndex].spriteType].shader;
+
+                maxBoundsExit = gameMaster.bulletData[bulletStages[stageIndex].spriteType].boundsExitDist;
 
                 timePassed = 0;
 
                 UpdateSprite();
+                if(bulletStages[stageIndex - 1].spriteType != bulletStages[stageIndex].spriteType)
+                    UpdateColliders(bulletStages[stageIndex].spriteType);
             }
             else
                 bulletStages[stageIndex].framesToLast -= gameMaster.timeScale;
 
-            //Trigers destroy animation, if it is destroying, exit out of code immediately
-            if (destroyingBullet)
-                return;
-            else if (destroy)
+
+            if(grazeDelayCurrent < grazeDelay && grazed)
             {
-                destroyingBullet = true;
-                /*else
-                    StartCoroutine(DestroyAnimation());*/
-                return;
+                grazeDelayCurrent++;
+                if (grazeDelayCurrent >= grazeDelay)
+                    grazed = false;
             }
 
             SpawnAnim();
@@ -282,8 +321,9 @@ namespace DawnmakuEngine.Elements
                 spawnTimeCurrent += gameMaster.timeScale;
 
                 renderScale = startScale * DawnMath.Lerp(spawnEffectStartScale, 1, spawnTimeCurrent / spawnTime);
-                meshRenderer.ColorByte = DawnMath.Lerp(new Vector4(startColor.X, startColor.Y, startColor.Z, 0),
-                    startColor, spawnTimeCurrent / (spawnTime * 2.5f));
+                meshRenderer.colorA = (byte)Math.Clamp(DawnMath.Floor(DawnMath.Lerp(0, startColor.W, spawnTimeCurrent / (spawnTime/* * 2.5f*/))), 0, 255);
+
+                meshRenderer.modelScale = renderScale;
 
                 if (spawnTimeCurrent >= spawnTime)
                 {
@@ -339,7 +379,9 @@ namespace DawnmakuEngine.Elements
         {
             if (killzoneDetectIndex == gameMaster.killzoneDetectIndex)
             {
-                CheckOutOfBounds();
+                if(CheckOutOfBounds())
+                    EntityAttachedTo.AttemptDelete();
+
                 /*if (regularKillzone && !regularDestroyExtents)
                 {
                     DetectKillzone(destroyXExtents, destroyYExtents);
@@ -351,11 +393,26 @@ namespace DawnmakuEngine.Elements
             }
         }
 
-        public void CheckOutOfBounds()
+        public override void AttemptDelete()
         {
-            Vector2 outOfBoundsDist = gameMaster.CheckDistOutsideCamBounds(EntityAttachedTo.WorldPosition.Xy);
-            if (outOfBoundsDist.X > maxBoundsExit || outOfBoundsDist.Y > maxBoundsExit)
-                EntityAttachedTo.Disable();
+            base.AttemptDelete();
+        }
+
+        public bool CheckOutOfBounds()
+        {
+            Vector2 outOfBoundsDist = Vector2.Zero, pos = entityAttachedTo.WorldPosition.Xy;
+
+            if (pos.X < gameMaster.bulletBoundsX.X)
+                outOfBoundsDist.X = Math.Abs(pos.X - gameMaster.bulletBoundsX.X);
+            else if (pos.X > gameMaster.bulletBoundsX.Y)
+                outOfBoundsDist.X = Math.Abs(pos.X - gameMaster.bulletBoundsX.Y);
+
+            if (pos.Y < gameMaster.bulletBoundsY.X)
+                outOfBoundsDist.Y = Math.Abs(pos.Y - gameMaster.bulletBoundsY.X);
+            else if (pos.Y > gameMaster.bulletBoundsY.Y)
+                outOfBoundsDist.Y = Math.Abs(pos.Y - gameMaster.bulletBoundsY.Y);
+
+            return outOfBoundsDist.X > maxBoundsExit || outOfBoundsDist.Y > maxBoundsExit;
         }
 
         //Detects when bullets are destroyed
@@ -419,33 +476,52 @@ namespace DawnmakuEngine.Elements
         }*/
 
         //Disables colliders on bullet
-       /* public void DisableAllColliders()
-        {
-            colliderContainer.gameObject.SetActive(false);
-        }
+        /* public void DisableAllColliders()
+         {
+             colliderContainer.gameObject.SetActive(false);
+         }
 
-        //Returns prefab of bullet
-        public static GameObject GetBulletType(BulletType type)
-        {
-            return GameMaster.gameMaster.bulletSpawns[(int)type - 1];
-        }*/
+         //Returns prefab of bullet
+         public static GameObject GetBulletType(BulletType type)
+         {
+             return GameMaster.gameMaster.bulletSpawns[(int)type - 1];
+         }*/
 
-        //Updates sprite by checking if it's animated, and then changing either the Sprite or RuntimeAnimatorController
+        /// <summary>
+        /// Updates sprite by setting an animaton for it -- creating a new one for a non-animated sprite
+        /// </summary>
         public void UpdateSprite()
         {
             spriteAnimator.animationStates = GetBulletAnim(bulletStages[stageIndex].spriteType, bulletStages[stageIndex].bulletColor);
             spriteAnimator.UpdateAnim(false);
-            /*if (!CheckForAnimatedType(bulletStages[stageIndex].animatedSprite))
-            {
-                meshRenderer.mesh.SetUVs(GetBulletSprite(bulletStages[stageIndex].spriteType, bulletStages[stageIndex].bulletColor, gameMaster.bulletSheet));
-            }
-            else
-            {
-                spriteAnimator.animationStates = GetBulletAnim(bulletStages[stageIndex].spriteType, bulletStages[stageIndex].bulletColor, gameMaster.bulletSheet);
-            }*/
         }
 
-        //Gets a bullet sprite by getting the index of the type by the list of the color -- or uses a custom sprite that is set
+        public void UpdateColliders(string type)
+        {
+            BulletData data = gameMaster.bulletData[type];
+            RemoveColliders();
+            if (firedByPlayer)
+                for (int i = 0; i < data.colliderSize.Length; i++)
+                    entityAttachedTo.AddElement(new PlayerDamageCollider(data.colliderSize[i], data.colliderOffset[i], this));
+            else
+                for (int i = 0; i < data.colliderSize.Length; i++)
+                    entityAttachedTo.AddElement(new EnemyDamageCollider(data.colliderSize[i], data.colliderOffset[i], this));
+        }
+
+        public void RemoveColliders()
+        {
+            if (firedByPlayer)
+                entityAttachedTo.DeleteAllElementsOfType<PlayerDamageCollider>();
+            else
+                entityAttachedTo.DeleteAllElementsOfType<EnemyDamageCollider>();
+        }
+
+        /// <summary>
+        /// Gets a bullet sprite by getting the index of the type by the list of the color -- or uses a custom sprite that is set
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="color"></param>
+        /// <returns></returns>
         public static SpriteSet.Sprite GetBulletSprite(string type, int color)
         {
             GameMaster gameMaster = GameMaster.gameMaster;
@@ -457,8 +533,9 @@ namespace DawnmakuEngine.Elements
 
             return gameMaster.bulletSprites[type].sprites[Math.Clamp(color + gameMaster.bulletData[type].spriteColors * randomizeNum, 0, gameMaster.bulletSprites[type].sprites.Count - 1)];
         }
-
-        //Gets a RuntimeAnimatorController by getting the index of the type by the list of the color -- or uses a custom animator that is set
+        /// <summary>
+        /// Gets a RuntimeAnimatorController by getting the index of the type by the list of the color -- or uses a custom animator that is set
+        /// </summary>
         public static TextureAnimator.AnimationState[] GetBulletAnim(string type, int color)
         {
             TextureAnimator.AnimationState[] state = new TextureAnimator.AnimationState[] { new TextureAnimator.AnimationState() };
@@ -478,7 +555,7 @@ namespace DawnmakuEngine.Elements
             }
 
             if (state[0] == null)
-                Console.WriteLine(type + " " + color.ToString() + "'s state returned null");
+                GameMaster.LogError(type + " " + color.ToString() + "'s state returned null");
             return state;
         }
 
@@ -500,13 +577,14 @@ namespace DawnmakuEngine.Elements
 
         public static Entity SpawnBullet(BulletStage[] stages, Vector3 position, bool shouldSpin = false, ushort damage = 1, int stage = 0, bool player = false)
         {
+            int i;
             Entity newBullet = new Entity(stages[0].bulletColor.ToString() + " "+ stages[0].spriteType.ToString());
             newBullet.LocalPosition = position;
             if (OpenTK.Input.Keyboard.GetState().IsKeyDown(OpenTK.Input.Key.ControlLeft))
                 newBullet.LocalScale = Vector3.One * 2;
             MeshRenderer renderer = new MeshRenderer();
             renderer.tex = GameMaster.gameMaster.bulletSprites[stages[0].spriteType].sprites[stages[0].bulletColor].tex;
-            renderer.shader = GameMaster.gameMaster.spriteShader;
+            renderer.shader = GameMaster.gameMaster.bulletData[stages[0].spriteType].shader;
             renderer.mesh = Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles);
             renderer.mesh.SetUp(OpenTK.Graphics.ES30.BufferUsageHint.DynamicDraw);
             renderer.LayerName = "bullets";
@@ -521,15 +599,17 @@ namespace DawnmakuEngine.Elements
 
             BulletElement bullet = new BulletElement();
             bullet.bulletStages = new BulletStage[stages.Length];
-            for (int i = 0; i < stages.Length; i++)
+            for (i = 0; i < stages.Length; i++)
             {
                 bullet.bulletStages[i] = stages[i].CopyValues();
             }
             bullet.spriteAnimator = newBullet.GetElement<TextureAnimator>();
             bullet.meshRenderer = renderer;
             bullet.firedByPlayer = player;
+            bullet.damage = damage;
             newBullet.AddElement(bullet);
-            Console.WriteLine("New bullet: {0}", newBullet.Name);
+
+            //Console.WriteLine("New bullet: {0}", newBullet.Name);
 
 
             return newBullet;
@@ -539,7 +619,7 @@ namespace DawnmakuEngine.Elements
         public static void UpdateSeed(int newSeed)
         {
             bulletRandom = new System.Random(newSeed);
-            Console.WriteLine("Bullets' Random is set to " + newSeed);
+            GameMaster.Log("Bullets' Random is set to " + newSeed);
         }
         //Gets random int from bullet Random
         public static int Random(int lower, int upper)

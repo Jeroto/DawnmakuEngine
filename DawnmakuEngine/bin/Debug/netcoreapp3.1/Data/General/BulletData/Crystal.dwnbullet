@@ -1,7 +1,8 @@
+shader=spriteshader;
 isanimated=false;
 shouldspin=false;
 shouldturn=true;
-collidersize=10;
+collidersize=6, 13;
 collideroffset=0,0;
 spriteColorCount=44;
 randomizeSprite=false;

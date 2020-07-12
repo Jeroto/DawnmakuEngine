@@ -33,6 +33,7 @@ namespace DawnmakuEngine.Data
             public EnemyData enemy;
             public uint time;
             public Vector3 pos;
+            public ItemData[] itemSpawns = new ItemData[0];
         }
     }
 }

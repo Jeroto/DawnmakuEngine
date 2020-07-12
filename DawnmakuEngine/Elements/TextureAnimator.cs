@@ -210,7 +210,7 @@ namespace DawnmakuEngine.Elements
                 }
             }
             else
-                Console.WriteLine("There is no sprite");
+                GameMaster.LogWarning("There is no sprite");
             animFramesRemaining += animationStates[StateIndex].animFrames[FrameIndex].frameDuration;
             refRenderer.mesh.SetUp(BufferUsageHint.DynamicDraw);
         }

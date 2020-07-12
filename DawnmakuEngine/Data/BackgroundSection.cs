@@ -23,7 +23,7 @@ namespace DawnmakuEngine.Data
             {
                 newModel = new Entity("Model", newSeg, modelPos[i], modelRot[i], modelScale[i]);
                 rand = GameMaster.Random(0, models[i].Length);
-                newModel.AddElement(new MeshRenderer(models[i][rand], 0, OpenTK.Graphics.ES30.BufferUsageHint.DynamicDraw, GameMaster.gameMaster.spriteShader));
+                newModel.AddElement(new MeshRenderer(models[i][rand], 0, OpenTK.Graphics.ES30.BufferUsageHint.DynamicDraw, models[i][rand].shader));
             }
             return newSeg;
         }
@@ -40,7 +40,7 @@ namespace DawnmakuEngine.Data
                 rotDeg.Z = MathHelper.DegreesToRadians(modelRot[i].Z);
                 newModel = new Entity("Model", newSeg, modelPos[i], rotDeg, modelScale[i]);
                 rand = GameMaster.Random(0, models[i].Length);
-                newModel.AddElement(new MeshRenderer(models[i][rand], 0, OpenTK.Graphics.ES30.BufferUsageHint.DynamicDraw, GameMaster.gameMaster.spriteShader));
+                newModel.AddElement(new MeshRenderer(models[i][rand], 0, OpenTK.Graphics.ES30.BufferUsageHint.DynamicDraw, models[i][rand].shader));
             }
             return newSeg;
         }

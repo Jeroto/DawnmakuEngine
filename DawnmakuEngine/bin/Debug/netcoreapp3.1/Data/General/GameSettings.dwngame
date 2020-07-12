@@ -6,6 +6,13 @@ PowerLevelSplits=100,200,300,400;
 FullPowerForPOC=false;
 ShiftAtTopToCollectItems=true;
 
+PlayerBoundsX=-182,182;
+playerBoundsY=10,433;
+GrazeDistance=10;
+
+BulletBoundsX=-202, 202;
+BulletBoundsY=-10, 453;
+
 MaxItemCount=200;
 PointOfCollectionHeight=350;
 ItemDisableHeight=-100;
@@ -15,10 +22,13 @@ ItemRandYVelRange = 2, 5;
 ItemMaxFallSpeed = 3;
 ItemGravAccel = 0.1;
 ItemXDecel = 0.01;
-ItemMagnetDist=0;
-ItemMagnetSpeed=6;
+ItemMagnetDist=32;
+ItemMagnetSpeed=4;
+ItemDrawSpeed=6;
 ItemCollectDist = 5;
 
+GeneralTextShader=textshader;
+DialogueTextShader=textshader;
 
 MainStages=1;
 ExStages=EX;

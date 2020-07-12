@@ -1,14 +1,14 @@
 ﻿using DawnmakuEngine.Elements;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using OpenTK;
 
 namespace DawnmakuEngine.Data
 {
-    class BulletData
+    public class BulletData
     {
+        public Shader shader;
         public bool isAnimated, shouldSpin, shouldTurn, randomizeSprite;
-        public float colliderSize, colliderOffsetX, colliderOffsetY;
+        public float boundsExitDist = -1;
+        public Vector2[] colliderSize, colliderOffset;
         public ushort spriteColors;
 
         public TextureAnimator.AnimationState[][] animStates = new TextureAnimator.AnimationState[0][];

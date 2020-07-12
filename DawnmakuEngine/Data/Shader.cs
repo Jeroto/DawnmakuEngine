@@ -38,11 +38,11 @@ namespace DawnmakuEngine.Data
 
             string infoLogVert = GL.GetShaderInfoLog(vertexShader);
             if (infoLogVert != System.String.Empty)
-                Console.WriteLine(infoLogVert);
+                GameMaster.Log(infoLogVert);
 
             string infoLogFrag = GL.GetShaderInfoLog(fragmentShader);
             if (infoLogFrag != System.String.Empty)
-                Console.WriteLine(infoLogFrag);
+                GameMaster.Log(infoLogFrag);
 
             handle = GL.CreateProgram();
 

@@ -73,7 +73,7 @@ namespace DawnmakuEngine.Elements
         {
             if (mesh == null)
             {
-                Console.WriteLine("There is no mesh on " + entityAttachedTo.Name + "'s Mesh Renderer Element!");
+                GameMaster.LogError("There is no mesh on " + entityAttachedTo.Name + "'s Mesh Renderer Element!");
                 return;
             }
 

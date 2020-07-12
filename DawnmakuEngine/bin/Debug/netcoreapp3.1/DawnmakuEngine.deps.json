@@ -17,9 +17,7 @@
           "SixLabors.ImageSharp.Drawing": "1.0.0-beta0009",
           "System.Drawing.Common": "4.7.0",
           "OpenTK": "3.2.0",
-          "OpenTK.GLControl": "3.1.0",
-          "PresentationCore": "4.0.0.0",
-          "SharpFont.Reference": "4.0.1.200"
+          "OpenTK.GLControl": "3.1.0"
         },
         "runtime": {
           "DawnmakuEngine.dll": {}
@@ -142,23 +140,7 @@
         }
       },
       "System.Numerics.Vectors/4.5.0": {},
-      "System.Runtime.CompilerServices.Unsafe/4.7.0": {},
-      "PresentationCore/4.0.0.0": {
-        "runtime": {
-          "PresentationCore.dll": {
-            "assemblyVersion": "4.0.0.0",
-            "fileVersion": "4.8.4180.0"
-          }
-        }
-      },
-      "SharpFont.Reference/4.0.1.200": {
-        "runtime": {
-          "SharpFont.dll": {
-            "assemblyVersion": "4.0.1.200",
-            "fileVersion": "1.0.0.0"
-          }
-        }
-      }
+      "System.Runtime.CompilerServices.Unsafe/4.7.0": {}
     }
   },
   "libraries": {
@@ -257,16 +239,6 @@
       "sha512": "sha512-IpU1lcHz8/09yDr9N+Juc7SCgNUz+RohkCQI+KsWKR67XxpFr8Z6c8t1iENCXZuRuNCc4HBwme/MDHNVCwyAKg==",
       "path": "system.runtime.compilerservices.unsafe/4.7.0",
       "hashPath": "system.runtime.compilerservices.unsafe.4.7.0.nupkg.sha512"
-    },
-    "PresentationCore/4.0.0.0": {
-      "type": "reference",
-      "serviceable": false,
-      "sha512": ""
-    },
-    "SharpFont.Reference/4.0.1.200": {
-      "type": "reference",
-      "serviceable": false,
-      "sha512": ""
     }
   }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace DawnmakuEngine
@@ -57,7 +58,7 @@ namespace DawnmakuEngine
 
         public virtual void Remove() { }
 
-        public virtual Element Clone() { Console.WriteLine("Cloning of " + this.GetType().Name + " has not been set up yet."); return null; }
+        public virtual Element Clone() { GameMaster.LogError("Cloning of " + this.GetType().Name + " has not been set up yet."); return null; }
 
         public void Enable()
         {
@@ -93,6 +94,7 @@ namespace DawnmakuEngine
             OnDisableAndDestroy();
             OnDestroy();
             allElements.Remove(this);
+            GameMaster.Log("Removing " + GetType().Name);
             EntityAttachedTo.RemoveElement(this);
         }
 

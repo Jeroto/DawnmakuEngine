@@ -16,14 +16,14 @@ namespace DawnmakuEngine
         protected static int randomSeed = 0;
         protected static Random random = new Random();
         public static GameMaster gameMaster = new GameMaster();
-        public static bool debugMode = false;
+        public static bool debugMode = true;
 
         public float timeScale = 1, timeScaleUpdate = 1, frameTime = 1/60f;
         public int windowWidth = 1920, windowHeight = 1080;
 
         public bool paused = false;
 
-        public int killzoneDetectIndex;
+        public byte killzoneDetectIndex;
 
         public static List<RenderLayer> renderLayerSettings = new List<RenderLayer>();
         public static Dictionary<string, int> layerIndexes = new Dictionary<string, int>();
@@ -45,10 +45,15 @@ namespace DawnmakuEngine
 
         public Entity playerEntity;
         public Vector3 playerWorldPos;
+        public string curCharName;
         public int playerTypeIndex, playerShotIndex;
+        public float grazeDistance = 10;
         public bool pointOfCollection = false,
             fullPowerPOC = false, shiftForPOC = false;
         public int pocHeight = 100, itemDisableHeight = -100;
+        public Vector2 playerBoundsX, playerBoundsY;
+
+        public Vector2 bulletBoundsX, bulletBoundsY;
 
         public delegate void ElementFunction();
 
@@ -57,13 +62,13 @@ namespace DawnmakuEngine
         public event ElementFunction PreRender;
 
 
-        public Shader spriteShader = new Shader("Data/General/Shaders/Shader.vert", "Data/General/Shaders/TransparentShader.frag");
+        public Shader generalTextShader, dialogueTextShader;
 
         public ushort maxItemCount = 200;
         //Default Item Data Values
         public Vector2 itemRandXRange, itemRandYRange;
         public float itemMaxFallSpeed, itemGravAccel, itemXDecel,
-            itemMagnetDist, itemMagnetSpeed,
+            itemMagnetDist, itemDrawSpeed, itemMagnetSpeed,
             itemCollectDist;
 
         //Loaded Shaders
@@ -120,6 +125,7 @@ namespace DawnmakuEngine
 
         //Loaded UI 
         public Dictionary<string, Texture> UITextures = new Dictionary<string, Texture>();
+        public List<string> fontNames = new List<string>();
         public FontCollection fonts = new FontCollection();
         public Dictionary<string, FontCharList> fontCharList = new Dictionary<string, FontCharList>();
         public Dictionary<string, Texture> fontSheets = new Dictionary<string, Texture>();
@@ -142,7 +148,10 @@ namespace DawnmakuEngine
             else
                 timeScale = 0;
 
-            if(playerEntity != null)
+
+            killzoneDetectIndex = (byte)DawnMath.Repeat(killzoneDetectIndex + 1, 6);
+
+            if (playerEntity != null)
                 playerWorldPos = playerEntity.WorldPosition;
         }
 
@@ -185,6 +194,84 @@ namespace DawnmakuEngine
             ShowWindow(GetConsoleWindow(), show ? SW_SHOW : SW_HIDE);
         }
 
+        public static void Log(string text)
+        {
+            if (!debugMode)
+                return;
+            Console.WriteLine(text);
+        }
+        public static void LogSecondary(string text)
+        {
+            if (!debugMode)
+                return;
+            Console.Write("> ");
+            Console.WriteLine(text);
+        }
+        public static void LogPositiveNotice(string text)
+        {
+            if (!debugMode)
+                return;
+            Console.ForegroundColor = ConsoleColor.DarkGreen;
+            Console.WriteLine(text);
+            Console.ForegroundColor = ConsoleColor.Gray;
+        }
+        public static void LogNeutralNotice(string text)
+        {
+            if (!debugMode)
+                return;
+            Console.ForegroundColor = ConsoleColor.DarkCyan;
+            Console.WriteLine(text);
+            Console.ForegroundColor = ConsoleColor.Gray;
+        }
+        public static void LogNegativeNotice(string text)
+        {
+            if (!debugMode)
+                return;
+            Console.ForegroundColor = ConsoleColor.DarkMagenta;
+            Console.WriteLine(text);
+            Console.ForegroundColor = ConsoleColor.Gray;
+        }
+        public static void LogError(string text)
+        {
+            if (!debugMode)
+                return;
+            Console.ForegroundColor = ConsoleColor.DarkRed;
+            Console.Write("[!] ");
+            Console.WriteLine(text);
+            Console.ForegroundColor = ConsoleColor.Gray;
+        }
+        public static void LogErrorMessage(string text, string message)
+        {
+            if (!debugMode)
+                return;
+            Console.ForegroundColor = ConsoleColor.DarkRed;
+            Console.Write("[!] ");
+            Console.WriteLine(text);
+            Console.Write("> ");
+            Console.WriteLine(message);
+            Console.ForegroundColor = ConsoleColor.Gray;
+        }
+        public static void LogWarning(string text)
+        {
+            if (!debugMode)
+                return;
+            Console.ForegroundColor = ConsoleColor.DarkYellow;
+            Console.Write("[!] ");
+            Console.WriteLine(text);
+            Console.ForegroundColor = ConsoleColor.Gray;
+        }
+        public static void LogWarningMessage(string text, string message)
+        {
+            if (!debugMode)
+                return;
+            Console.ForegroundColor = ConsoleColor.DarkYellow;
+            Console.Write("[!] ");
+            Console.WriteLine(text);
+            Console.Write("> ");
+            Console.WriteLine(message);
+            Console.ForegroundColor = ConsoleColor.Gray;
+        }
+
         //All random functions
         public void GenerateRandomSeed()
         {
@@ -196,7 +283,7 @@ namespace DawnmakuEngine
         {
             randomSeed = newSeed;
             random = new System.Random(randomSeed);
-            Console.WriteLine("Game's Random is set to " + randomSeed);
+            Log("Game's Random is set to " + randomSeed);
         }
 
         public static int Random(int lower, int upper)

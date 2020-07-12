@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using DawnmakuEngine.Data;
@@ -30,9 +31,6 @@ namespace DawnmakuEngine.Elements
         public float invFrames = 30;
         public int scoreOnDeath;
 
-        public float colliderSize;
-        public Vector2 colliderOffset;
-
         public int segmentIndex = 0;
         protected float moveTimePassed, waitTime;
 
@@ -44,13 +42,18 @@ namespace DawnmakuEngine.Elements
         Vector2 prevPos, prevMovement;
 
         //Item Drops
+        public ItemData[] itemSpawns;
 
         Vector2 destroyExtentsX = new Vector2(-600, 600);
         Vector2 destroyExtentsY = new Vector2(-600, 600);
 
-        public BaseEnemyElement(EnemyData enemyToSpawn) : base(true, true, true)
+        public BaseEnemyElement(EnemyData enemyToSpawn) : this(enemyToSpawn, new ItemData[0]) { }
+        public BaseEnemyElement(EnemyData enemyToSpawn, ItemData[] itemSpawns_) : base(true, true, true)
         {
             enemyData = enemyToSpawn;
+            itemSpawns = itemSpawns_;
+
+            health = enemyData.health;
         }
 
         public override void PostCreate()
@@ -66,6 +69,8 @@ namespace DawnmakuEngine.Elements
             anim.animationStates = enemyData.animations;
 
             waitTime = enemyData.movementCurve.StartWaitTime(segmentIndex);
+
+            entityAttachedTo.AddElement(new EnemyDamageCollider(enemyData.killColliderSize, enemyData.killColliderOffset));
 
             base.PostCreate();
         }
@@ -184,7 +189,58 @@ namespace DawnmakuEngine.Elements
 
         protected virtual void BulletCollisions()
         {
+            PlayerDamageCollider thisCol;
+            float curHitboxSize, hitboxCombined, sin, cos,
+                XCosYSin, XSinYCos;
+            Vector2 position = entityAttachedTo.WorldPosition.Xy + enemyData.colliderOffset,
+                posDif = new Vector2();
+            curHitboxSize = enemyData.colliderSize * entityAttachedTo.WorldScale.X;
+            for (int i = 0; i < PlayerDamageCollider.playerDamageColliders.Count; i++)
+            {
+                thisCol = PlayerDamageCollider.playerDamageColliders[i];
+                posDif = thisCol.rotatedOffset - position;
+                hitboxCombined = curHitboxSize + thisCol.LargestScaledDimension / 2;
 
+                if (posDif.X * posDif.X + posDif.Y * posDif.Y <= hitboxCombined * hitboxCombined)
+                {
+                    posDif = new Vector2(Math.Clamp(posDif.X, -curHitboxSize, curHitboxSize),
+                        Math.Clamp(posDif.Y, -curHitboxSize, curHitboxSize));
+                    sin = MathF.Sin(thisCol.rotRad);
+                    cos = MathF.Cos(thisCol.rotRad);
+                    XCosYSin = posDif.X * cos - posDif.Y * sin;
+                    XCosYSin *= XCosYSin;
+                    XSinYCos = posDif.X * sin + posDif.Y * cos;
+                    XSinYCos *= XSinYCos;
+
+                    if (XCosYSin / (thisCol.scaledWidth * thisCol.scaledWidth)
+                        + XSinYCos / (thisCol.scaledHeight * thisCol.scaledHeight) <= 1)
+                    {
+                        Damage(thisCol.bulletAttached);
+                    }
+                }
+            }
+        }
+
+        protected virtual void Damage(BulletElement bullet)
+        {
+            if (bullet != null)
+            {
+                bullet.destroy = true;
+                health -= bullet.damage;
+            }
+
+            if (health <= 0)
+                Death();
+        }
+
+        protected virtual void Death()
+        {
+            for (int i = 0; i < itemSpawns.Length; i++)
+            {
+                ItemElement.SpawnItem(itemSpawns[i], entityAttachedTo.WorldPosition);
+            }
+            entityAttachedTo.DeleteAllElementsOfType<EnemyDamageCollider>();
+            entityAttachedTo.AttemptDelete();
         }
 
         protected override void OnEnableAndCreate()

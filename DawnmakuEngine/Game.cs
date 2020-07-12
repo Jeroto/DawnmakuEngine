@@ -57,35 +57,14 @@ namespace DawnmakuEngine
             GL.VertexAttribPointer(texCoordLocation, 2, VertexAttribPointerType.Float, false, 5 * sizeof(float), 3 * sizeof(float));*/
 
 
-
-
-            MeshRenderer debugPlayerRenderer = new MeshRenderer();
-            debugPlayerRenderer.mesh = Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles);
-            debugPlayerRenderer.mesh.SetUp(BufferUsageHint.DynamicDraw);
-            debugPlayerRenderer.shader = GameMaster.gameMaster.spriteShader;
-            debugPlayerRenderer.LayerName = "player";
-            debugPlayerRenderer.resizeSprite = true;
-            //newRenderer1.tex = new Texture("Wood.jpg", true);
-            debugPlayerRenderer.shader.SetInt("texture0", 0);
-            debugPlayerRenderer.shader.SetInt("texture1", 1);
-
-            Entity debugPlayer = new Entity("Player", new Vector3(0, 32, 0));
-            debugPlayer.AddElement(debugPlayerRenderer);
-
-            PlayerController debugPlayerControl = new PlayerController();
-            debugPlayerControl.playerData = GameMaster.gameMaster.playerChars["reimu"];
-            debugPlayer.AddElement(debugPlayerControl);
-
-            TextureAnimator debugPlayerAnim = new TextureAnimator(debugPlayer.GetElement<MeshRenderer>());
-            debugPlayer.AddElement(debugPlayerAnim);
-
-            GameMaster.gameMaster.playerEntity = debugPlayer;
+            GameMaster.gameMaster.curCharName = "reimu";
+            PlayerController.SpawnPlayer();
 
             Entity text = new Entity("FPSCounter", new Vector3(.5f, -.5f, 0), Vector3.Zero, Vector3.One);
 
             Entity gameBorder = new Entity("GameBorder", new Vector3(96.5f,225.5f, 0));
             gameBorder.AddElement(new MeshRenderer(Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles), "gameborder", BufferUsageHint.StaticDraw, true));
-            gameBorder.GetElement<MeshRenderer>().shader = GameMaster.gameMaster.spriteShader;
+            gameBorder.GetElement<MeshRenderer>().shader = GameMaster.gameMaster.shaders["spriteshader"];
             TextureAnimator.AnimationState newState = new TextureAnimator.AnimationState();
             newState.animFrames = new TextureAnimator.AnimationFrame[1] { new TextureAnimator.AnimationFrame() };
             newState.animFrames[0].frameDuration = 8;
@@ -99,7 +78,6 @@ namespace DawnmakuEngine
             textRend.font = new QuickFont.QFont("Fonts/WitchingHour.ttf", 72, new QuickFont.Configuration.QFontBuilderConfiguration());
             textRend.SetUp();
             text.AddElement(textRend);*/
-            Console.WriteLine(debugPlayer.ToString());
 
             Entity debugCam = new Entity("BackgroundCamera", new Vector3(0, 25, 100)), debugCam2 = new Entity("Camera", new Vector3(96.5f,225.5f,3));
             debugCam.AddElement(new CameraElement(true));
@@ -111,6 +89,16 @@ namespace DawnmakuEngine
 
             Entity stageController = new Entity("StageControl");
             stageController.AddElement(new StageElement(loader.stageData));
+
+            /*BulletElement.BulletStage[] stages = new BulletElement.BulletStage[1];
+            stages[0] = new BulletElement.BulletStage();
+            stages[0].spriteType = "round";
+            stages[0].bulletColor = 5;
+            stages[0].movementDirection = new Vector2(0, -1);
+            stages[0].endingSpeed = 25;
+
+            BulletElement.SpawnBullet(stages, new Vector3(0, GameMaster.gameMaster.playerBoundsY.Y, 0));*/
+            
             
             GL.Enable(EnableCap.Blend);
             GL.BlendFunc(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha);
@@ -120,40 +108,45 @@ namespace DawnmakuEngine
 
             Entity debugText = new Entity("DebugText", new Vector3(300, 450, 0));
             TextRenderer textRenderer = new TextRenderer();
-            //textRenderer.WriteFontFamilyName = "Arial";
-            textRenderer.WriteFontFamilyName = "Witching Hour";
+            debugText.AddElement(textRenderer);
+            textRenderer.WriteFontFamilyName = "Arial";
+            //textRenderer.WriteFontFamilyName = "Witching Hour";
+            textRenderer.currentShader = GameMaster.gameMaster.shaders["textshader"];
             textRenderer.TextSize = 50;
             textRenderer.Text = "Normal";
-            MeshRenderer textMesh = new MeshRenderer(Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles), "borderui", BufferUsageHint.StaticDraw, 
-                GameMaster.gameMaster.spriteShader, null, true);
+            /*MeshRenderer textMesh = new MeshRenderer(Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles), "borderui", BufferUsageHint.StaticDraw, 
+                GameMaster.gameMaster.generalTextShader, null, true);
             textMesh.colorR = 150;
             textMesh.colorG = 150;
-            debugText.AddElement(textMesh);
-            debugText.AddElement(textRenderer);
+            debugText.AddElement(textMesh);*/
 
-            /*debugText = new Entity("ScoreLabel", new Vector3(300, 400, 0));
+            debugText = new Entity("ScoreLabel", new Vector3(300, 400, 0));
             textRenderer = new TextRenderer();
-            textRenderer.WriteFontFamilyName = "Witching Hour";
+            debugText.AddElement(textRenderer);
+            textRenderer.WriteFontFamilyName = "Arial";
+            //textRenderer.WriteFontFamilyName = "Witching Hour";
+            textRenderer.currentShader = GameMaster.gameMaster.shaders["textshader"];
             textRenderer.TextSize = 50;
             textRenderer.Text = "Score";
             textRenderer.HoriAlign = SixLabors.Fonts.HorizontalAlignment.Right;
-            textMesh = new MeshRenderer(Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles), "borderui", BufferUsageHint.StaticDraw,
-                GameMaster.gameMaster.spriteShader, null, true);
+            /*textMesh = new MeshRenderer(Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles), "borderui", BufferUsageHint.StaticDraw,
+                GameMaster.gameMaster.generalTextShader, null, true);
             textMesh.colorR = 150;
             textMesh.colorG = 150;
             debugText.AddElement(textMesh);*/
 
             debugText = new Entity("ScoreVal", new Vector3(300, 400, 0));
             textRenderer = new TextRenderer();
+            debugText.AddElement(textRenderer);
             textRenderer.WriteFontFamilyName = "Arial";
             //textRenderer.WriteFontFamilyName = "Witching Hour";
+            textRenderer.currentShader = GameMaster.gameMaster.shaders["textshader"];
             textRenderer.TextSize = 35;
             textRenderer.Text = "000000000";
             textRenderer.HoriAlign = SixLabors.Fonts.HorizontalAlignment.Left;
-            textMesh = new MeshRenderer(Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles), "borderui", BufferUsageHint.StaticDraw,
-                GameMaster.gameMaster.spriteShader, null, true);
-            debugText.AddElement(textMesh);
-            debugText.AddElement(textRenderer);
+            /*textMesh = new MeshRenderer(Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles), "borderui", BufferUsageHint.StaticDraw,
+                GameMaster.gameMaster.generalTextShader, null, true);
+            debugText.AddElement(textMesh);*/
 
             /*GL.Enable(EnableCap.StencilTest);
             GL.StencilFunc(StencilFunction.Equal, GameMaster.gameMaster.spriteShader.Handle, 0xFF);
@@ -188,11 +181,12 @@ namespace DawnmakuEngine
                     stage[0].spriteType = gameMaster.bulletTypes[BulletElement.Random(0, gameMaster.bulletTypes.Count - 1)];
                     stage[0].bulletColor = BulletElement.Random(0, gameMaster.bulletSprites[stage[0].spriteType].sprites.Count - 1);
                     stage[0].movementDirection = DawnMath.RandomCircle();
-                    stage[0].startingSpeed = 100;
-                    stage[0].endingSpeed = 50;
+                    stage[0].startingSpeed = 20;
+                    stage[0].endingSpeed = 10;
                     stage[0].framesToChangeSpeed = 60;
                     stage[0].rotate = BulletElement.ShouldTurn(stage[0].spriteType);
-                    BulletElement.SpawnBullet(stage, gameMaster.playerEntity.WorldPosition, BulletElement.ShouldSpin(stage[0].spriteType));
+                    BulletElement.SpawnBullet(stage, gameMaster.playerEntity.WorldPosition + new Vector3(stage[0].movementDirection * 20),
+                        BulletElement.ShouldSpin(stage[0].spriteType));
                 }
                 if(input.IsKeyDown(Key.I))
                 {
@@ -340,7 +334,9 @@ namespace DawnmakuEngine
                         if (thisRenderer.mesh.triangleData == null || thisRenderer.mesh.triangleData.Length == 0)
                             GL.DrawArrays(PrimitiveType.Triangles, 0, thisRenderer.mesh.vertices.Length);
                         else
+                        {
                             GL.DrawElements(PrimitiveType.Triangles, thisRenderer.mesh.triangleData.Length, DrawElementsType.UnsignedInt, IntPtr.Zero);
+                        }
                     }
                 }
             }

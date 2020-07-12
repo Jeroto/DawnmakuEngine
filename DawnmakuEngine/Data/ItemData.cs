@@ -6,15 +6,16 @@ using OpenTK;
 
 namespace DawnmakuEngine.Data
 {
-    class ItemData
+    public class ItemData
     {
+        public Shader shader;
         public TextureAnimator.AnimationState[] animations;
         public Vector2 randXRange, randYRange;
         public float maxFallSpeed, gravAccel, xDecel,
-            magnetDist, magnetDistSqr, magnetSpeed,
+            magnetDist, magnetDistSqr, drawSpeed, magnetSpeed,
             collectDist, collectDistSqr;
 
         public bool canBePOC = true,
-            autoMagnetDraw = false;
+            autoDraw = false;
     }
 }

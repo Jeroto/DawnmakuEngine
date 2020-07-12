@@ -14,7 +14,7 @@ namespace DawnmakuEngine.Elements
 
         public ItemData itemData;
         public Vector2 velocity;
-        public bool drawToPlayer;
+        public bool drawToPlayer, magnetToPlayer;
         GameMaster gameMaster = GameMaster.gameMaster;
 
         public override void OnUpdate()
@@ -22,7 +22,7 @@ namespace DawnmakuEngine.Elements
             if (gameMaster.pointOfCollection)
                 drawToPlayer = true;
             
-            if(!drawToPlayer)
+            if(!drawToPlayer && !magnetToPlayer)
             {
                 velocity.X = Math.Clamp(Math.Abs(velocity.X) - itemData.xDecel * gameMaster.timeScale, 0, Math.Abs(velocity.X)) * Math.Sign(velocity.X);
                 velocity.Y = Math.Clamp(velocity.Y - itemData.gravAccel * gameMaster.timeScale, -itemData.maxFallSpeed, velocity.Y);
@@ -66,10 +66,10 @@ namespace DawnmakuEngine.Elements
 
             Entity newSpawn = new Entity("item"+itemList.Count, position);
             MeshRenderer renderer = new MeshRenderer(Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles), "items",
-                OpenTK.Graphics.ES30.BufferUsageHint.DynamicDraw, GameMaster.gameMaster.spriteShader, data.animations[0].animFrames[0].sprite.tex, true);
+                OpenTK.Graphics.ES30.BufferUsageHint.DynamicDraw, data.shader, data.animations[0].animFrames[0].sprite.tex, true);
             newSpawn.AddElement(renderer);
             newItemEle = new ItemElement(data, randomVel);
-            newItemEle.drawToPlayer = data.autoMagnetDraw;
+            newItemEle.drawToPlayer = data.autoDraw;
             newSpawn.AddElement(newItemEle);
             newSpawn.AddElement(new TextureAnimator(data.animations, renderer));
 
@@ -91,11 +91,13 @@ namespace DawnmakuEngine.Elements
 
             itemList[index].itemData = data;
             itemList[index].velocity = vel;
-            itemList[index].drawToPlayer = data.autoMagnetDraw;
+            itemList[index].drawToPlayer = data.autoDraw;
 
             TextureAnimator animator = newSpawn.GetElement<TextureAnimator>();
             animator.animationStates = data.animations;
             animator.UpdateAnim(false);
+
+            newSpawn.GetElement<MeshRenderer>().shader = data.shader;
 
             itemList.Add(itemList[index]);
             itemList.RemoveAt(index);
@@ -106,7 +108,7 @@ namespace DawnmakuEngine.Elements
         public static void UpdateSeed(int newSeed)
         {
             itemDropRandom = new System.Random(newSeed);
-            Console.WriteLine("Items' Random is set to " + newSeed);
+            GameMaster.Log("Items' Random is set to " + newSeed);
         }
 
         public static int Random(int lower, int upper)

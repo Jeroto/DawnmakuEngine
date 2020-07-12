@@ -5,6 +5,16 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Stages\**" />
+    <EmbeddedResource Remove="Stages\**" />
+    <None Remove="Stages\**" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.Win32.SystemEvents" Version="4.7.0" />
     <PackageReference Include="opentk" Version="3.2.0" />
@@ -18,23 +28,13 @@
     <PackageReference Include="System.Drawing.Common" Version="4.7.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Reference Include="PresentationCore">
-      <HintPath>C:\Windows\Microsoft.NET\assembly\GAC_64\PresentationCore\v4.0_4.0.0.0__31bf3856ad364e35\PresentationCore.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpFont">
-      <HintPath>..\..\..\dll\SharpFont.dll</HintPath>
-    </Reference>
-    <Reference Include="PresentationCore" Condition="$(Platform) == 'x64'">
+  <ItemGroup> 
+	<Reference Include="PresentationCore" Condition="$(Platform) == 'x64'">
       <HintPath>C:\Windows\Microsoft.NET\assembly\GAC_32\PresentationCore\v4.0_4.0.0.0__31bf3856ad364e35\PresentationCore.dll</HintPath>
     </Reference>
-	<Reference Include="PresentationCore" Condition="$(Platform) == 'x86'">
-	   <HintPath>C:\Windows\Microsoft.NET\assembly\GAC_64\PresentationCore\v4.0_4.0.0.0__31bf3856ad364e35\PresentationCore.dll</HintPath>
-	</Reference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Stages\1\" />
+    <Reference Include="PresentationCore" Condition="$(Platform) == 'x86'">
+       <HintPath>C:\Windows\Microsoft.NET\assembly\GAC_64\PresentationCore\v4.0_4.0.0.0__31bf3856ad364e35\PresentationCore.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

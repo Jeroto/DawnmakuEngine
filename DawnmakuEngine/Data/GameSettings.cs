@@ -8,6 +8,7 @@ namespace DawnmakuEngine.Data
 {
     class GameSettings
     {
+        public Shader generalTextShader, dialogueTextShader;
         public bool runInDebugMode = false,
             fullPowerPOC = false, shiftForPOC = false;
         public int maxPower, powerLostOnDeath, powerTotalDroppedOnDeath, maxPowerLevel;
@@ -17,11 +18,17 @@ namespace DawnmakuEngine.Data
         public Dictionary<string, int> renderLayers = new Dictionary<string, int>();
         public List<GameMaster.RenderLayer> renderLayerSettings = new List<GameMaster.RenderLayer>();
 
+        //Player Values
+        public Vector2 playerBoundsX, playerBoundsY;
+        public float grazeDistance;
+
+
+        public Vector2 bulletBoundsX, bulletBoundsY;
 
         //Default Item Data Values
         public Vector2 itemRandXRange, itemRandYRange;
         public float itemMaxFallSpeed, itemGravAccel, itemXDecel,
-            itemMagnetDist, itemMagnetSpeed,
+            itemMagnetDist, itemDrawSpeed, itemMagnetSpeed,
             itemCollectDist;
         public int pocHeight, itemDisableHeight;
         public ushort maxItemCount;

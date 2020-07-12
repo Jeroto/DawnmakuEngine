@@ -8,6 +8,7 @@ namespace DawnmakuEngine.Data
 {
     public class EnemyData
     {
+        public Shader shader;
         public string enemyName;
         public int health;
         public float invTime = 30;
@@ -15,6 +16,9 @@ namespace DawnmakuEngine.Data
 
         public float colliderSize;
         public Vector2 colliderOffset;
+
+        public Vector2 killColliderSize,
+            killColliderOffset;
 
         public Bezier movementCurve;
         public TextureAnimator.AnimationState[] animations;

@@ -142,7 +142,7 @@ namespace DawnmakuEngine.Elements
         {
             if(data.enemySpawns.Count > enemyIndex && data.enemySpawns[enemyIndex].time <= enemyTime)
             {
-                EnemyElement.SpawnEnemy(data.enemySpawns[enemyIndex].enemy, data.enemySpawns[enemyIndex].pos);
+                EnemyElement.SpawnEnemy(data.enemySpawns[enemyIndex].enemy, data.enemySpawns[enemyIndex].pos, data.enemySpawns[enemyIndex].itemSpawns);
                 enemyIndex++;
             }
         }

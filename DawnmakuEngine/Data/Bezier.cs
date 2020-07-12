@@ -38,7 +38,7 @@ namespace DawnmakuEngine.Data
                 new Point(center+(vec2Right + vec2Down) * 0.5f, 0),
                 new Point(center + vec2Right, 0.5f),
             };
-            Console.WriteLine("Instantiated with " + NumPoints + " points");
+            GameMaster.Log("Instantiated with " + NumPoints + " points");
         }
 
         public Point this[int i]

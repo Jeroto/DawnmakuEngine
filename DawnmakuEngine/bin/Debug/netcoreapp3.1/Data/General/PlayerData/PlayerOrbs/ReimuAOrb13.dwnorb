@@ -1,3 +1,4 @@
+shader=spriteshader;
 Active Power Levels = true, true, true, true, true, true, true, true, true;
 Unfocus Pos  = 0, -30;
 Focused Pos = 0, -30;

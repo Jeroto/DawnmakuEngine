@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 
 namespace DawnmakuEngine
 {
@@ -6,8 +7,10 @@ namespace DawnmakuEngine
     {
         static void Main(string[] args)
         {
+            Console.OutputEncoding = Encoding.UTF8;
             using (Game window = new Game(1280, 960, "Dawnmaku"))
             {
+                
                 window.Run(60.0);
             }
         }

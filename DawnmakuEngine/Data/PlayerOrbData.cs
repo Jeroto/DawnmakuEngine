@@ -8,6 +8,7 @@ namespace DawnmakuEngine.Data
 {
     class PlayerOrbData
     {
+        public Shader shader;
         public bool[] activePowerLevels = null;
         public Vector2 unfocusPosition = Vector2.Zero, 
             focusPosition = Vector2.Zero;

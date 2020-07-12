@@ -4,10 +4,11 @@ ItemRandYVelRange = 2, 5;
 ItemMaxFallSpeed = 2;
 ItemGravAccel = 0.1;
 ItemXDecel = 0.01;
-ItemMagnetDist=0;
-ItemMagnetSpeed=5.25;
+ItemMagnetDist=32;
+ItemMagnetSpeed=2;
+ItemDrawSpeed=5.25;
 ItemCollectDist = 8;
 
 canBeAutoCollectedAtTop=true;
-autoMagnetDraw=false;
+autoDraw=false;
 animStates=lifeitem;

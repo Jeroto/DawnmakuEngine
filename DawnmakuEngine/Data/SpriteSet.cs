@@ -34,6 +34,11 @@ namespace DawnmakuEngine.Data
             public float left, top, right, bottom;
             public Texture tex;
 
+            public float[] GetUVs()
+            {
+                return new float[] { left, top, right, top, right, bottom, left, bottom };
+            }
+
             public Sprite() { }
             /// <summary>
             /// Set up Sprite with a texture

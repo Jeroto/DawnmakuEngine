@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Transactions;
@@ -98,6 +99,11 @@ namespace DawnmakuEngine.Elements
             shotSwitchTime--;
 
             entityAttachedTo.LocalPosition += new Vector3(movementVelocity.X, movementVelocity.Y, 0);
+
+            //Lock the player in-bounds
+            entityAttachedTo.LocalPosition = new Vector3(Math.Clamp(entityAttachedTo.LocalPosition.X, gameMaster.playerBoundsX.X, gameMaster.playerBoundsX.Y),
+                Math.Clamp(entityAttachedTo.LocalPosition.Y, gameMaster.playerBoundsY.X, gameMaster.playerBoundsY.Y), 0);
+
             gameMaster.pointOfCollection = entityAttachedTo.WorldPosition.Y >= gameMaster.pocHeight && 
                 (!gameMaster.fullPowerPOC || (gameMaster.fullPowerPOC && gameMaster.currentPowerLevel == gameMaster.maxPowerLevel)) &&
                 (!gameMaster.shiftForPOC || (gameMaster.shiftForPOC && InputScript.Focus));
@@ -117,6 +123,7 @@ namespace DawnmakuEngine.Elements
             }
 
             DrawAndCollectItems();
+            BulletCollisions();
 
             if (movementVelocity.X > 0)
                 anim.UpdateStateIndex = 1;
@@ -177,15 +184,80 @@ namespace DawnmakuEngine.Elements
 
                 if (dist <= currentItem.itemData.magnetDistSqr)
                 {
-
+                    currentItem.magnetToPlayer = true;
                 }
 
-                if (currentItem.drawToPlayer)
+                if (currentItem.drawToPlayer || currentItem.magnetToPlayer)
                 {
                     dir = (playerPos - itemPos);
                     dir.NormalizeFast();
-                    currentItem.velocity = dir * currentItem.itemData.magnetSpeed;
+                    currentItem.velocity = dir * (currentItem.drawToPlayer ? currentItem.itemData.drawSpeed : currentItem.itemData.magnetSpeed);
                 }
+            }
+        }
+
+        public void BulletCollisions()
+        {
+            EnemyDamageCollider thisCol;
+            float curHitboxSize, hitboxCombined, widthGraze, heightGraze, sin, cos,
+                XCosYSin, XSinYCos;
+            Vector2 position = entityAttachedTo.WorldPosition.Xy + playerData.colliderOffset,
+                posDif = new Vector2();
+            curHitboxSize = playerData.colliderSize * entityAttachedTo.WorldScale.X;
+            for (int i = 0; i < EnemyDamageCollider.enemyDamageColliders.Count; i++)
+            {
+                thisCol = EnemyDamageCollider.enemyDamageColliders[i];
+                posDif = thisCol.rotatedOffset - position;
+                hitboxCombined = curHitboxSize + thisCol.LargestScaledDimension / 2 + gameMaster.grazeDistance;
+
+                if (posDif.X * posDif.X + posDif.Y * posDif.Y <= hitboxCombined * hitboxCombined)
+                {
+                    posDif = new Vector2(Math.Clamp(posDif.X, -curHitboxSize, curHitboxSize),
+                        Math.Clamp(posDif.Y, -curHitboxSize, curHitboxSize));
+                    widthGraze = thisCol.scaledWidth + gameMaster.grazeDistance;
+                    heightGraze = thisCol.scaledHeight + gameMaster.grazeDistance;
+                    sin = MathF.Sin(thisCol.rotRad);
+                    cos = MathF.Cos(thisCol.rotRad);
+                    XCosYSin = posDif.X * cos - posDif.Y * sin;
+                    XCosYSin *= XCosYSin;
+                    XSinYCos = posDif.X * sin + posDif.Y * cos;
+                    XSinYCos *= XSinYCos;
+                    if (XCosYSin / (widthGraze * widthGraze) 
+                        + XSinYCos / (heightGraze * heightGraze) <= 1)
+                    {
+                        if (thisCol.bulletAttached != null && !thisCol.bulletAttached.grazed)
+                        {
+                            thisCol.bulletAttached.grazed = true;
+                            thisCol.bulletAttached.grazeDelayCurrent = 0;
+                            Graze();
+                        }
+
+                        if (XCosYSin / (thisCol.scaledWidth * thisCol.scaledWidth)
+                            + XSinYCos / (thisCol.scaledHeight * thisCol.scaledHeight) <= 1)
+                        {
+                            Damage(thisCol.bulletAttached);
+                        }
+
+                    }
+                }
+
+            }
+        }
+
+        public void Graze()
+        {
+            GameMaster.LogPositiveNotice("Grazed");
+        }
+
+        long collisionCounter;
+        public void Damage(BulletElement bullet)
+        {
+            GameMaster.LogNegativeNotice("Collision " + collisionCounter.ToString("000000"));
+
+            collisionCounter++;
+            if(bullet != null)
+            {
+                bullet.destroy = true;
             }
         }
 
@@ -303,13 +375,14 @@ namespace DawnmakuEngine.Elements
                         orbAnim.animationStates = orbData[i].animStates;
                         orbAnim.UpdateStateIndex = 0;
                         orbAnim.FrameIndex = 0;
+                        spawnedOrbs[i].GetElement<MeshRenderer>().shader = orbData[i].shader;
                         spawnedOrbs[i].GetElement<RotateElement>().RotSpeedDeg = orbData[i].rotateDegreesPerSecond;
                     }
                     else
                     {
                         spawnedOrbs[i] = new Entity("PlayerOrb" + i.ToString(), EntityAttachedTo, Vector3.Zero, Vector3.Zero, Vector3.One);
                         orbRenderers[i] = new MeshRenderer(Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles), "playerorbs",
-                            OpenTK.Graphics.ES30.BufferUsageHint.DynamicDraw, gameMaster.spriteShader, orbData[i].animStates[0].animFrames[0].sprite.tex, true);
+                            OpenTK.Graphics.ES30.BufferUsageHint.DynamicDraw, orbData[i].shader, orbData[i].animStates[0].animFrames[0].sprite.tex, true);
                         orbRenderers[i].colorA = 0;
                         spawnedOrbs[i].AddElement(orbRenderers[i]);
                         
@@ -328,6 +401,7 @@ namespace DawnmakuEngine.Elements
                     orbAnim.animationStates = orbData[i].animStates;
                     orbAnim.UpdateStateIndex = 0;
                     orbAnim.FrameIndex = 0;
+                    spawnedOrbs[i].GetElement<MeshRenderer>().shader = orbData[i].shader;
                     spawnedOrbs[i].GetElement<RotateElement>().RotSpeedDeg = orbData[i].rotateDegreesPerSecond;
                 }
             }
@@ -404,7 +478,7 @@ namespace DawnmakuEngine.Elements
                 Entity newEntity;
                 newEntity = new Entity("FocusEffect", entityAttachedTo, new Vector3(playerData.colliderOffset));
                 focusEffect = new MeshRenderer(Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles), "effects", OpenTK.Graphics.ES30.BufferUsageHint.DynamicDraw,
-                    gameMaster.spriteShader, playerData.focusEffectAnim.animFrames[0].sprite.tex, true);
+                    playerData.focusEffectShader, playerData.focusEffectAnim.animFrames[0].sprite.tex, true);
                 focusEffect.ColorByte = new Vector4(255, 255, 255,0);
                 newEntity.AddElement(focusEffect);
                 newEntity.AddElement(new TextureAnimator(new TextureAnimator.AnimationState[] { playerData.focusEffectAnim }, focusEffect));
@@ -412,15 +486,41 @@ namespace DawnmakuEngine.Elements
 
                 newEntity = new Entity("Hitbox", entityAttachedTo, new Vector3(playerData.colliderOffset));
                 hitbox = new MeshRenderer(Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles), "effects", OpenTK.Graphics.ES30.BufferUsageHint.DynamicDraw,
-                    gameMaster.spriteShader, playerData.hitboxAnim.animFrames[0].sprite.tex, true);
+                    playerData.hitboxShader, playerData.hitboxAnim.animFrames[0].sprite.tex, true);
                 hitbox.ColorByte = new Vector4(255, 255, 255, 0);
-                hitboxScale = playerData.colliderSize / (hitbox.tex.Height * 
-                    (playerData.hitboxAnim.animFrames[0].sprite.right - playerData.hitboxAnim.animFrames[0].sprite.left));
+                hitboxScale = playerData.colliderSize / (((hitbox.tex.Height) * 
+                    (playerData.hitboxAnim.animFrames[0].sprite.right - playerData.hitboxAnim.animFrames[0].sprite.left)) - playerData.hitboxInsetAmount);
                 hitboxInvisScale = hitboxScale * 1.5f;
                 hitbox.modelScale = hitboxInvisScale;
                 newEntity.AddElement(hitbox);
                 newEntity.AddElement(new TextureAnimator(new TextureAnimator.AnimationState[] { playerData.hitboxAnim }, hitbox));
             }
+        }
+
+        public static Entity SpawnPlayer()
+        {
+            Entity newPlayer = new Entity("Player", new Vector3(0, 32, 0));
+
+            MeshRenderer playerRenderer = new MeshRenderer();
+            playerRenderer.mesh = Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles);
+            playerRenderer.mesh.SetUp(OpenTK.Graphics.ES30.BufferUsageHint.DynamicDraw);
+            playerRenderer.LayerName = "player";
+            playerRenderer.resizeSprite = true;
+            //playerRenderer.shader.SetInt("texture0", 0);
+            //playerRenderer.shader.SetInt("texture1", 1);
+
+
+            PlayerController playerControl = new PlayerController();
+            playerControl.playerData = GameMaster.gameMaster.playerChars[GameMaster.gameMaster.curCharName];
+
+            playerRenderer.shader = playerControl.playerData.charShader;
+
+            newPlayer.AddElement(playerRenderer);
+            newPlayer.AddElement(playerControl);
+            newPlayer.AddElement(new TextureAnimator(newPlayer.GetElement<MeshRenderer>()));
+
+            GameMaster.gameMaster.playerEntity = newPlayer;
+            return newPlayer;
         }
     } //Class end
 }

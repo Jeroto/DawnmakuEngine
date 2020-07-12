@@ -1,3 +1,4 @@
+character shader=spriteshader;
 name=Hakurei, Reimu;
 jp name=博麗霊夢;
 move speed=1.75;
@@ -7,5 +8,8 @@ collider offset = -2,0;
 shot types = ReimuA;
 animstates = ReimuIdle, ReimuLeft, ReimuRight;
 hitbox anim=PlayerHitbox;
+hitbox pixel inset = 7;
+hitbox shader = spriteshader;
 focus effect anim=FocusFX;
 focus effect rot speed = 60;
+focus effect shader = spriteshader;

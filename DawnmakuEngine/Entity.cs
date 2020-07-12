@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text;
 using OpenTK;
@@ -19,6 +20,10 @@ namespace DawnmakuEngine
         protected Vector3 position = Vector3.Zero; //Local position
         protected Quaternion rotation = Quaternion.Identity; //Local rotation
         protected Vector3 scale = Vector3.One;    //Local scale
+
+        protected Vector3 worldPosition;
+        protected Quaternion worldRotation;
+        protected Vector3 worldScale;
 
 
 
@@ -135,29 +140,17 @@ namespace DawnmakuEngine
         public Vector3 LocalPosition
         {
             get { return position; }
-            set { position = value; }
+            set 
+            {
+                position = value;
+                SetWorldPosition();
+            }
         }
         public Vector3 WorldPosition
         {
             get
             {
-                Entity currentEntity = parent;      //Used to go up through each parent until we are at the top of the list
-                Vector4 vec4Pos = new Vector4(LocalPosition, 1);   //Used in matrix multiplication
-                Matrix4 modifyMatrix;
-                while (currentEntity != null)
-                {
-                    modifyMatrix = Matrix4.Identity //Identity base matrix
-                        * Matrix4.CreateScale(currentEntity.LocalScale)             //Adds a scale of the parent's local scale to scale units
-                        * Matrix4.CreateRotationX(currentEntity.LocalRotationRad.X)    //Rotates position based on parent's rotation
-                        * Matrix4.CreateRotationY(currentEntity.LocalRotationRad.Y)    // /\
-                        * Matrix4.CreateRotationZ(currentEntity.LocalRotationRad.Z)    // /\
-                        * Matrix4.CreateTranslation(currentEntity.LocalPosition)   //Adds translation of the parent's position
-                        ; 
-
-                    vec4Pos *= modifyMatrix;    //Modifies vector with the above matrix
-                    currentEntity = currentEntity.parent;   //Updates to parent of parent
-                }
-                return vec4Pos.Xyz;
+                return worldPosition;
             }
             set
             {
@@ -166,24 +159,37 @@ namespace DawnmakuEngine
                     LocalPosition += Vector3.Multiply(currentWorldPosition - value, parent.WorldScale);
                 else
                     LocalPosition = value;
+                SetChildrenWorldPosition();
             }
         }
         public Quaternion LocalRotation
         {   
             get { return rotation; }
-            set { rotation = value; }
+            set 
+            {
+                rotation = value;
+                SetChildrenWorldPosition();
+            }
         }
         public Vector3 LocalRotationRad
         {
             get {return QuaternionToEuler(rotation); }
-            set { rotation = Quaternion.FromEulerAngles(value); }
+            set 
+            {
+                rotation = Quaternion.FromEulerAngles(value);
+                SetChildrenWorldPosition();
+            }
         }
         public Vector3 LocalRotationDegrees
         {
             get {
                 Vector3 rot = QuaternionToEuler(rotation);
                 return new Vector3(MathHelper.RadiansToDegrees(rot.X), MathHelper.RadiansToDegrees(rot.Y), MathHelper.RadiansToDegrees(rot.Z)); }
-            set { rotation = Quaternion.FromEulerAngles(new Vector3(MathHelper.DegreesToRadians(value.X), MathHelper.DegreesToRadians(value.Y), MathHelper.DegreesToRadians(value.Z))); }
+            set 
+            { 
+                rotation = Quaternion.FromEulerAngles(new Vector3(MathHelper.DegreesToRadians(value.X), MathHelper.DegreesToRadians(value.Y), MathHelper.DegreesToRadians(value.Z)));
+                SetChildrenWorldPosition();
+            }
         }
         public Vector3 WorldRotationRad
         {
@@ -236,7 +242,11 @@ namespace DawnmakuEngine
         public Vector3 LocalScale
         {
             get { return scale; }
-            set { scale = value; }
+            set 
+            {
+                scale = value;
+                SetChildrenWorldPosition();
+            }
         }
 
         public Vector3 WorldScale
@@ -253,6 +263,40 @@ namespace DawnmakuEngine
                 }
                 return vec4Scale.Xyz;
             }
+        }
+
+        public void SetWorldPosition()
+        {
+            worldPosition = CalculateWorldPosition();
+            SetChildrenWorldPosition();
+        }
+        public void SetChildrenWorldPosition()
+        {
+            for (int i = 0; i < ChildCount; i++)
+            {
+                children[i].SetWorldPosition();
+            }
+        }
+
+        public Vector3 CalculateWorldPosition()
+        {
+            Entity currentEntity = parent;      //Used to go up through each parent until we are at the top of the list
+            Vector4 vec4Pos = new Vector4(LocalPosition, 1);   //Used in matrix multiplication
+            Matrix4 modifyMatrix;
+            while (currentEntity != null)
+            {
+                modifyMatrix = Matrix4.Identity //Identity base matrix
+                    * Matrix4.CreateScale(currentEntity.LocalScale)             //Adds a scale of the parent's local scale to scale units
+                    * Matrix4.CreateRotationX(currentEntity.LocalRotationRad.X)    //Rotates position based on parent's rotation
+                    * Matrix4.CreateRotationY(currentEntity.LocalRotationRad.Y)    // /\
+                    * Matrix4.CreateRotationZ(currentEntity.LocalRotationRad.Z)    // /\
+                    * Matrix4.CreateTranslation(currentEntity.LocalPosition)   //Adds translation of the parent's position
+                    ;
+
+                vec4Pos *= modifyMatrix;    //Modifies vector with the above matrix
+                currentEntity = currentEntity.parent;   //Updates to parent of parent
+            }
+            return vec4Pos.Xyz;
         }
 
         public Vector3 GetLocalPositionToObject(Entity obj)
@@ -317,9 +361,15 @@ namespace DawnmakuEngine
         }
         public void DeleteAllElements()
         {
-            for (int i = 0; i < elements.Count; i++)
-                elements[i].AttemptDelete();
+            while(elements.Count > 0)
+                elements[0].AttemptDelete();
             elements = new List<Element>();
+        }
+        public void DeleteAllElementsOfType<T>()
+        {
+            Element[] elementsOfType = GetElementsAsElement<T>();
+            for (int i = 0; i < elementsOfType.Length; i++)
+                elementsOfType[i].AttemptDelete();
         }
 
         public void Enable()
@@ -349,7 +399,7 @@ namespace DawnmakuEngine
                 if (elements[i].GetType() == typeof(T))
                     return (T)Convert.ChangeType(elements[i], typeof(T));
             }
-            return default(T);
+            return default;
         }
         public T[] GetElements<T>()
         {
@@ -358,6 +408,35 @@ namespace DawnmakuEngine
             {
                 if (elements[i].GetType() == typeof(T))
                     tempList.Add((T)Convert.ChangeType(elements[i], typeof(T)));
+            }
+            return tempList.ToArray();
+        }
+        public List<T> GetElementsAsList<T>()
+        {
+            List<T> tempList = new List<T>();
+            for (int i = 0; i < elements.Count; i++)
+            {
+                if (elements[i].GetType() == typeof(T))
+                    tempList.Add((T)Convert.ChangeType(elements[i], typeof(T)));
+            }
+            return tempList;
+        }
+        public Element GetElementAsElement<T>()
+        {
+            for (int i = 0; i < elements.Count; i++)
+            {
+                if (elements[i].GetType() == typeof(T))
+                    return elements[i];
+            }
+            return null;
+        }
+        public Element[] GetElementsAsElement<T>()
+        {
+            List<Element> tempList = new List<Element>();
+            for (int i = 0; i < elements.Count; i++)
+            {
+                if (elements[i].GetType() == typeof(T))
+                    tempList.Add(elements[i]);
             }
             return tempList.ToArray();
         }
