@@ -1,22 +1,7 @@
 scale=50;
 autosetpoints=false;
 pointslist=
-{pos=-1,0; time=0; waitTime=0}:
-{pos=-0.49344704,-0.08068465; time=0; waitTime=0}:
-{pos=0.013105929,-0.1613693; time=0; waitTime=0}:
-{pos=1,0; time=60; waitTime=0}:
-{pos=1.6649522,0.10872784; time=60; waitTime=0}:
-{pos=1.9971118,-0.18351251; time=60; waitTime=0}:
-{pos=2.277384,0.42921144; time=120; waitTime=0}:
-{pos=2.5405831,1.0046105; time=120; waitTime=0}:
-{pos=2.3163176,1.2375919; time=120; waitTime=0}:
-{pos=1.7978735,1.6003226; time=180; waitTime=0}:
-{pos=1.2137575,2.0090008; time=180; waitTime=0}:
-{pos=1.0819465,1.7321166; time=180; waitTime=0}:
-{pos=0.3731714,1.6556497; time=240; waitTime=0}:
-{pos=-0.6402722,1.5463133; time=240; waitTime=0}:
-{pos=-1.7250905,2.1555097; time=240; waitTime=0}:
-{pos=-1.6001929,1.143866; time=300; waitTime=0}:
-{pos=-1.425337,-0.2724297; time=300; waitTime=0}:
-{pos=5.08576298,3; time=300; waitTime=0}:
-{pos=20.253811,1.1208115; time=800; waitTime=0}
+{pos=0,0; time=0; waitTime=0}:
+{pos=1,1; time=0; waitTime=0}:
+{pos=2,1; time=0; waitTime=0}:
+{pos=15,0; time=240; waitTime=0}

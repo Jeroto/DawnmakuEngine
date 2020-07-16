@@ -8,9 +8,12 @@ namespace DawnmakuEngine.Data
 {
     class GameSettings
     {
+        //Debug Values
+        public bool runInDebugMode = false, logAllFontChars = false, canToggleInvincible = true, logTimers = false;
+
+        //Misc Values
         public Shader generalTextShader, dialogueTextShader;
-        public bool runInDebugMode = false,
-            fullPowerPOC = false, shiftForPOC = false;
+        public bool fullPowerPOC = false, shiftForPOC = false;
         public int maxPower, powerLostOnDeath, powerTotalDroppedOnDeath, maxPowerLevel;
         public int[] powerLevelSplits = null;
         public string[] mainStageFolderNames, exStageFolderNames,
@@ -23,7 +26,8 @@ namespace DawnmakuEngine.Data
         public float grazeDistance;
 
 
-        public Vector2 bulletBoundsX, bulletBoundsY;
+        public Vector2 bulletBoundsX, bulletBoundsY,
+            enemyBoundsX, enemyBoundsY;
 
         //Default Item Data Values
         public Vector2 itemRandXRange, itemRandYRange;

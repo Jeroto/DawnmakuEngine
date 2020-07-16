@@ -1,4 +1,8 @@
 RunInDebugMode=true;
+LogAllFontChars=false;
+PressIToToggleInvincible=true;
+LogTimers=false;
+
 MaxPower=400;
 PowerLostOnDeath=100;
 PowerTotalDroppedOnDeath=20;
@@ -12,6 +16,9 @@ GrazeDistance=10;
 
 BulletBoundsX=-202, 202;
 BulletBoundsY=-10, 453;
+
+EnemyBoundsX=-250, 250;
+EnemyBoundsY=-50, 500;
 
 MaxItemCount=200;
 PointOfCollectionHeight=350;

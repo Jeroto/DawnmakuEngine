@@ -18,9 +18,10 @@ namespace DawnmakuEngine.Data
 
         public void Use()
         {
-            GL.BindVertexArray(VertexArrayHandle);
+           /* GL.BindVertexArray(VertexArrayHandle);*/
             GL.BindBuffer(BufferTarget.ArrayBuffer, VertexBufferHandle);
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, elementBufferHandle);
+            GameMaster.lastBoundMesh = this;
         }
 
         public void SetUp(BufferUsageHint bufferUsage)
@@ -34,6 +35,7 @@ namespace DawnmakuEngine.Data
             }
         }
 
+        public int GetVertexCount { get { return vertices.Length / 5; } }
         public Vector3 GetVertex(int index)
         {
             int startingVert = index * 5;
@@ -57,6 +59,30 @@ namespace DawnmakuEngine.Data
             vertices[startingVert] = newUV.X;
             vertices[startingVert + 1] = newUV.Y;
         }
+        public void SetUV(int index, float newUV1, float newUV2)
+        {
+            int startingVert = index * 5 + 3;
+            vertices[startingVert] = newUV1;
+            vertices[startingVert + 1] = newUV2;
+        }
+        public void SetUVs(float[] uvs)
+        {
+            /*int count = uvs.Length;
+            for (int i = 0; i < count; i += 2)
+            {
+                vertices[(i / 2) * 5 + 3] = uvs[i];
+                vertices[(i / 2) * 5 + 4] = uvs[i + 1];
+            }*/
+            int count = Math.Min(GetVertexCount, uvs.Length);
+            for (int i = 0; i < count; i++)
+                SetUV(i, uvs[i * 2], uvs[i * 2 + 1]);
+        }
+        public void SetUVs(int startIndex, float[] uvs)
+        {
+            int count = Math.Min(GetVertexCount, uvs.Length);
+            for (int i = startIndex; i < count; i++)
+                SetUV(i, uvs[i * 2], uvs[i * 2 + 1]);
+        }
 
         public Mesh()
         {
@@ -73,16 +99,6 @@ namespace DawnmakuEngine.Data
         public Mesh(float[] vertices_) : this()
         {
             vertices = vertices_;
-        }
-
-        public void SetUVs(float[] uvs)
-        {
-            int count = uvs.Length;
-            for (int i = 0; i < count; i += 2)
-            {
-                vertices[(i / 2) * 5 + 3] = uvs[i];
-                vertices[(i / 2) * 5 + 4] = uvs[i + 1];
-            }
         }
 
         public static Mesh CreatePrimitiveMesh(Primitives primitiveType)

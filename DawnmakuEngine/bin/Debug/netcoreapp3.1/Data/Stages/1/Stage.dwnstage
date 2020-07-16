@@ -61,62 +61,62 @@ EnemySpawns=
 {
 Enemy=blueenemy1;
 Time=60;
-Pos=-250,250;
+Pos=-215,200;
 Items=bigpoweritem, bigpoweritem, bigpoweritem;
 }
 :
 {
 Enemy=blueenemy1;
 Time=180;
-Pos=-250,300;
+Pos=-215,250;
 Items=poweritem, poweritem, poweritem;
 }
 :
 {
 Enemy=blueenemy1;
 Time=200;
-Pos=-200,300;
+Pos=-215,300;
 Items=pointitem, poweritem, pointitem;
 }
 :
 {
 Enemy=blueenemy1;
 Time=220;
-Pos=-200,250;
+Pos=-210,300;
 Items=pointitem, pointitem, pointitem;
 }
 :
 {
 Enemy=blueenemy1;
 Time=240;
-Pos=-200,200;
+Pos=-210,250;
 Items=poweritem, staritem, poweritem;
 }
 :
 {
 Enemy=blueenemy1;
 Time=260;
-Pos=-250,200;
+Pos=-210,200;
 Items=poweritem, bigpoweritem, poweritem;
 }
 :
 {
 Enemy=blueenemy1;
-Time=260;
-Pos=-300,200;
+Time=280;
+Pos=-219,200;
 Items=poweritem, pointitem, poweritem;
 }
 :
 {
 Enemy=blueenemy1;
-Time=260;
-Pos=-300,250;
+Time=300;
+Pos=-219,250;
 Items=bombitem;
 }
 :
 {
 Enemy=blueenemy1;
-Time=260;
-Pos=-300,300;
+Time=320;
+Pos=-219,300;
 Items=lifeitem;
 }

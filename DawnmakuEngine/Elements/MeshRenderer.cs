@@ -83,8 +83,10 @@ namespace DawnmakuEngine.Elements
                 modelScaleY = Math.Abs(mesh.GetUV(1).Y * tex.Height - mesh.GetUV(2).Y * tex.Height);
             }
 
-            shader.Use();
-            mesh.Use();
+            if(shader != null && shader != GameMaster.lastBoundShader)
+                shader.Use();
+            if(mesh != null && mesh != GameMaster.lastBoundMesh)
+                mesh.Use();
 
 
             int positionLocation = shader.GetAttribLocation("aPosition");
@@ -94,14 +96,14 @@ namespace DawnmakuEngine.Elements
             GL.EnableVertexAttribArray(texCoordLocation);
             GL.VertexAttribPointer(texCoordLocation, 2, VertexAttribPointerType.Float, false, 5 * sizeof(float), 3 * sizeof(float));
 
-            if (tex != null)
+            if (tex != null && tex != GameMaster.lastBoundTexture)
                 tex.Use();
             if (tex2 != null)
                 tex2.Use(TextureUnit.Texture1);
             Quaternion modelRotation = entityAttachedTo.LocalRotation;
             Matrix4 model = Matrix4.Identity *
-                Matrix4.CreateScale(entityAttachedTo.WorldScale * modelScale * new Vector3(modelScaleX, modelScaleY, modelScaleZ)) * Matrix4.CreateFromQuaternion(entityAttachedTo.WorldRotation) *
-                Matrix4.CreateTranslation(entityAttachedTo.WorldPosition);
+                Matrix4.CreateScale(entityAttachedTo.WorldScale * modelScale * new Vector3(modelScaleX, modelScaleY, modelScaleZ))
+                * Matrix4.CreateFromQuaternion(entityAttachedTo.WorldRotation) * Matrix4.CreateTranslation(entityAttachedTo.WorldPosition);
             shader.SetMatrix4("model", model);
             shader.SetVector4("colorModInput", ColorFloat);
         }

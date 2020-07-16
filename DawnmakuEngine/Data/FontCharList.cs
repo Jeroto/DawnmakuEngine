@@ -7,7 +7,7 @@ using System.Text;
 
 namespace DawnmakuEngine.Data
 {
-    class FontCharList
+    public class FontCharList
     {
         //public Dictionary<int, ushort> fontChars = new Dictionary<int, ushort>();
         public string everyCharInFont = "";

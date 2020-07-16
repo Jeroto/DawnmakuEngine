@@ -9,6 +9,7 @@ ItemMagnetSpeed=2.5;
 ItemDrawSpeed=5.5;
 ItemCollectDist = 8;
 
+shader=spriteshader;
 canBeAutoCollectedAtTop=true;
 autoDraw=false;
 animStates=bigpoweritem;

@@ -4,19 +4,28 @@ using System.Text;
 using System.Runtime.InteropServices;
 using DawnmakuEngine.Elements;
 using DawnmakuEngine.Data;
-
 using OpenTK;
 using SixLabors.Fonts;
-using SixLabors.ImageSharp;
+using System.Diagnostics;
 
 namespace DawnmakuEngine
 {
-    class GameMaster
+    public class GameMaster
     {
         protected static int randomSeed = 0;
         protected static Random random = new Random();
         public static GameMaster gameMaster = new GameMaster();
+        public static Stopwatch timeLogger = new Stopwatch();
+
+        public static Shader lastBoundShader;
+        public static Texture lastBoundTexture;
+        public static Mesh lastBoundMesh;
+
         public static bool debugMode = true;
+        public bool logAllFontChars = false, canToggleInvincible = true, logTimers = false;
+        public bool invincible = false;
+
+        public AudioController audioManager = new AudioController();
 
         public float timeScale = 1, timeScaleUpdate = 1, frameTime = 1/60f;
         public int windowWidth = 1920, windowHeight = 1080;
@@ -53,13 +62,33 @@ namespace DawnmakuEngine
         public int pocHeight = 100, itemDisableHeight = -100;
         public Vector2 playerBoundsX, playerBoundsY;
 
-        public Vector2 bulletBoundsX, bulletBoundsY;
+        public Vector2 bulletBoundsX, bulletBoundsY,
+            enemyBoundsX, enemyBoundsY;
 
         public delegate void ElementFunction();
 
         public event ElementFunction PostCreate;
         public event ElementFunction OnUpdate;
         public event ElementFunction PreRender;
+
+        public bool enemyBulletSpawnSoundPlayed = false, enemyBulletStageSoundPlayed = false,
+            playerBulletSpawnSoundPlayed = false, playerBulletStageSoundPlayed = false;
+
+        private float masterVolume = 1, bgmVolume = 1, sfxVolume = .75f,
+            bulletSpawnVolume = .1f, bulletStageVolume = 0.75f, 
+            playerShootVolume = .75f, playerBulletVolume = .1f, playerDeathVolume = 1, 
+            enemyDeathVolume = 1;
+
+        public float BgmVol { get { return masterVolume * bgmVolume; } }
+        public float SfxVol { get { return masterVolume * sfxVolume; } }
+        public float BulletSpawnVol { get { return masterVolume * sfxVolume * bulletSpawnVolume; } }
+        public float BulletStageVol { get { return masterVolume * sfxVolume * bulletStageVolume; } }
+        public float PlayerShootVol { get { return masterVolume * sfxVolume * playerShootVolume; } }
+        public float PlayerBulletVol { get { return masterVolume * sfxVolume * playerBulletVolume; } }
+        public float PlayerDeathVol { get { return masterVolume * sfxVolume * playerDeathVolume; } }
+        public float EnemyDeathVol { get { return masterVolume * sfxVolume * enemyDeathVolume; } }
+
+
 
 
         public Shader generalTextShader, dialogueTextShader;
@@ -109,6 +138,9 @@ namespace DawnmakuEngine
         public Dictionary<string, TextureAnimator.AnimationState> itemAnimStates = new Dictionary<string, TextureAnimator.AnimationState>();
         public Dictionary<string, ItemData> itemData = new Dictionary<string, ItemData>();
 
+        //Loaded Sfx
+        public Dictionary<string, AudioData> sfx = new Dictionary<string, AudioData>();
+
         //Loaded Enemy Data
         public Dictionary<string, Texture> enemyTextures = new Dictionary<string, Texture>();
         public Dictionary<string, SpriteSet> enemySprites = new Dictionary<string, SpriteSet>();
@@ -148,6 +180,8 @@ namespace DawnmakuEngine
             else
                 timeScale = 0;
 
+            if (canToggleInvincible && InputScript.IDown)
+                invincible = !invincible;
 
             killzoneDetectIndex = (byte)DawnMath.Repeat(killzoneDetectIndex + 1, 6);
 
@@ -157,8 +191,12 @@ namespace DawnmakuEngine
 
         public void ElementUpdate()
         {
+            StartTimer();
             PostCreate?.Invoke();
+            LogTimeMilliseconds("all post creates");
+            StartTimer();
             OnUpdate?.Invoke();
+            LogTimeMilliseconds("all updates");
         }
 
         public void ElementPreRender()
@@ -187,7 +225,7 @@ namespace DawnmakuEngine
         [DllImport("user32.dll")]
         static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 
-        public void ShowConsole(bool show)
+        public static void ShowConsole(bool show)
         {
             const int SW_HIDE = 0;
             const int SW_SHOW = 5;
@@ -229,6 +267,66 @@ namespace DawnmakuEngine
                 return;
             Console.ForegroundColor = ConsoleColor.DarkMagenta;
             Console.WriteLine(text);
+            Console.ForegroundColor = ConsoleColor.Gray;
+        }
+        public static void StartTimer()
+        {
+            if (!gameMaster.logTimers)
+                return;
+            timeLogger.Restart();
+        }
+        public static void LogTimeMilliseconds(string item, string opening = "Time taken for ")
+        {
+            LogTimeCustMilliseconds(item, timeLogger.Elapsed.TotalMilliseconds, opening);
+        }
+        public static void LogTimeTicks(string item, string opening = "Time taken for ")
+        {
+            LogTimeCustTicks(item, timeLogger.ElapsedTicks, opening);
+        }
+        public static void LogTimeMillisecondsAndTicks(string item, string opening = "Time taken for ")
+        {
+            LogTimeCustMillisecondsAndTicks(item, timeLogger.Elapsed.TotalMilliseconds, timeLogger.ElapsedTicks, opening);
+        }
+        public static void LogTimeCustMilliseconds(string item, double milliseconds, string opening = "Time taken for ")
+        {
+            if (!gameMaster.logTimers)
+                return;
+            Console.ForegroundColor = ConsoleColor.DarkRed;
+            Console.Write(" | ");
+            Console.Write(opening);
+            Console.Write(item);
+            Console.Write(" | ");
+            Console.Write(milliseconds);
+            Console.WriteLine(" milliseconds");
+            Console.ForegroundColor = ConsoleColor.Gray;
+        }
+        public static void LogTimeCustTicks(string item, long ticks, string opening = "Time taken for ")
+        {
+            if (!gameMaster.logTimers)
+                return;
+            Console.ForegroundColor = ConsoleColor.DarkRed;
+            Console.Write(" | ");
+            Console.Write(opening);
+            Console.Write(item);
+            Console.Write(" | ");
+            Console.Write(ticks);
+            Console.WriteLine(" ticks");
+            Console.ForegroundColor = ConsoleColor.Gray;
+        }
+        public static void LogTimeCustMillisecondsAndTicks(string item, double milliseconds, long ticks, string opening = "Time taken for ")
+        {
+            if (!gameMaster.logTimers)
+                return;
+            timeLogger.Stop();
+            Console.ForegroundColor = ConsoleColor.DarkRed;
+            Console.Write(" | ");
+            Console.Write(opening);
+            Console.Write(item);
+            Console.Write(" | ");
+            Console.Write(milliseconds);
+            Console.Write(" milliseconds, or ");
+            Console.Write(ticks);
+            Console.WriteLine(" ticks");
             Console.ForegroundColor = ConsoleColor.Gray;
         }
         public static void LogError(string text)

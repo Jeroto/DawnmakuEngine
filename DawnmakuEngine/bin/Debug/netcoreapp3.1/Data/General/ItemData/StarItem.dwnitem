@@ -10,6 +10,7 @@ ItemMagnetSpeed=10;
 ItemDrawSpeed=10;
 ItemCollectDist = 5;
 
+shader=spriteshader;
 canBeAutoCollectedAtTop=true;
 autoDraw=true;
 animStates=staritem;

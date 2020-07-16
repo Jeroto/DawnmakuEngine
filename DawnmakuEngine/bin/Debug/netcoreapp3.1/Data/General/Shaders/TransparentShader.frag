@@ -6,9 +6,8 @@ in vec4 colorMod;
 
 
 uniform sampler2D texture0;
-uniform sampler2D texture1;
 
 void main()
 {
-    outputColor = colorMod * mix(texture(texture0, texCoord), texture(texture1, texCoord), 0.5);
+    outputColor = colorMod * texture(texture0, texCoord);
 }

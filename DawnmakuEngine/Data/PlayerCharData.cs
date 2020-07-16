@@ -6,7 +6,7 @@ using OpenTK;
 
 namespace DawnmakuEngine.Data
 {
-    class PlayerCharData
+    public class PlayerCharData
     {
         public Shader charShader, hitboxShader, focusEffectShader;
         public string name;
@@ -15,6 +15,7 @@ namespace DawnmakuEngine.Data
         public float focusModifier;
         public float colliderSize;
         public Vector2 colliderOffset;
+        public AudioData hitSound, focusSound, grazeSound;
         public PlayerTypeData[] types;
         public TextureAnimator.AnimationState[] animStates;
         public TextureAnimator.AnimationState hitboxAnim, focusEffectAnim;

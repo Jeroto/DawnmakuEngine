@@ -34,6 +34,9 @@ namespace DawnmakuEngine.Data
             for (i = 0; i < perBulletDelay.Count; i++)
                 newCopy.perBulletDelay.Add(perBulletDelay[i]);
 
+            for (i = 0; i < spawnSounds.Count; i++)
+                newCopy.spawnSounds.Add(spawnSounds[i]);
+
             for (i = 0; i < damage.Count; i++)
                 newCopy.damage.Add(damage[i]);
 
@@ -138,6 +141,22 @@ namespace DawnmakuEngine.Data
 
                     BulletElement.SpawnBullet(currentStages, new Vector3(position + offset), BulletElement.ShouldSpin(currentStages[0].spriteType), 
                         damage[bulletVars.damageIndex], 0, callerIsPlayer);
+
+
+                    if(callerIsPlayer && !gameMaster.playerBulletSpawnSoundPlayed && spawnSounds.Count > 0)
+                    {
+                        gameMaster.audioManager.PlaySound(spawnSounds[bulletVars.soundIndex], AudioController.AudioCategory.PlayerBulletSpawn,
+                            gameMaster.PlayerShootVol);
+                        bulletVars.soundIndex = DawnMath.Repeat(bulletVars.soundIndex + 1, spawnSounds.Count - 1);
+                        gameMaster.playerBulletSpawnSoundPlayed = true;
+                    }
+                    else if(!callerIsPlayer && !gameMaster.enemyBulletSpawnSoundPlayed && spawnSounds.Count > 0)
+                    {
+                        gameMaster.audioManager.PlaySound(spawnSounds[bulletVars.soundIndex], AudioController.AudioCategory.BulletSpawn,
+                            gameMaster.BulletSpawnVol);
+                        bulletVars.soundIndex = DawnMath.Repeat(bulletVars.soundIndex + 1, spawnSounds.Count - 1);
+                        gameMaster.enemyBulletSpawnSoundPlayed = true;
+                    }
 
                     bulletVars.turnOffsetIndex = DawnMath.Repeat(bulletVars.turnOffsetIndex + 1, turnOffsets.Count - 1);
                     bulletVars.offsetIndex = DawnMath.Repeat(bulletVars.offsetIndex + 1, offsets.Count - 1);

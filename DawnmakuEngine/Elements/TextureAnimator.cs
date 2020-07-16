@@ -24,7 +24,9 @@ namespace DawnmakuEngine.Elements
             get { return entityAttachedTo; }
             set
             {
+                RemoveEntitySubscriptions();
                 entityAttachedTo = value;
+                AddEntitySubscriptions();
                 refRenderer = entityAttachedTo.GetElement<MeshRenderer>();
 
                 if (refRenderer == null)
@@ -188,10 +190,11 @@ namespace DawnmakuEngine.Elements
             {
                 if (refRenderer.mesh.triangleData != null)
                 {
-                    refRenderer.mesh.SetUV(0, new Vector2(animationStates[StateIndex].animFrames[FrameIndex].sprite.left, animationStates[StateIndex].animFrames[FrameIndex].sprite.top));
+                    /*refRenderer.mesh.SetUV(0, new Vector2(animationStates[StateIndex].animFrames[FrameIndex].sprite.left, animationStates[StateIndex].animFrames[FrameIndex].sprite.top));
                     refRenderer.mesh.SetUV(1, new Vector2(animationStates[StateIndex].animFrames[FrameIndex].sprite.right, animationStates[StateIndex].animFrames[FrameIndex].sprite.top));
                     refRenderer.mesh.SetUV(2, new Vector2(animationStates[StateIndex].animFrames[FrameIndex].sprite.right, animationStates[StateIndex].animFrames[FrameIndex].sprite.bottom));
-                    refRenderer.mesh.SetUV(3, new Vector2(animationStates[StateIndex].animFrames[FrameIndex].sprite.left, animationStates[StateIndex].animFrames[FrameIndex].sprite.bottom));
+                    refRenderer.mesh.SetUV(3, new Vector2(animationStates[StateIndex].animFrames[FrameIndex].sprite.left, animationStates[StateIndex].animFrames[FrameIndex].sprite.bottom));*/
+                    refRenderer.mesh.SetUVs(animationStates[StateIndex].animFrames[FrameIndex].sprite.GetUVs());
                 }
                 else
                 {

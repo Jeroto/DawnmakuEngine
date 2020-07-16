@@ -8,6 +8,7 @@ Aimed=false;
 Burst Delay=5;
 Initial Delay=10;
 Per Bullet Delay=0;
+SpawnSounds=shoot3;
 Damage=10;
 Offsets={0,0};
 Turn Offsets=false;

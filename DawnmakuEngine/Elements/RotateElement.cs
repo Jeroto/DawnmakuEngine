@@ -29,7 +29,9 @@ namespace DawnmakuEngine.Elements
 
         public override void OnUpdate()
         {
-            EntityAttachedTo.RotateQuaternion(axis, rotationSpeed * GameMaster.gameMaster.frameTime * (affectedByTimescale ? GameMaster.gameMaster.timeScale : 1));
+            if (rotationSpeed.CompareTo(0) != 0) 
+                EntityAttachedTo.RotateQuaternion(axis, 
+                    rotationSpeed * GameMaster.gameMaster.frameTime * (affectedByTimescale ? GameMaster.gameMaster.timeScale : 1));
             base.OnUpdate();
         }
     }

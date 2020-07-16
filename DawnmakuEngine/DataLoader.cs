@@ -29,6 +29,7 @@ namespace DawnmakuEngine
             generalTexDir, bulletTexDir, playerTexDir, playerOrbTexDir, playerFxTexDir, itemTexDir, enemyTexDir, UITexDir,
             generalAnimDir, bulletAnimDir, playerAnimDir, playerOrbAnimDir, playerFxAnimDir, itemAnimDir, enemyAnimDir, texAnimDir,
             playerPatternDir, playerOrbDir,
+            soundEffectDir,
             shaderDir, fontDir,
             stageDir, curStageDir, enemyDir, enemyPatternDir, enemyMovementDir, backgroundDir, backgroundModelDir, backgroundTexDir,
             backgroundSecDir;
@@ -94,6 +95,9 @@ namespace DawnmakuEngine
                         break;
                     case "Fonts":
                         fontDir = dirs[i].FullName;
+                        break;
+                    case "Sfx":
+                        soundEffectDir = dirs[i].FullName;
                         break;
                 }
             }
@@ -234,23 +238,28 @@ namespace DawnmakuEngine
         /// </summary>
         public void InitializeGame()
         {
+            GameMaster.StartTimer();
             ShaderLoader();
             GameSettingsLoader();
+            LoadAudio();
             LoadBullets();
             LoadPlayerOrbs();
             LoadPlayerEffects();
             LoadPlayers();
             LoadItems();
             LoadUI();
+            GameMaster.LogTimeMilliseconds("game init");
         }
         /// <summary>
         /// Load stage-specific data
         /// </summary>
         public void InitializeStage()
         {
+            GameMaster.StartTimer();
             LoadEnemies();
             LoadBackground();
-            LoadStage();
+            LoadStage(GetStageBGMPaths());
+            GameMaster.LogTimeMilliseconds("stage init");
         }
 
         public void LoadBullets()
@@ -290,6 +299,11 @@ namespace DawnmakuEngine
             ItemAnimLoader();
             ItemDataLoader();
         }
+
+        public void LoadAudio()
+        {
+            SoundEffectLoader();
+        }
         public void LoadEnemies()
         {
             EnemyPatternLoader();
@@ -314,9 +328,9 @@ namespace DawnmakuEngine
             FontLoader();
         }
 
-        public void LoadStage()
+        public void LoadStage(string[] bgmPaths)
         {
-            StageDataLoader();
+            StageDataLoader(bgmPaths);
             //Stage-specific data
         }
 
@@ -327,8 +341,13 @@ namespace DawnmakuEngine
             GameMaster.LogPositiveNotice("Loading game settings...\n");
             GameSettings settings = ReadGameSettings(file);
             GameMaster.debugMode = settings.runInDebugMode;
+            GameMaster.ShowConsole(GameMaster.debugMode);
 
-            gameMaster.ShowConsole(GameMaster.debugMode);
+            gameMaster.logAllFontChars = settings.logAllFontChars && GameMaster.debugMode;
+            gameMaster.canToggleInvincible = settings.canToggleInvincible && GameMaster.debugMode;
+            gameMaster.logTimers = settings.logTimers && GameMaster.debugMode;
+
+
             gameMaster.maxPower = settings.maxPower;
             gameMaster.powerLostOnDeath = settings.powerLostOnDeath;
             gameMaster.powerTotalDroppedOnDeath = settings.powerTotalDroppedOnDeath;
@@ -342,6 +361,10 @@ namespace DawnmakuEngine
 
             gameMaster.bulletBoundsX = settings.bulletBoundsX;
             gameMaster.bulletBoundsY = settings.bulletBoundsY;
+
+            gameMaster.enemyBoundsX = settings.enemyBoundsX;
+            gameMaster.enemyBoundsY = settings.enemyBoundsY;
+
 
             gameMaster.maxItemCount = settings.maxItemCount;
             gameMaster.pocHeight = settings.pocHeight;
@@ -704,7 +727,34 @@ namespace DawnmakuEngine
             }
         }
 
+        public void SoundEffectLoader()
+        {
+            string[] directories = Directory.GetDirectories(soundEffectDir),
+                files;
+            int f, i;
+            for (i = 0; i < directories.Length; i++)
+            {
+                files = Directory.GetFiles(directories[i], "*.mp3");
+                for (f = 0; f < files.Length; f++)
+                    gameMaster.sfx.Add(GetFileNameOnly(files[f]), new AudioData(files[f]));
+                files = Directory.GetFiles(directories[i], "*.wav");
+                for (f = 0; f < files.Length; f++)
+                    gameMaster.sfx.Add(GetFileNameOnly(files[f]), new AudioData(files[f]));
+            }
+        }
 
+        public string[] GetStageBGMPaths()
+        {
+            List<string> paths = new List<string>();
+            string[] files = Directory.GetFiles(curStageDir, "*.mp3");
+            int i;
+            for (i = 0; i < files.Length; i++)
+                paths.Add(files[i]);
+            files = Directory.GetFiles(curStageDir, "*.wav");
+            for (i = 0; i < files.Length; i++)
+                paths.Add(files[i]);
+            return paths.ToArray();
+        }
 
         public void EnemyPatternLoader()
         {
@@ -894,14 +944,14 @@ namespace DawnmakuEngine
         }
 
 
-        public void StageDataLoader()
+        public void StageDataLoader(string[] bgmPaths)
         {
             string file = Directory.GetFiles(curStageDir, "*.dwnstage")[0];
 
             GameMaster.LogPositiveNotice("\nLoading Stage");
             try
             {
-                ReadStageData(file);
+                ReadStageData(file, bgmPaths);
             }
             catch(Exception e)
             {
@@ -933,9 +983,40 @@ namespace DawnmakuEngine
         {
             return data.Substring(indexes[0], indexes[1] - indexes[0]);
         }
+        
         public string GetInputSubstring(int index, string data)
         {
             return data.Substring(index, data.Length - index);
+        }
+        public bool TryGetInputSubstring(int[] indexes, string data, out string substring)
+        {
+            substring = "";
+            try
+            {
+                substring = data.Substring(indexes[0], indexes[1] - indexes[0]);
+                if (substring == ";")
+                    return false;
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+        public bool TryGetInputSubstring(int index, string data, out string substring)
+        {
+            substring = "";
+            try
+            {
+                substring = data.Substring(index, data.Length - index);
+                if (substring == ";")
+                    return false;
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
         public string GetData(string[] data, string opener, int lineOffset = 0, bool simplify = true, string closer = ";")
         {
@@ -1198,7 +1279,8 @@ namespace DawnmakuEngine
                 if (!charList.indexes.ContainsKey((ushort)newChar))
                     charList.indexes.Add((ushort)newChar, t);
             }
-            GameMaster.LogNeutralNotice(charList.everyCharInFont);
+            if(gameMaster.logAllFontChars)
+                GameMaster.LogNeutralNotice(charList.everyCharInFont);
 
             /*for (t = 0; t < typefaces.Length; t++)
             {
@@ -1276,7 +1358,7 @@ namespace DawnmakuEngine
                     sprites.Add(new SpriteSet.Sprite(distanceDrawn, bm.Height, distanceDrawn + textRects[i].Width, 0, bm.Height, bm.Width, true));
                     distanceDrawn += Ceil(textRects[i].Width);
                 }
-                GameMaster.LogNegativeNotice("Time to render font: " + timer.ElapsedMilliseconds);
+                GameMaster.LogTimeCustMilliseconds("rendering font", timer.Elapsed.TotalMilliseconds);
 
                 textBrush.Dispose();
                 graphic.Dispose();
@@ -1821,6 +1903,7 @@ namespace DawnmakuEngine
             int[] indexes = { 0, 0 };
             string[] tempStrings, allLines = File.ReadAllLines(file);
             string data;
+            AudioData audioVal;
 
             try
             {
@@ -1855,6 +1938,21 @@ namespace DawnmakuEngine
                 data = GetData(allLines, "collideroffset=");
                 indexes = FindIndexes(data, "collideroffset=");
                 thisData.colliderOffset = ParseVector2(indexes, data);
+
+                data = GetData(allLines, "hitsound=");
+                indexes = FindIndexes(data, "hitsound=");
+                if (gameMaster.sfx.TryGetValue(GetInputSubstring(indexes, data), out audioVal))
+                    thisData.hitSound = audioVal;
+
+                data = GetData(allLines, "focussound=");
+                indexes = FindIndexes(data, "focussound=");
+                if (gameMaster.sfx.TryGetValue(GetInputSubstring(indexes, data), out audioVal))
+                    thisData.focusSound = audioVal;
+
+                data = GetData(allLines, "grazesound=");
+                indexes = FindIndexes(data, "grazesound=");
+                if (gameMaster.sfx.TryGetValue(GetInputSubstring(indexes, data), out audioVal))
+                    thisData.grazeSound = audioVal;
 
                 data = GetData(allLines, "shottypes=");
                 indexes = FindIndexes(data, "shottypes=");
@@ -1978,6 +2076,8 @@ namespace DawnmakuEngine
             float numVal = 0;
             int intVal = 0;
             bool boolVal = false;
+            string stringVal = "";
+            AudioData audioVal;
             int patternType = 0;
             string[] tempStrings, subTempStrings, allLines = File.ReadAllLines(file);
             string patternBase = null,
@@ -2084,6 +2184,17 @@ namespace DawnmakuEngine
                         finalPattern.perBulletDelay.Add(ParseFloat(tempStrings[i]));
                 }
 
+                data = GetData(allLines, "spawnsounds=");
+                indexes = FindIndexes(data, "spawnsounds=");
+                if (indexes[0] != data.Length - 1 || indexes[1] != data.Length)
+                {
+                    tempStrings = GetInputSubstring(indexes, data).Split(',', StringSplitOptions.RemoveEmptyEntries);
+                    finalPattern.spawnSounds = new List<AudioData>();
+                    for (i = 0; i < tempStrings.Length; i++)
+                        if(gameMaster.sfx.TryGetValue(tempStrings[i], out audioVal))
+                            finalPattern.spawnSounds.Add(audioVal);
+                }
+
                 data = GetData(allLines, "damage=");
                 indexes = FindIndexes(data, "damage=");
                 if (indexes[0] != data.Length - 1 || indexes[1] != data.Length)
@@ -2135,6 +2246,8 @@ namespace DawnmakuEngine
                             thisPattern.initialDelay = finalPattern.initialDelay;
                             for (i = 0; i < finalPattern.perBulletDelay.Count; i++)
                                 thisPattern.perBulletDelay.Add(finalPattern.perBulletDelay[i]);
+                            for (i = 0; i < finalPattern.spawnSounds.Count; i++)
+                                thisPattern.spawnSounds.Add(finalPattern.spawnSounds[i]);
                             for (i = 0; i < finalPattern.damage.Count; i++)
                                 thisPattern.damage.Add(finalPattern.damage[i]);
                             for (i = 0; i < finalPattern.offsets.Count; i++)
@@ -2262,6 +2375,16 @@ namespace DawnmakuEngine
                                         if (TryParseBool(indexes, subTempStrings[i], out boolVal))
                                             thisInstance.turnAfterDelay = boolVal;
 
+                                        indexes = FindIndexes(subTempStrings[i], "stagesound=");
+                                        if (TryGetInputSubstring(indexes, subTempStrings[i], out stringVal))
+                                        {
+                                            if (gameMaster.sfx.TryGetValue(stringVal, out audioVal))
+                                                thisInstance.stageSound = audioVal;
+                                            else
+                                                thisInstance.stageSound = null;
+                                        }
+                                        
+
                                         indexes = FindIndexes(subTempStrings[i], "haseffect=");
                                         if (TryParseBool(indexes, subTempStrings[i], out boolVal))
                                             thisInstance.hasEffect = boolVal;
@@ -2332,6 +2455,15 @@ namespace DawnmakuEngine
                 data = GetData(allLines, "runindebugmode=");
                 indexes = FindIndexes(data, "runindebugmode=");
                 thisData.runInDebugMode = ParseBool(indexes, data);
+                data = GetData(allLines, "logallfontchars=");
+                indexes = FindIndexes(data, "logallfontchars=");
+                thisData.logAllFontChars = ParseBool(indexes, data);
+                data = GetData(allLines, "pressitotoggleinvincible=");
+                indexes = FindIndexes(data, "pressitotoggleinvincible=");
+                thisData.canToggleInvincible = ParseBool(indexes, data);
+                data = GetData(allLines, "logtimers=");
+                indexes = FindIndexes(data, "logtimers=");
+                thisData.logTimers = ParseBool(indexes, data);
 
                 data = GetData(allLines, "maxpower=");
                 indexes = FindIndexes(data, "maxpower=");
@@ -2381,6 +2513,16 @@ namespace DawnmakuEngine
                 data = GetData(allLines, "bulletboundsy=");
                 indexes = FindIndexes(data, "bulletboundsy=");
                 thisData.bulletBoundsY = ParseVector2(indexes, data);
+
+
+                data = GetData(allLines, "enemyboundsx=");
+                indexes = FindIndexes(data, "enemyboundsx=");
+                thisData.enemyBoundsX = ParseVector2(indexes, data);
+
+                data = GetData(allLines, "enemyboundsy=");
+                indexes = FindIndexes(data, "enemyboundsy=");
+                thisData.enemyBoundsY = ParseVector2(indexes, data);
+
 
                 data = GetData(allLines, "maxitemcount=");
                 indexes = FindIndexes(data, "maxitemcount=");
@@ -2564,6 +2706,10 @@ namespace DawnmakuEngine
                     if (indexes[0] >= 0)
                         thisData.collectDist = ParseFloat(indexes, data);
                 }
+
+                data = GetData(allLines, "shader=");
+                indexes = FindIndexes(data, "shader=");
+                thisData.shader = gameMaster.shaders[GetInputSubstring(indexes, data)];
 
                 data = GetData(allLines, "canbeautocollectedattop=");
                 indexes = FindIndexes(data, "canbeautocollectedattop=");
@@ -3065,7 +3211,7 @@ namespace DawnmakuEngine
             return thisData;
         }
 
-        public void ReadStageData(string file)
+        public void ReadStageData(string file, string[] bgmPaths)
         {
             StageData thisData = new StageData();
             string[] tempStrings, subTempStrings, allLines = File.ReadAllLines(file);
@@ -3078,6 +3224,17 @@ namespace DawnmakuEngine
 
             try
             {
+                data = GetData(allLines, "stagebgm=");
+                data = GetInputSubstring(FindIndexes(data, "stagebgm="), data);
+                for (i = 0; i < bgmPaths.Length; i++)
+                    if (SimplifyText(bgmPaths[i]).Contains(data))
+                        thisData.stageTrackFile = bgmPaths[i];
+                data = GetData(allLines, "bossbgm=");
+                data = GetInputSubstring(FindIndexes(data, "bossbgm="), data);
+                for (i = 0; i < bgmPaths.Length; i++)
+                    if (SimplifyText(bgmPaths[i]).Contains(data))
+                        thisData.bossTrackFile = bgmPaths[i];
+
                 data = GetData(allLines, "backgroundsegments=", 0, true, "enemyspawns=");
                 data = data.Remove(data.Length - "enemyspawns=".Length, "enemyspawns=".Length);
                 data = data.Remove(0, "backgroundsegments=".Length);

@@ -6,7 +6,7 @@ using OpenTK;
 
 namespace DawnmakuEngine.Data
 {
-    class PlayerShotData
+    public class PlayerShotData
     {
         public string[] bombName;
 

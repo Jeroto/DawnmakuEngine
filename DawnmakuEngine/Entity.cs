@@ -25,6 +25,9 @@ namespace DawnmakuEngine
         protected Quaternion worldRotation;
         protected Vector3 worldScale;
 
+        public event GameMaster.ElementFunction OnMove;
+        public event GameMaster.ElementFunction OnRotate;
+        public event GameMaster.ElementFunction OnScale;
 
 
         protected List<Entity> children = new List<Entity>();
@@ -144,6 +147,7 @@ namespace DawnmakuEngine
             {
                 position = value;
                 SetWorldPosition();
+                OnMove?.Invoke();
             }
         }
         public Vector3 WorldPosition
@@ -169,6 +173,8 @@ namespace DawnmakuEngine
             {
                 rotation = value;
                 SetChildrenWorldPosition();
+
+                OnRotate?.Invoke();
             }
         }
         public Vector3 LocalRotationRad
@@ -178,6 +184,7 @@ namespace DawnmakuEngine
             {
                 rotation = Quaternion.FromEulerAngles(value);
                 SetChildrenWorldPosition();
+                OnRotate?.Invoke();
             }
         }
         public Vector3 LocalRotationDegrees
@@ -189,6 +196,7 @@ namespace DawnmakuEngine
             { 
                 rotation = Quaternion.FromEulerAngles(new Vector3(MathHelper.DegreesToRadians(value.X), MathHelper.DegreesToRadians(value.Y), MathHelper.DegreesToRadians(value.Z)));
                 SetChildrenWorldPosition();
+                OnRotate?.Invoke();
             }
         }
         public Vector3 WorldRotationRad
@@ -246,6 +254,7 @@ namespace DawnmakuEngine
             {
                 scale = value;
                 SetChildrenWorldPosition();
+                OnScale?.Invoke();
             }
         }
 
@@ -485,11 +494,11 @@ namespace DawnmakuEngine
 
         public void RotateQuaternion(Vector3 axis, float angle)
         {
-            rotation = Quaternion.Multiply(rotation, Quaternion.FromAxisAngle(axis, angle));
+            LocalRotation = Quaternion.Multiply(rotation, Quaternion.FromAxisAngle(axis, angle));
         }
         public void SetQuaternion(Vector3 axis, float angle)
         {
-            rotation = Quaternion.FromAxisAngle(axis, angle);
+            LocalRotation = Quaternion.FromAxisAngle(axis, angle);
         }
         public void Rotate(Vector3 axis)
         {

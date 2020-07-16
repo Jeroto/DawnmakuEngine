@@ -7,7 +7,8 @@ namespace DawnmakuEngine.Data
 {
     public class StageData
     {
-        //BGM
+        public AudioData stageTrack, bossTrack;
+        public string stageTrackFile, bossTrackFile;
         public List<CamVelocities> camVel = new List<CamVelocities>();
         public List<SectionSpawns> secSpawns = new List<SectionSpawns>();
         public List<EnemySpawn> enemySpawns = new List<EnemySpawn>();

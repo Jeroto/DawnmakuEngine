@@ -9,6 +9,10 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
   <ItemGroup>
     <Compile Remove="Stages\**" />
     <EmbeddedResource Remove="Stages\**" />
@@ -17,6 +21,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Win32.SystemEvents" Version="4.7.0" />
+    <PackageReference Include="NAudio" Version="1.10.0" />
     <PackageReference Include="opentk" Version="3.2.0" />
     <PackageReference Include="opentk.glcontrol" Version="3.1.0" />
     <PackageReference Include="QuickFont.Desktop" Version="4.5.7053.25687" />

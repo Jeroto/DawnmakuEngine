@@ -8,6 +8,7 @@ Aimed=false;
 Burst Delay=15;
 Initial Delay=10;
 Per Bullet Delay=5;
+SpawnSounds=shootsoft;
 Damage=10;
 Offsets={0,0};
 Turn Offsets=false;
@@ -30,7 +31,7 @@ Has Effect=false;
 }
 :
 {
-Frames to Last=10;
+Frames to Last=5;
 Bullet Type=round;
 Starting Speed=0;
 Frames to Change Speed=0;
@@ -46,13 +47,15 @@ Bullet Type=charm;
 Starting Speed=200;
 Frames to Change Speed=30;
 ReAim=true;
+StageSound=stagechange3;
 }
 :
 {
-Frames to Last=10;
+Frames to Last=5;
 Bullet Type=round;
 Starting Speed=0;
 Frames to Change Speed=0;
+StageSound=null;
 }
 :
 {
@@ -66,4 +69,5 @@ Starting Speed=100;
 Ending Speed=300;
 Frames to Change Speed=120;
 ReAim=true;
+StageSound=stagechange2;
 }

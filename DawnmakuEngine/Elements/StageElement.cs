@@ -52,6 +52,10 @@ namespace DawnmakuEngine.Elements
             newRot = new Vector3(GameMaster.Random(data.camVel[0].randMinRot.X, data.camVel[0].randMaxRot.X),
                 GameMaster.Random(data.camVel[0].randMinRot.Y, data.camVel[0].randMaxRot.Y),
                 GameMaster.Random(data.camVel[0].randMinRot.Z, data.camVel[0].randMaxRot.Z));
+
+            //gameMaster.audioManager.PlaySound(data.stageTrack);
+            gameMaster.audioManager.PlaySound(data.stageTrackFile, AudioController.AudioCategory.BGM, gameMaster.BgmVol);
+
             base.PostCreate();
         }
 

@@ -114,19 +114,6 @@ namespace DawnmakuEngine.Elements
                         segmentIndex++;
                         prevMovement = EntityAttachedTo.LocalPosition.Xy - prevPos;
                         waitTime = enemyData.movementCurve.StartWaitTime(segmentIndex);
-
-                        BulletElement.BulletStage[] stages = new BulletElement.BulletStage[1];
-                        stages[0] = new BulletElement.BulletStage();
-                        stages[0].spriteType = gameMaster.bulletTypes[BulletElement.Random(1, gameMaster.bulletTypes.Count)];
-                        stages[0].bulletColor = BulletElement.Random(0, gameMaster.bulletSprites[stages[0].spriteType].sprites.Count - 2);
-                        stages[0].startingSpeed = 200;
-                        stages[0].endingSpeed = 75;
-                        stages[0].framesToChangeSpeed = 30;
-                        stages[0].movementDirection = DawnMath.RandomCircle();
-                        //stages[0].movementDirection = DawnMath.RandomCircle();
-                        stages[0].rotate = BulletElement.ShouldTurn(stages[0].spriteType);
-                        //stages[0].rotate = false;
-                        BulletElement.SpawnBullet(stages, EntityAttachedTo.LocalPosition, BulletElement.ShouldSpin(stages[0].spriteType));
                     }
 
                     if (waitTime <= 0)
@@ -183,7 +170,8 @@ namespace DawnmakuEngine.Elements
         protected void DetectKillzone()
         {
             Vector3 pos = EntityAttachedTo.WorldPosition;
-            if (pos.X < destroyExtentsX.X || pos.X > destroyExtentsX.Y || pos.Y < destroyExtentsY.X || pos.Y > destroyExtentsY.Y)
+            if (pos.X < gameMaster.enemyBoundsX.X || pos.X > gameMaster.enemyBoundsX.Y ||
+                pos.Y < gameMaster.enemyBoundsY.X || pos.Y > gameMaster.enemyBoundsY.Y)
                 EntityAttachedTo.AttemptDelete();
         }
 
@@ -198,13 +186,22 @@ namespace DawnmakuEngine.Elements
             for (int i = 0; i < PlayerDamageCollider.playerDamageColliders.Count; i++)
             {
                 thisCol = PlayerDamageCollider.playerDamageColliders[i];
-                posDif = thisCol.rotatedOffset - position;
+                posDif = thisCol.GetRotatedCollider() - position;
                 hitboxCombined = curHitboxSize + thisCol.LargestScaledDimension / 2;
 
                 if (posDif.X * posDif.X + posDif.Y * posDif.Y <= hitboxCombined * hitboxCombined)
                 {
-                    posDif = new Vector2(Math.Clamp(posDif.X, -curHitboxSize, curHitboxSize),
-                        Math.Clamp(posDif.Y, -curHitboxSize, curHitboxSize));
+                    /*posDif = new Vector2(Math.Clamp(posDif.X, -curHitboxSize, curHitboxSize),
+                        Math.Clamp(posDif.Y, -curHitboxSize, curHitboxSize));*/
+                    if (posDif.X > 0)
+                        posDif.X = MathF.Max(0, posDif.X - curHitboxSize);
+                    else
+                        posDif.X = MathF.Min(0, posDif.X + curHitboxSize);
+
+                    if (posDif.Y > 0)
+                        posDif.Y = MathF.Max(0, posDif.Y - curHitboxSize);
+                    else
+                        posDif.Y = MathF.Min(0, posDif.Y + curHitboxSize);
                     sin = MathF.Sin(thisCol.rotRad);
                     cos = MathF.Cos(thisCol.rotRad);
                     XCosYSin = posDif.X * cos - posDif.Y * sin;

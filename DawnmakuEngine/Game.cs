@@ -7,6 +7,7 @@ using OpenTK.Graphics.ES30;
 using OpenTK.Input;
 using DawnmakuEngine.Elements;
 using DawnmakuEngine.Data;
+using Microsoft.VisualBasic.CompilerServices;
 
 namespace DawnmakuEngine
 {
@@ -71,7 +72,7 @@ namespace DawnmakuEngine
             newState.animFrames[0].sprite = new SpriteSet.Sprite(0, 0, 1, 1, GameMaster.gameMaster.UITextures["gameborder"], false);
             newState.autoTransition = -1;
             gameBorder.AddElement(new TextureAnimator(new TextureAnimator.AnimationState[1] { newState }, gameBorder.GetElement<MeshRenderer>()));
-
+            
             /*TextRenderer textRend = new TextRenderer();
             textRend.SetDrawingColor(255, 0, 0, 255);
             textRend.textToWrite = "FPS:";
@@ -106,44 +107,47 @@ namespace DawnmakuEngine
             GL.BlendEquation(BlendEquationMode.FuncAdd);
             GL.DepthFunc(DepthFunction.Less);
 
-            Entity debugText = new Entity("DebugText", new Vector3(300, 450, 0));
+            /*Entity debugText = new Entity("DebugText", new Vector3(300, 450, 0));
             TextRenderer textRenderer = new TextRenderer();
             debugText.AddElement(textRenderer);
+            textRenderer.uiText = true;
             textRenderer.WriteFontFamilyName = "Arial";
             //textRenderer.WriteFontFamilyName = "Witching Hour";
             textRenderer.currentShader = GameMaster.gameMaster.shaders["textshader"];
             textRenderer.TextSize = 50;
-            textRenderer.Text = "Normal";
+            textRenderer.Text = "Normal";*/
             /*MeshRenderer textMesh = new MeshRenderer(Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles), "borderui", BufferUsageHint.StaticDraw, 
                 GameMaster.gameMaster.generalTextShader, null, true);
             textMesh.colorR = 150;
             textMesh.colorG = 150;
             debugText.AddElement(textMesh);*/
 
-            debugText = new Entity("ScoreLabel", new Vector3(300, 400, 0));
+            /*debugText = new Entity("ScoreLabel", new Vector3(300, 400, 0));
             textRenderer = new TextRenderer();
             debugText.AddElement(textRenderer);
+            textRenderer.uiText = true;
             textRenderer.WriteFontFamilyName = "Arial";
             //textRenderer.WriteFontFamilyName = "Witching Hour";
             textRenderer.currentShader = GameMaster.gameMaster.shaders["textshader"];
             textRenderer.TextSize = 50;
             textRenderer.Text = "Score";
-            textRenderer.HoriAlign = SixLabors.Fonts.HorizontalAlignment.Right;
+            textRenderer.HoriAlign = SixLabors.Fonts.HorizontalAlignment.Right;*/
             /*textMesh = new MeshRenderer(Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles), "borderui", BufferUsageHint.StaticDraw,
                 GameMaster.gameMaster.generalTextShader, null, true);
             textMesh.colorR = 150;
             textMesh.colorG = 150;
             debugText.AddElement(textMesh);*/
 
-            debugText = new Entity("ScoreVal", new Vector3(300, 400, 0));
+            /*debugText = new Entity("ScoreVal", new Vector3(300, 400, 0));
             textRenderer = new TextRenderer();
             debugText.AddElement(textRenderer);
+            textRenderer.uiText = true;
             textRenderer.WriteFontFamilyName = "Arial";
             //textRenderer.WriteFontFamilyName = "Witching Hour";
             textRenderer.currentShader = GameMaster.gameMaster.shaders["textshader"];
             textRenderer.TextSize = 35;
             textRenderer.Text = "000000000";
-            textRenderer.HoriAlign = SixLabors.Fonts.HorizontalAlignment.Left;
+            textRenderer.HoriAlign = SixLabors.Fonts.HorizontalAlignment.Left;*/
             /*textMesh = new MeshRenderer(Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles), "borderui", BufferUsageHint.StaticDraw,
                 GameMaster.gameMaster.generalTextShader, null, true);
             debugText.AddElement(textMesh);*/
@@ -188,11 +192,11 @@ namespace DawnmakuEngine
                     BulletElement.SpawnBullet(stage, gameMaster.playerEntity.WorldPosition + new Vector3(stage[0].movementDirection * 20),
                         BulletElement.ShouldSpin(stage[0].spriteType));
                 }
-                if(input.IsKeyDown(Key.I))
+                /*if(input.IsKeyDown(Key.I))
                 {
                     ItemElement.SpawnItem(gameMaster.itemData[gameMaster.itemTypes[ItemElement.Random(0, gameMaster.itemData.Count)]],
                         gameMaster.playerEntity.WorldPosition + new Vector3(0, 16, 0));
-                }
+                }*/
 
 
                 uint prevScore = gameMaster.score;
@@ -209,6 +213,10 @@ namespace DawnmakuEngine
                     Entity.FindEntity("ScoreVal").GetElement<TextRenderer>().Text = gameMaster.score.ToString("000000000");
 
 
+                if(InputScript.bombDown)
+                    gameMaster.audioManager.PlaySound(gameMaster.sfx["playerdeath"], AudioController.AudioCategory.Player);
+                else if(InputScript.bombUp)
+                    gameMaster.audioManager.PlaySound(gameMaster.sfx["playerdeath"], AudioController.AudioCategory.Player, 0.5f);
 
 
                 if (input.IsKeyDown(Key.H))
@@ -294,7 +302,14 @@ namespace DawnmakuEngine
             /*texture1.Use(TextureUnit.Texture0);
             texture2.Use(TextureUnit.Texture1);*/
 
+            GameMaster.StartTimer();
             GameMaster.gameMaster.ElementPreRender();
+            GameMaster.LogTimeMilliseconds("all pre-renders");
+
+            GameMaster.gameMaster.enemyBulletSpawnSoundPlayed = false;
+            GameMaster.gameMaster.enemyBulletStageSoundPlayed = false;
+            GameMaster.gameMaster.playerBulletSpawnSoundPlayed = false;
+            GameMaster.gameMaster.playerBulletStageSoundPlayed = false;
 
             Render();
 
@@ -307,6 +322,8 @@ namespace DawnmakuEngine
         {
             int camCount = CameraElement.cameras.Count, layersCount, meshCount,
                 c, r, m;
+            double totalMilliseconds = 0;
+            long totalTicks = 0;
             CameraElement thisCam;
             MeshRenderer thisRenderer;
             for (c = 0; c < camCount; c++)
@@ -317,6 +334,7 @@ namespace DawnmakuEngine
                 layersCount = thisCam.renderableLayers.Count;
                 for (r = 0; r < layersCount; r++)
                 {
+                    GameMaster.StartTimer();
                     SetLayerSettings(GameMaster.renderLayerSettings[thisCam.renderableLayers[r]]);
                     meshCount = MeshRenderer.renderLayers[thisCam.renderableLayers[r]].Count;
                     for (m = 0; m < meshCount; m++)
@@ -338,8 +356,13 @@ namespace DawnmakuEngine
                             GL.DrawElements(PrimitiveType.Triangles, thisRenderer.mesh.triangleData.Length, DrawElementsType.UnsignedInt, IntPtr.Zero);
                         }
                     }
+
+                    GameMaster.LogTimeMilliseconds("rendering layer " + thisCam.renderableLayers[r].ToString() + " for " + thisCam.EntityAttachedTo.Name);
+                    totalMilliseconds += GameMaster.timeLogger.Elapsed.TotalMilliseconds; 
+                    totalTicks += GameMaster.timeLogger.ElapsedTicks;
                 }
             }
+            GameMaster.LogTimeCustMillisecondsAndTicks("rendering", totalMilliseconds, totalTicks, "Total time taken for ");
         }
 
         protected void SetLayerSettings(GameMaster.RenderLayer layerSettings)

@@ -77,6 +77,7 @@ namespace DawnmakuEngine.Data
         {
             GL.ActiveTexture(unit);
             GL.BindTexture(TextureTarget.Texture2D, handle);
+            GameMaster.lastBoundTexture = this;
         }
 
         public void SetUpTexture(Image<Rgba32> image, bool generateMipmaps)
@@ -191,7 +192,7 @@ namespace DawnmakuEngine.Data
             {
                 GameMaster.LogError(e.Message);
             }
-            GameMaster.LogNegativeNotice("Time to cycle pixels: " + timer.ElapsedMilliseconds);
+            GameMaster.LogTimeCustMilliseconds("cycle pixels", timer.Elapsed.TotalMilliseconds, "Time to ");
 
             GL.TexImage2D(TextureTarget2d.Texture2D, 0, TextureComponentCount.Rgba, image.Width, image.Height,
                 0, PixelFormat.Rgba, PixelType.UnsignedByte, pixels);

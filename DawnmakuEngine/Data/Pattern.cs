@@ -19,6 +19,7 @@ namespace DawnmakuEngine.Data
         public float initialDelay = 1;
         public List<float> perBulletDelay = new List<float>();
 
+        public List<AudioData> spawnSounds = new List<AudioData>();
         public List<ushort> damage = new List<ushort>();
 
         public List<Vector2> offsets = new List<Vector2>();
@@ -45,6 +46,9 @@ namespace DawnmakuEngine.Data
             for (i = 0; i < damage.Count; i++)
                 newCopy.damage.Add(damage[i]);
 
+            for (i = 0; i < spawnSounds.Count; i++)
+                newCopy.spawnSounds.Add(spawnSounds[i]);
+
             for (i = 0; i < offsets.Count; i++)
             {
                 newCopy.offsets.Add(offsets[i]);
@@ -55,7 +59,7 @@ namespace DawnmakuEngine.Data
 
         public class PatternVariables
         {
-            public int burstsRemaining = 999, burstDelayIndex = 0, perBulletIndex = 0, delayIndex = 0, damageIndex = 0, offsetIndex = 0, turnOffsetIndex = 0;
+            public int burstsRemaining = 999, burstDelayIndex = 0, perBulletIndex = 0, delayIndex = 0, damageIndex = 0, offsetIndex = 0, turnOffsetIndex = 0, soundIndex = 0;
             public float fireDelay;
             virtual public PatternVariables Copy()
             {
@@ -67,6 +71,7 @@ namespace DawnmakuEngine.Data
                 copy.offsetIndex = offsetIndex;
                 copy.turnOffsetIndex = turnOffsetIndex;
                 copy.fireDelay = fireDelay;
+                copy.soundIndex = soundIndex;
                 return copy;
             }
         }

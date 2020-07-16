@@ -4,7 +4,7 @@ using System.Text;
 
 namespace DawnmakuEngine.Data
 {
-    class PlayerTypeData
+    public class PlayerTypeData
     {
         public string[] name;
         public string[] desc;

@@ -1,13 +1,14 @@
 PatternType=Bullet;
-Burst Count=25;
-Bullets in Burst=14;
+Burst Count=4;
+Bullets in Burst=7;
 Overall Degrees=60;
 Degree Offset=0;
 Random Degree Offset=0;
 Aimed=true;
-Burst Delay=1, 1;
-Initial Delay=475;
+Burst Delay=5, 20;
+Initial Delay=25;
 Per Bullet Delay=1;
+SpawnSounds=shoot1;
 Damage=10;
 Offsets={0,0};
 Turn Offsets=false;
@@ -33,6 +34,7 @@ Has Effect=false;
 Frames to Last=180;
 Bullet Color=red;
 Starting Speed=50;
-Ending Speed=10;
+Ending Speed=500;
 Frames to Change Speed=180;
+StageSound=stageChange1;
 }

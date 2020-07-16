@@ -6,7 +6,7 @@ using OpenTK;
 
 namespace DawnmakuEngine.Data
 {
-    class PlayerOrbData
+    public class PlayerOrbData
     {
         public Shader shader;
         public bool[] activePowerLevels = null;

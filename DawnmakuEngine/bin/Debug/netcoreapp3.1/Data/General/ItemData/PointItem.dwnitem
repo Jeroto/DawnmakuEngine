@@ -9,6 +9,7 @@ ItemMagnetSpeed=0;
 ItemDrawSpeed=0;
 ItemCollectDist = 0;
 
+shader=spriteshader;
 canBeAutoCollectedAtTop=true;
 autoDraw=false;
 animStates=pointitem;

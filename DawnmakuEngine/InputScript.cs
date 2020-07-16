@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using OpenTK;
 using OpenTK.Input;
+using Typography.OpenFont.Tables;
 
 namespace DawnmakuEngine
 {
@@ -21,6 +22,9 @@ namespace DawnmakuEngine
         private static bool prevBomb = false;
         private static bool prevSpecial = false;
 
+        private static bool iPressed;
+        private static bool prevIPressed;
+
         public class ExtraInputData
         {
             //input
@@ -28,6 +32,12 @@ namespace DawnmakuEngine
             public float outputFloat = 0;
             public bool outputBool = false;
         }
+
+        public static bool IDown
+        { 
+            get { return iPressed && !prevIPressed;  }
+        }
+
         public static Vector2 DirectionalInput
         {
             get { return directionalInput; }
@@ -97,6 +107,10 @@ namespace DawnmakuEngine
         public static void GetInput()
         {
             KeyboardState keyboardState = Keyboard.GetState();
+
+            prevIPressed = iPressed;
+            iPressed = keyboardState.IsKeyDown(Key.I);
+
             //GamePadState gamepadState = GamePad.GetState(0);
             directionalInput.X = keyboardState.IsKeyDown(Key.Left) ? -1 : keyboardState.IsKeyDown(Key.Right) ? 1 : 0;
             directionalInput.Y = keyboardState.IsKeyDown(Key.Down) ? -1 : keyboardState.IsKeyDown(Key.Up) ? 1 : 0;

@@ -78,6 +78,8 @@ namespace DawnmakuEngine.Elements
             public bool turnAtStart;
             public float initialMoveDelay = 0;
             public bool turnAfterDelay;
+            //Stage Effect Sound
+            public AudioData stageSound;
             //Spawn Effect Burst
             public bool hasEffect;
             public BulletColor effectColor;
@@ -106,6 +108,8 @@ namespace DawnmakuEngine.Elements
                 copy.turnAtStart = turnAtStart;
                 copy.initialMoveDelay = initialMoveDelay;
                 copy.turnAfterDelay = turnAfterDelay;
+
+                copy.stageSound = stageSound;
 
                 copy.hasEffect = hasEffect;
                 copy.effectColor = effectColor;
@@ -155,12 +159,12 @@ namespace DawnmakuEngine.Elements
             if (bulletStages[stageIndex].turnAtStart)
                 /*facingAngleRad = DawnMath.FindAngleRad(bulletStages[stageIndex].movementDirection) - ((EntityAttachedTo.parent != null) ?
                     EntityAttachedTo.parent.WorldRotation.Z + EntityAttachedTo.WorldRotation.Z : EntityAttachedTo.WorldRotation.Z);*/
-                entityAttachedTo .LocalRotationRad = new Vector3(0, 0, DawnMath.FindAngleRad(bulletStages[stageIndex].movementDirection) - ((EntityAttachedTo.Parent != null) ?
+                entityAttachedTo.LocalRotationRad = new Vector3(0, 0, DawnMath.FindAngleRad(bulletStages[stageIndex].movementDirection) - ((EntityAttachedTo.Parent != null) ?
                     EntityAttachedTo.Parent.WorldRotation.Z + EntityAttachedTo.WorldRotation.Z : EntityAttachedTo.WorldRotation.Z));
 
             maxBoundsExit = gameMaster.bulletData[bulletStages[stageIndex].spriteType].boundsExitDist;
 
-                meshRenderer = EntityAttachedTo.GetElement<MeshRenderer>();
+            meshRenderer = EntityAttachedTo.GetElement<MeshRenderer>();
             spriteAnimator = EntityAttachedTo.GetElement<TextureAnimator>();
 
             startScale = bulletStages[stageIndex].renderScale;
@@ -180,6 +184,19 @@ namespace DawnmakuEngine.Elements
             base.PostCreate();
 
             DetectDestroy();
+
+            if (firedByPlayer && !gameMaster.playerBulletStageSoundPlayed)
+            {
+                gameMaster.audioManager.PlaySound(bulletStages[stageIndex].stageSound, AudioController.AudioCategory.PlayerBullet,
+                    gameMaster.PlayerBulletVol);
+                gameMaster.playerBulletStageSoundPlayed = true;
+            }
+            else if (!firedByPlayer && !gameMaster.enemyBulletStageSoundPlayed)
+            {
+                gameMaster.audioManager.PlaySound(bulletStages[stageIndex].stageSound, AudioController.AudioCategory.Bullet,
+                    gameMaster.BulletStageVol);
+                gameMaster.enemyBulletStageSoundPlayed = true;
+            }
         }
 
         // Update is called once per frame
@@ -212,59 +229,7 @@ namespace DawnmakuEngine.Elements
 
             if (stageIndex + 1 < bulletStages.Length && bulletStages[stageIndex].framesToLast <= 0)
             {
-                stageIndex++;
-
-                if (bulletStages[stageIndex].keepOldAngle)
-                {
-                    if (bulletStages[stageIndex].modifyAngle)
-                        bulletStages[stageIndex].movementDirection = DawnMath.CalculateCircleDeg(DawnMath.FindAngleRad(bulletStages[stageIndex - 1].movementDirection) +
-                            DawnMath.FindAngleRad(bulletStages[stageIndex].movementDirection));
-                    else
-                        bulletStages[stageIndex].movementDirection = bulletStages[stageIndex - 1].movementDirection;
-                }
-                else if (bulletStages[stageIndex].reAim)
-                {
-                    Entity aimTarget;
-                    if (!firedByPlayer)
-                        aimTarget = gameMaster.playerEntity;
-                    else
-                        aimTarget = DawnMath.FindNearestEnemy(entityAttachedTo.WorldPosition.Xy);
-
-                    if (bulletStages[stageIndex].modifyAngle)
-                        bulletStages[stageIndex].movementDirection = DawnMath.CalculateCircleRad(DawnMath.FindAngleToObjectRad(EntityAttachedTo.WorldPosition.Xy, aimTarget) +
-                            DawnMath.FindAngleRad(bulletStages[stageIndex].movementDirection));
-                    else
-                        bulletStages[stageIndex].movementDirection = DawnMath.FindDirectionToObject(EntityAttachedTo.WorldPosition.Xy, aimTarget);
-                }
-                else if (bulletStages[stageIndex].modifyAngle)
-                    bulletStages[stageIndex].movementDirection = DawnMath.CalculateCircleDeg(DawnMath.FindAngleRad(bulletStages[stageIndex - 1].movementDirection) +
-                            DawnMath.FindAngleRad(bulletStages[stageIndex].movementDirection));
-
-
-                if (bulletStages[stageIndex].turnAtStart)
-                    /*facingAngleRad = DawnMath.FindAngleRad(bulletStages[stageIndex].movementDirection) - ((EntityAttachedTo.parent != null) ?
-                        EntityAttachedTo.parent.WorldRotation.Z + EntityAttachedTo.WorldRotation.Z : EntityAttachedTo.WorldRotation.Z);*/
-                    entityAttachedTo.LocalRotationRad = new Vector3(0, 0 , DawnMath.FindAngleRad(bulletStages[stageIndex].movementDirection) - ((EntityAttachedTo.Parent != null) ?
-                        EntityAttachedTo.Parent.WorldRotation.Z + EntityAttachedTo.WorldRotation.Z : EntityAttachedTo.WorldRotation.Z));
-
-                if (!ShouldSpin(bulletStages[stageIndex].spriteType))
-                    EntityAttachedTo.GetElement<RotateElement>().Disable();
-                else
-                    EntityAttachedTo.GetElement<RotateElement>().Enable();
-
-                if (bulletStages[stageIndex].hasEffect)
-                    SpawnEffect();
-
-                startColor = meshRenderer.ColorByte;
-                meshRenderer.shader = gameMaster.bulletData[bulletStages[stageIndex].spriteType].shader;
-
-                maxBoundsExit = gameMaster.bulletData[bulletStages[stageIndex].spriteType].boundsExitDist;
-
-                timePassed = 0;
-
-                UpdateSprite();
-                if(bulletStages[stageIndex - 1].spriteType != bulletStages[stageIndex].spriteType)
-                    UpdateColliders(bulletStages[stageIndex].spriteType);
+                ChangeStage();
             }
             else
                 bulletStages[stageIndex].framesToLast -= gameMaster.timeScale;
@@ -339,7 +304,7 @@ namespace DawnmakuEngine.Elements
             if (bulletStages[stageIndex].initialMoveDelay <= 0)
             {
                 EntityAttachedTo.LocalPosition += 
-                    new Vector3(bulletStages[stageIndex].movementDirection * currentSpeed * gameMaster.frameTime * gameMaster.timeScale);
+                    new Vector3(bulletStages[stageIndex].movementDirection * (currentSpeed * gameMaster.frameTime * gameMaster.timeScale));
 
                 if (bulletStages[stageIndex].framesToChangeSpeed > 0)
                 {
@@ -363,15 +328,88 @@ namespace DawnmakuEngine.Elements
                     if (!bulletStages[stageIndex].turnAfterDelay || bulletStages[stageIndex].initialMoveDelay <= 0)
                     {
                         if (Vector2.Distance(EntityAttachedTo.WorldPosition.Xy, prevPos) > 0.01f)
-                            /*facingAngleRad = DawnMath.FindAngleRad(new Vector2(EntityAttachedTo.WorldPosition.X - prevPos.X, 
-                                EntityAttachedTo.WorldPosition.Y - prevPos.Y));*/
-                            entityAttachedTo.SetQuaternion(new Vector3(0, 0, 1), -DawnMath.FindAngleRad(new Vector2(EntityAttachedTo.WorldPosition.X - prevPos.X,
-                            EntityAttachedTo.WorldPosition.Y - prevPos.Y).Normalized()));
+                        {
+                            float angle = -DawnMath.FindAngleRad(new Vector2(EntityAttachedTo.WorldPosition.X - prevPos.X,
+                                EntityAttachedTo.WorldPosition.Y - prevPos.Y).Normalized());
+                            if(MathF.Abs(entityAttachedTo.LocalRotationRad.Z - angle) > 0.01f)
+                            entityAttachedTo.SetQuaternion(new Vector3(0, 0, 1), angle);
+                        }
+
+                        /*facingAngleRad = DawnMath.FindAngleRad(new Vector2(EntityAttachedTo.WorldPosition.X - prevPos.X, 
+                            EntityAttachedTo.WorldPosition.Y - prevPos.Y));*/
                         rotateFramesWaited = 0;
                     }
             }
             else
                 rotateFramesWaited++;
+        }
+
+        public void ChangeStage()
+        {
+            stageIndex++;
+
+            if (bulletStages[stageIndex].keepOldAngle)
+            {
+                if (bulletStages[stageIndex].modifyAngle)
+                    bulletStages[stageIndex].movementDirection = DawnMath.CalculateCircleDeg(DawnMath.FindAngleRad(bulletStages[stageIndex - 1].movementDirection) +
+                        DawnMath.FindAngleRad(bulletStages[stageIndex].movementDirection));
+                else
+                    bulletStages[stageIndex].movementDirection = bulletStages[stageIndex - 1].movementDirection;
+            }
+            else if (bulletStages[stageIndex].reAim)
+            {
+                Entity aimTarget;
+                if (!firedByPlayer)
+                    aimTarget = gameMaster.playerEntity;
+                else
+                    aimTarget = DawnMath.FindNearestEnemy(entityAttachedTo.WorldPosition.Xy);
+
+                if (bulletStages[stageIndex].modifyAngle)
+                    bulletStages[stageIndex].movementDirection = DawnMath.CalculateCircleRad(DawnMath.FindAngleToObjectRad(EntityAttachedTo.WorldPosition.Xy, aimTarget) +
+                        DawnMath.FindAngleRad(bulletStages[stageIndex].movementDirection));
+                else
+                    bulletStages[stageIndex].movementDirection = DawnMath.FindDirectionToObject(EntityAttachedTo.WorldPosition.Xy, aimTarget);
+            }
+            else if (bulletStages[stageIndex].modifyAngle)
+                bulletStages[stageIndex].movementDirection = DawnMath.CalculateCircleDeg(DawnMath.FindAngleRad(bulletStages[stageIndex - 1].movementDirection) +
+                        DawnMath.FindAngleRad(bulletStages[stageIndex].movementDirection));
+
+
+            if (bulletStages[stageIndex].turnAtStart)
+                entityAttachedTo.LocalRotationRad = new Vector3(0, 0, DawnMath.FindAngleRad(bulletStages[stageIndex].movementDirection) - ((EntityAttachedTo.Parent != null) ?
+                    EntityAttachedTo.Parent.WorldRotation.Z + EntityAttachedTo.WorldRotation.Z : EntityAttachedTo.WorldRotation.Z));
+
+            if (!ShouldSpin(bulletStages[stageIndex].spriteType))
+                EntityAttachedTo.GetElement<RotateElement>().Disable();
+            else
+                EntityAttachedTo.GetElement<RotateElement>().Enable();
+
+            if (bulletStages[stageIndex].hasEffect)
+                SpawnEffect();
+
+            startColor = meshRenderer.ColorByte;
+            meshRenderer.shader = gameMaster.bulletData[bulletStages[stageIndex].spriteType].shader;
+
+            maxBoundsExit = gameMaster.bulletData[bulletStages[stageIndex].spriteType].boundsExitDist;
+
+            timePassed = 0;
+
+            if (firedByPlayer && !gameMaster.playerBulletStageSoundPlayed)
+            {
+                gameMaster.audioManager.PlaySound(bulletStages[stageIndex].stageSound, AudioController.AudioCategory.PlayerBullet,
+                    gameMaster.PlayerBulletVol);
+                gameMaster.playerBulletStageSoundPlayed = true;
+            }
+            else if (!firedByPlayer && !gameMaster.enemyBulletStageSoundPlayed)
+            {
+                gameMaster.audioManager.PlaySound(bulletStages[stageIndex].stageSound, AudioController.AudioCategory.Bullet,
+                    gameMaster.BulletStageVol);
+                gameMaster.enemyBulletStageSoundPlayed = true;
+            }
+
+            UpdateSprite();
+            if (bulletStages[stageIndex - 1].spriteType != bulletStages[stageIndex].spriteType)
+                UpdateColliders(bulletStages[stageIndex].spriteType);
         }
 
         //Destroy detection

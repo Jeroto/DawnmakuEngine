@@ -90,6 +90,9 @@ namespace DawnmakuEngine.Elements
             else if(InputScript.focusUp)
                 timeSinceFocusChange = 0;
 
+            if(timeSinceFocusChange.CompareTo(0) == 0)
+                gameMaster.audioManager.PlaySound(playerData.focusSound, AudioController.AudioCategory.Misc, gameMaster.SfxVol);
+
             if (InputScript.shootDown && shotSwitchTime > 0)
             {
                 shotSwitchTime = 0;
@@ -198,22 +201,36 @@ namespace DawnmakuEngine.Elements
 
         public void BulletCollisions()
         {
+            if (gameMaster.invincible)
+                return;
             EnemyDamageCollider thisCol;
             float curHitboxSize, hitboxCombined, widthGraze, heightGraze, sin, cos,
                 XCosYSin, XSinYCos;
             Vector2 position = entityAttachedTo.WorldPosition.Xy + playerData.colliderOffset,
-                posDif = new Vector2();
+                posDif = new Vector2(), posDifNorm = new Vector2();
             curHitboxSize = playerData.colliderSize * entityAttachedTo.WorldScale.X;
             for (int i = 0; i < EnemyDamageCollider.enemyDamageColliders.Count; i++)
             {
                 thisCol = EnemyDamageCollider.enemyDamageColliders[i];
-                posDif = thisCol.rotatedOffset - position;
+                posDif = thisCol.GetRotatedCollider() - position;
                 hitboxCombined = curHitboxSize + thisCol.LargestScaledDimension / 2 + gameMaster.grazeDistance;
 
                 if (posDif.X * posDif.X + posDif.Y * posDif.Y <= hitboxCombined * hitboxCombined)
                 {
-                    posDif = new Vector2(Math.Clamp(posDif.X, -curHitboxSize, curHitboxSize),
-                        Math.Clamp(posDif.Y, -curHitboxSize, curHitboxSize));
+                    /*posDif = new Vector2(Math.Clamp(posDif.X, -curHitboxSize, curHitboxSize),
+                        Math.Clamp(posDif.Y, -curHitboxSize, curHitboxSize));*/
+                    posDifNorm = new Vector2(MathF.Abs(posDif.X), MathF.Abs(posDif.Y));
+                    posDifNorm.NormalizeFast();
+                    if (posDif.X > 0)
+                        posDif.X = MathF.Max(0, posDif.X - curHitboxSize * posDifNorm.X);
+                    else
+                        posDif.X = MathF.Min(0, posDif.X + curHitboxSize * posDifNorm.X);
+
+                    if (posDif.Y > 0)
+                        posDif.Y = MathF.Max(0, posDif.Y - curHitboxSize * posDifNorm.Y);
+                    else
+                        posDif.Y = MathF.Min(0, posDif.Y + curHitboxSize * posDifNorm.Y);
+
                     widthGraze = thisCol.scaledWidth + gameMaster.grazeDistance;
                     heightGraze = thisCol.scaledHeight + gameMaster.grazeDistance;
                     sin = MathF.Sin(thisCol.rotRad);
@@ -246,13 +263,15 @@ namespace DawnmakuEngine.Elements
 
         public void Graze()
         {
-            GameMaster.LogPositiveNotice("Grazed");
+            //GameMaster.LogPositiveNotice("Grazed");
+            gameMaster.audioManager.PlaySound(playerData.grazeSound, AudioController.AudioCategory.Misc, gameMaster.SfxVol);
         }
 
         long collisionCounter;
         public void Damage(BulletElement bullet)
         {
-            GameMaster.LogNegativeNotice("Collision " + collisionCounter.ToString("000000"));
+            //GameMaster.LogNegativeNotice("Collision " + collisionCounter.ToString("000000"));
+            gameMaster.audioManager.PlaySound(playerData.hitSound, AudioController.AudioCategory.Player, gameMaster.SfxVol);
 
             collisionCounter++;
             if(bullet != null)
@@ -488,7 +507,7 @@ namespace DawnmakuEngine.Elements
                 hitbox = new MeshRenderer(Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles), "effects", OpenTK.Graphics.ES30.BufferUsageHint.DynamicDraw,
                     playerData.hitboxShader, playerData.hitboxAnim.animFrames[0].sprite.tex, true);
                 hitbox.ColorByte = new Vector4(255, 255, 255, 0);
-                hitboxScale = playerData.colliderSize / (((hitbox.tex.Height) * 
+                hitboxScale = (playerData.colliderSize * 2) / (((hitbox.tex.Height) * 
                     (playerData.hitboxAnim.animFrames[0].sprite.right - playerData.hitboxAnim.animFrames[0].sprite.left)) - playerData.hitboxInsetAmount);
                 hitboxInvisScale = hitboxScale * 1.5f;
                 hitbox.modelScale = hitboxInvisScale;

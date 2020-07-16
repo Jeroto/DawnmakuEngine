@@ -60,6 +60,7 @@ namespace DawnmakuEngine.Data
         public void Use()
         {
             GL.UseProgram(handle);
+            GameMaster.lastBoundShader = this;
         }
 
         public void SetUp()
