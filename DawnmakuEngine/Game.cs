@@ -13,6 +13,7 @@ using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
 using SixLabors.ImageSharp;
+using DawnmakuEngine.Data.Resources;
 
 namespace DawnmakuEngine
 {
@@ -41,6 +42,20 @@ namespace DawnmakuEngine
 
             GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
+
+            BaseResource resource = new FloatResource();
+
+            Console.WriteLine("\n\n");
+
+            Console.WriteLine(Convert.ChangeType(resource.GetValue(), resource.resourceType));
+            resource.ModifyValue(1);
+            Console.WriteLine(Convert.ChangeType(resource.GetValue(), resource.resourceType));
+            resource.ModifyValue(100);
+            Console.WriteLine(Convert.ChangeType(resource.GetValue(), resource.resourceType));
+            resource.ModifyValue(-11);
+            Console.WriteLine(Convert.ChangeType(resource.GetValue(), resource.resourceType));
+
+            Console.WriteLine("\n\n");
 
             /*vertexBufferObject = GL.GenBuffer();
             elementBufferObject = GL.GenBuffer();
