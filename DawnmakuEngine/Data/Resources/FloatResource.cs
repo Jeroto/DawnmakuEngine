@@ -8,6 +8,11 @@ namespace DawnmakuEngine.Data.Resources
     {
         float value;
 
+        public override void InitValue(string stringValue)
+        {
+            value = float.Parse(stringValue);
+        }
+
         public override object GetValue()
         {
             return value;
@@ -23,7 +28,7 @@ namespace DawnmakuEngine.Data.Resources
             return value;
         }
 
-        public FloatResource() : base()
+        public FloatResource(string resourceName) : base(resourceName)
         {
             resourceType = typeof(float);
         }

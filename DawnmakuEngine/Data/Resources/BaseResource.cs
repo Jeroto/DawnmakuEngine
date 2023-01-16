@@ -14,6 +14,15 @@ namespace DawnmakuEngine.Data.Resources
         public Type resourceType = typeof(BaseResource);
 
         /// <summary>
+        /// Called when initially loading the resource with json. Recieves the direct value string if given, and "NULL" otherwise.
+        /// </summary>
+        /// <param name="stringValue">Either the string imported from JSON or "NULL" if no value was given.</param>
+        public virtual void InitValue(string stringValue)
+        {
+
+        }
+
+        /// <summary>
         /// Modifies the value(s) contained in the resource. Any number and types of values can be passed in to modify the resource.
         /// </summary>
         /// <param name="values">The list of values. Within the function, each entry needs to be converted to the type you want to use.</param>
@@ -40,6 +49,10 @@ namespace DawnmakuEngine.Data.Resources
             return 0;
         }
 
-        public BaseResource() { }
+        public BaseResource(string resourceName) 
+        {
+            name = resourceName;
+            GameMaster.gameMaster.resources.Add(name, this);
+        }
     }
 }

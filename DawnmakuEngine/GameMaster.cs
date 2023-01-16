@@ -9,6 +9,7 @@ using SixLabors.Fonts;
 using System.Diagnostics;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Desktop;
+using DawnmakuEngine.Data.Resources;
 
 namespace DawnmakuEngine
 {
@@ -100,8 +101,6 @@ namespace DawnmakuEngine
         public float EnemyDeathVol { get { return playerSettings.masterVolume * playerSettings.sfxVolume * playerSettings.enemyDeathVolume; } }
 
 
-
-
         public Shader generalTextShader, dialogueTextShader;
 
         public ushort maxItemCount = 200;
@@ -110,6 +109,9 @@ namespace DawnmakuEngine
         public float itemMaxFallSpeed, itemGravAccel, itemXDecel,
             itemMagnetDist, itemDrawSpeed, itemMagnetSpeed,
             itemCollectDist;
+
+        //Resources
+        public Dictionary<string, BaseResource> resources = new Dictionary<string, BaseResource>();
 
         //Loaded Shaders
         public Dictionary<string, Shader> shaders = new Dictionary<string, Shader>();

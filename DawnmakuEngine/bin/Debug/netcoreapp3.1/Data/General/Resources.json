@@ -1,0 +1,22 @@
+[
+   {
+      "name":"Lives",
+      "type":"Int",
+      "value":"3"
+   },
+   {
+      "name":"Bombs",
+      "type":"Int",
+      "value":"2"
+   },
+   {
+      "name":"Magic",
+      "type":"Float",
+      "value":"2.4"
+   },
+   {
+      "name":"UFOs",
+      "type":"UFO",
+      "value":"red,green,none"
+   }
+]

@@ -14,6 +14,8 @@ using SixLabors.ImageSharp.Processing;
 using Typography.OpenFont;
 using OpenTK.Graphics.ES30;
 
+using Newtonsoft.Json;
+
 //using System.Drawing;
 using OpenTK.Mathematics;
 //using System.Drawing.Text;
@@ -21,6 +23,8 @@ using SixLabors.ImageSharp.ColorSpaces;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using DawnmakuEngine.Data.Resources;
+using DawnmakuEngine.Data.JSONFormats;
 //using System.Windows.Media;
 
 namespace DawnmakuEngine
@@ -258,7 +262,7 @@ namespace DawnmakuEngine
 
             RenderLoadBackdrop();
 
-            GameSettingsLoader();
+            LoadGame();
             LoadAudio();
             LoadBullets();
             LoadPlayerOrbs();
@@ -268,6 +272,13 @@ namespace DawnmakuEngine
             LoadUI();
             GameMaster.LogTimeMilliseconds("game init");
         }
+
+        public void LoadGame()
+        {
+            GameSettingsLoader();
+            LoadResources();
+        }
+
         /// <summary>
         /// Load stage-specific data
         /// </summary>
@@ -472,6 +483,42 @@ namespace DawnmakuEngine
             for (int i = 0; i < GameMaster.layerIndexes.Count; i++)
             {
                 MeshRenderer.renderLayers.Add(new List<MeshRenderer>());
+            }
+        }
+
+        public void LoadResources()
+        {
+            try
+            {
+                GameMaster.LogPositiveNotice("\nResources:");
+                if (!File.Exists(generalDir + "/Resources.json"))
+                    throw new Exception("No 'Resources.json' file found.");
+                string fileText = File.ReadAllText(generalDir + "/Resources.json");
+                JsonSerializerSettings settings = new JsonSerializerSettings();
+                Dictionary<string,string>[] resources = JsonConvert.DeserializeObject<Dictionary<string, string>[]>(fileText, settings);
+                BaseResource newResource;
+                Type resourceType;
+
+                for (int i = 0; i < resources.Length; i++)
+                {
+                    GameMaster.Log(resources[i]["name"]);
+
+                    resourceType = Type.GetType("DawnmakuEngine.Data.Resources." + resources[i]["type"] + "Resource");
+
+                    newResource = (BaseResource)resourceType.GetConstructor(new Type[] { typeof(string) }).Invoke(new object[] { resources[i]["name"] });
+
+                    if (resources[i].ContainsKey("value"))
+                    {
+                        newResource.InitValue(resources[i]["value"]);
+                    }
+                    else
+                        newResource.InitValue("NULL");
+                }
+                
+            }
+            catch(Exception e)
+            {
+                GameMaster.LogErrorMessage("There was an error loading the resource data!", e.Message);
             }
         }
 

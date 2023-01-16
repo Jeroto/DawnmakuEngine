@@ -7,6 +7,10 @@ namespace DawnmakuEngine.Data.Resources
     public class IntResource : BaseResource
     {
         int value;
+        public override void InitValue(string stringValue)
+        {
+            value = int.Parse(stringValue);
+        }
 
         public override object GetValue()
         {
@@ -23,7 +27,7 @@ namespace DawnmakuEngine.Data.Resources
             return value;
         }
 
-        public IntResource() : base()
+        public IntResource(string resourceName) : base(resourceName)
         {
             resourceType = typeof(int);
         }

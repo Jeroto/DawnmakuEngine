@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -6,7 +7,30 @@ namespace DawnmakuEngine.Data.Resources
 {
     public class UFOResource : BaseResource
     {
-        List<int> ufos = new List<int>();
+        int[] ufos = new int[3];
+        public override void InitValue(string stringValue)
+        {
+            string[] colors = stringValue.Split(',');
+
+            for (int i = 0; i < colors.Length; i++)
+            {
+                switch(colors[i])
+                {
+                    case "none":
+                        ufos[i] = 0;
+                        break;
+                    case "red":
+                        ufos[i] = 1;
+                        break;
+                    case "green":
+                        ufos[i] = 2;
+                        break;
+                    case "blue":
+                        ufos[i] = 3;
+                        break;
+                }
+            }
+        }
 
         public override object GetValue()
         {
@@ -16,7 +40,7 @@ namespace DawnmakuEngine.Data.Resources
         public override void ModifyValue(params object[] values)
         {
             int index = Convert.ToInt32(values[0]);
-            if(index > 0 && index < ufos.Count)
+            if(index > 0 && index < ufos.Length)
             {
                 ufos[index] = Convert.ToInt32(values[1]);
             }
@@ -27,12 +51,9 @@ namespace DawnmakuEngine.Data.Resources
             return ufos[0];
         }
 
-        public UFOResource(int ufoCount = 3) : base()
+        public UFOResource(string resourceName) : base(resourceName)
         {
             resourceType = typeof(List<int>);
-
-            for (int i = 0; i < ufoCount; i++)
-                ufos.Add(0);
         }
     }
 }
