@@ -7,6 +7,7 @@ using System.Text;
 using OpenTK;
 using OpenTK.Audio.OpenAL;
 using static DawnmakuEngine.DawnMath;
+using OpenTK.Mathematics;
 
 namespace DawnmakuEngine
 {
@@ -420,7 +421,7 @@ namespace DawnmakuEngine
             }
             return tempList.ToArray();
         }
-        public List<T> GetElementsAsList<T>()
+        public List<T> GetElementsInList<T>()
         {
             List<T> tempList = new List<T>();
             for (int i = 0; i < elements.Count; i++)
@@ -448,6 +449,16 @@ namespace DawnmakuEngine
                     tempList.Add(elements[i]);
             }
             return tempList.ToArray();
+        }
+        public List<Element> GetElementsAsElementsInList<T>()
+        {
+            List<Element> tempList = new List<Element>();
+            for (int i = 0; i < elements.Count; i++)
+            {
+                if (elements[i].GetType() == typeof(T))
+                    tempList.Add(elements[i]);
+            }
+            return tempList;
         }
 
         public Entity GetChild(int index)

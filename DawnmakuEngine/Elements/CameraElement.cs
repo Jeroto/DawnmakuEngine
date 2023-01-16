@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using OpenTK;
+using OpenTK.Mathematics;
 
 namespace DawnmakuEngine.Elements
 {
@@ -151,10 +151,10 @@ namespace DawnmakuEngine.Elements
         public void CreateProjectionMatrix()
         {
             if (perspective)
-                projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(fov, gameMaster.windowWidth / (float)gameMaster.windowHeight, nearDist, farDist);
+                projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(fov, gameMaster.currentSize.X / (float)gameMaster.currentSize.Y, nearDist, farDist);
             else
-                projectionMatrix = Matrix4.CreateOrthographic(gameMaster.windowWidth / 2f * orthoScale * orthoScaleX,
-                    gameMaster.windowHeight / 2f * orthoScale * orthoScaleY, nearDist, farDist);
+                projectionMatrix = Matrix4.CreateOrthographic(gameMaster.currentSize.X / 2f * orthoScale * orthoScaleX,
+                    gameMaster.currentSize.Y / 2f * orthoScale * orthoScaleY, nearDist, farDist);
         }
 
         public void SetLayers(int[] layers)

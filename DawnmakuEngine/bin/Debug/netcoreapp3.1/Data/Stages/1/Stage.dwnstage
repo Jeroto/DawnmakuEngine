@@ -1,6 +1,21 @@
 StageBGM=Lovely Mound Of Cherry Blossoms;
 BossBGM=Izanagi Object;
 
+AmbientLights=
+{
+ColorForm=rgb;
+ColorVal=10,10,10,1;
+StartTime = 0;
+TransitionTime=0;
+}
+:
+{
+ColorForm=rgb;
+ColorVal=50,50,100,2;
+StartTime = 120;
+TransitionTime=360;
+}
+
 BackgroundCamVelocities=
 {
 Vel=0,0,0.5;

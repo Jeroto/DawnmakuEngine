@@ -1,0 +1,12 @@
+windowsizeindex=0;
+framecap=60;
+fullscreen=false;
+mastervolume=0.5;
+bgmvolume=1.0;
+sfxvolume=0.25;
+bulletspawnvolume=0.02;
+bulletstagevolume=0.1;
+playershootvolume=0.75;
+playerbulletvolume=0.2;
+playerdeathvolume=1.0;
+enemydeathvolume=0.5;

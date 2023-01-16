@@ -1,7 +1,7 @@
 RunInDebugMode=true;
 LogAllFontChars=false;
 PressIToToggleInvincible=true;
-LogTimers=false;
+LogTimers=true;
 
 MaxPower=400;
 PowerLostOnDeath=100;
@@ -52,39 +52,50 @@ layerName=enemies, index=5:
 layerName=bullets, index=6:
 layerName=effects, index=7:
 layerName=gameBorder, index=8:
-layerName=border UI, index=9;
+layerName=borderui, index=9;
 
 RenderLayerSettings=
 {
 hasDepth=true;
+hasLighting=true;
 }:
 {
 hasDepth=false;
+hasLighting=false;
 }:
 {
 hasDepth=false;
+hasLighting=false;
 }:
 {
 hasDepth=false;
+hasLighting=false;
 }:
 {
 hasDepth=false;
+hasLighting=false;
 }:
 {
 hasDepth=false;
+hasLighting=false;
 }:
 {
 hasDepth=false;
+hasLighting=false;
 }:
 {
 hasDepth=false;
+hasLighting=false;
 }:
 {
 hasDepth=false;
+hasLighting=false;
 }:
 {
 hasDepth=false;
+hasLighting=false;
 }:
 {
 hasDepth=false;
+hasLighting=false;
 }

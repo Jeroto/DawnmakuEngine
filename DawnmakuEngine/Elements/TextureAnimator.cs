@@ -4,6 +4,7 @@ using System.Text;
 using OpenTK.Graphics.ES30;
 using DawnmakuEngine.Data;
 using OpenTK;
+using OpenTK.Mathematics;
 
 namespace DawnmakuEngine.Elements
 {
@@ -247,7 +248,7 @@ namespace DawnmakuEngine.Elements
             for (int i = 0; i < count; i++)
             {
                 tempFrames[i] = new AnimationFrame();
-                tempFrames[i].frameDuration = durations[OpenTK.MathHelper.Clamp(i, 0, durations.Length - 1)];
+                tempFrames[i].frameDuration = durations[MathHelper.Clamp(i, 0, durations.Length - 1)];
                 tempFrames[i].sprite = sprites[i];
             }
             return tempFrames;

@@ -7,6 +7,8 @@ using DawnmakuEngine.Data;
 using OpenTK;
 using SixLabors.Fonts;
 using System.Diagnostics;
+using OpenTK.Mathematics;
+using OpenTK.Windowing.Desktop;
 
 namespace DawnmakuEngine
 {
@@ -16,6 +18,7 @@ namespace DawnmakuEngine
         protected static Random random = new Random();
         public static GameMaster gameMaster = new GameMaster();
         public static Stopwatch timeLogger = new Stopwatch();
+        public static Game window;
 
         public static Shader lastBoundShader;
         public static Texture lastBoundTexture;
@@ -28,7 +31,13 @@ namespace DawnmakuEngine
         public AudioController audioManager = new AudioController();
 
         public float timeScale = 1, timeScaleUpdate = 1, frameTime = 1/60f;
-        public int windowWidth = 1920, windowHeight = 1080;
+        public Vector2i currentSize = new Vector2i(1920, 1080);
+
+        public GameWindowSettings gameWindowSettings = new GameWindowSettings();
+        public NativeWindowSettings nativeWindowSettings = new NativeWindowSettings();
+
+        public Vector2i[] windowSizes = new Vector2i[] { new Vector2i(1920, 1080) };
+        public int windowSizeIndex = 0;
 
         public bool paused = false;
 
@@ -65,6 +74,10 @@ namespace DawnmakuEngine
         public Vector2 bulletBoundsX, bulletBoundsY,
             enemyBoundsX, enemyBoundsY;
 
+        public float ambientR = 255, ambientG = 255, ambientB = 255, ambientIntensity = 0;
+        public bool overrideAmbient = false;
+        public float overrideAmbR = 255, overrideAmbG = 255, overrideAmbB = 255, overrideAmbIntensity = 0;
+
         public delegate void ElementFunction();
 
         public event ElementFunction PostCreate;
@@ -74,19 +87,17 @@ namespace DawnmakuEngine
         public bool enemyBulletSpawnSoundPlayed = false, enemyBulletStageSoundPlayed = false,
             playerBulletSpawnSoundPlayed = false, playerBulletStageSoundPlayed = false;
 
-        private float masterVolume = 1, bgmVolume = 1, sfxVolume = .75f,
-            bulletSpawnVolume = .1f, bulletStageVolume = 0.75f, 
-            playerShootVolume = .75f, playerBulletVolume = .1f, playerDeathVolume = 1, 
-            enemyDeathVolume = 1;
 
-        public float BgmVol { get { return masterVolume * bgmVolume; } }
-        public float SfxVol { get { return masterVolume * sfxVolume; } }
-        public float BulletSpawnVol { get { return masterVolume * sfxVolume * bulletSpawnVolume; } }
-        public float BulletStageVol { get { return masterVolume * sfxVolume * bulletStageVolume; } }
-        public float PlayerShootVol { get { return masterVolume * sfxVolume * playerShootVolume; } }
-        public float PlayerBulletVol { get { return masterVolume * sfxVolume * playerBulletVolume; } }
-        public float PlayerDeathVol { get { return masterVolume * sfxVolume * playerDeathVolume; } }
-        public float EnemyDeathVol { get { return masterVolume * sfxVolume * enemyDeathVolume; } }
+        public static Settings playerSettings = new Settings();
+
+        public float BgmVol { get { return playerSettings.masterVolume * playerSettings.bgmVolume; } }
+        public float SfxVol { get { return playerSettings.masterVolume * playerSettings.sfxVolume; } }
+        public float BulletSpawnVol { get { return playerSettings.masterVolume * playerSettings.sfxVolume * playerSettings.bulletSpawnVolume; } }
+        public float BulletStageVol { get { return playerSettings.masterVolume * playerSettings.sfxVolume * playerSettings.bulletStageVolume; } }
+        public float PlayerShootVol { get { return playerSettings.masterVolume * playerSettings.sfxVolume * playerSettings.playerShootVolume; } }
+        public float PlayerBulletVol { get { return playerSettings.masterVolume * playerSettings.sfxVolume * playerSettings.playerBulletVolume; } }
+        public float PlayerDeathVol { get { return playerSettings.masterVolume * playerSettings.sfxVolume * playerSettings.playerDeathVolume; } }
+        public float EnemyDeathVol { get { return playerSettings.masterVolume * playerSettings.sfxVolume * playerSettings.enemyDeathVolume; } }
 
 
 
@@ -161,13 +172,17 @@ namespace DawnmakuEngine
         public FontCollection fonts = new FontCollection();
         public Dictionary<string, FontCharList> fontCharList = new Dictionary<string, FontCharList>();
         public Dictionary<string, Texture> fontSheets = new Dictionary<string, Texture>();
+        public Dictionary<string, SixLabors.ImageSharp.Image<SixLabors.ImageSharp.PixelFormats.Rgba32>> fontImages = 
+            new Dictionary<string, SixLabors.ImageSharp.Image<SixLabors.ImageSharp.PixelFormats.Rgba32>>();
         public Dictionary<string, SpriteSet> fontGlyphSprites = new Dictionary<string, SpriteSet>();
+        public Dictionary<string, DawnFont> dawnFonts = new Dictionary<string, DawnFont>();
 
 
 
         public class RenderLayer
         {
             public bool hasDepth = false;
+            public bool hasLight = false;
         }
 
 
@@ -391,7 +406,6 @@ namespace DawnmakuEngine
 
         public static float Random(float lower, float upper)
         {
-
             return (((float)random.NextDouble() * Math.Abs(lower - upper)) + lower);
         }
 

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using OpenTK;
+using OpenTK.Mathematics;
 
 namespace DawnmakuEngine.Elements
 {
@@ -26,6 +27,10 @@ namespace DawnmakuEngine.Elements
         {
             axis = rotateAround;
         }
+        public RotateElement(float rotationSpeed_, bool isDegrees_, bool affectedByTimescale_, float rotateAroundX, float rotateAroundY, float rotateAroundZ)
+            : this(rotationSpeed_, isDegrees_, affectedByTimescale_, new Vector3(rotateAroundX, rotateAroundY, rotateAroundZ))
+        {
+        }
 
         public override void OnUpdate()
         {
@@ -33,6 +38,11 @@ namespace DawnmakuEngine.Elements
                 EntityAttachedTo.RotateQuaternion(axis, 
                     rotationSpeed * GameMaster.gameMaster.frameTime * (affectedByTimescale ? GameMaster.gameMaster.timeScale : 1));
             base.OnUpdate();
+        }
+
+        public override Element Clone()
+        {
+            return new RotateElement(rotationSpeed, false, affectedByTimescale, axis);
         }
     }
 }

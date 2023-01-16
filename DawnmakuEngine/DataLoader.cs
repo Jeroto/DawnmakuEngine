@@ -12,12 +12,15 @@ using SixLabors.Fonts;
 using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.Processing;
 using Typography.OpenFont;
-using OpenTK.Graphics.OpenGL;
+using OpenTK.Graphics.ES30;
 
-using System.Drawing;
-using OpenTK.Graphics.ES20;
-using System.Drawing.Text;
+//using System.Drawing;
+using OpenTK.Mathematics;
+//using System.Drawing.Text;
 using SixLabors.ImageSharp.ColorSpaces;
+using System.Reflection.Metadata.Ecma335;
+using System.Reflection;
+using System.Runtime.InteropServices;
 //using System.Windows.Media;
 
 namespace DawnmakuEngine
@@ -25,8 +28,8 @@ namespace DawnmakuEngine
     class DataLoader
     {
         GameMaster gameMaster;
-        public string directory, generalDir, bulletDataDir, playerDataDir, itemDataDir,
-            generalTexDir, bulletTexDir, playerTexDir, playerOrbTexDir, playerFxTexDir, itemTexDir, enemyTexDir, UITexDir,
+        public string directory, containingFolder, generalDir, bulletDataDir, playerDataDir, itemDataDir,
+            generalTexDir, bulletTexDir, playerTexDir, playerOrbTexDir, playerFxTexDir, itemTexDir, enemyTexDir, UITexDir, loadTexDir,
             generalAnimDir, bulletAnimDir, playerAnimDir, playerOrbAnimDir, playerFxAnimDir, itemAnimDir, enemyAnimDir, texAnimDir,
             playerPatternDir, playerOrbDir,
             soundEffectDir,
@@ -46,7 +49,8 @@ namespace DawnmakuEngine
                 directory = directory.Remove(directory.Length - 1, 1);
             }*/
             DirectoryInfo dir = Directory.GetParent(directory);
-            directory = dir.FullName;
+            containingFolder = dir.FullName;
+
             //Console.WriteLine(directory);
             DirectoryInfo[] dirs = dir.GetDirectories();
             int i = 0;
@@ -126,6 +130,9 @@ namespace DawnmakuEngine
                         break;
                     case "Items":
                         itemTexDir = dirs[i].FullName;
+                        break;
+                    case "Loading":
+                        loadTexDir = dirs[i].FullName;
                         break;
                 }
             }
@@ -233,6 +240,7 @@ namespace DawnmakuEngine
             return filename[filename.Length - 1].Split('.', StringSplitOptions.RemoveEmptyEntries)[0].ToLower().Replace(" ", "");
         }
 
+        #region Load Callers
         /// <summary>
         /// Load consistent game data only once
         /// </summary>
@@ -240,6 +248,16 @@ namespace DawnmakuEngine
         {
             GameMaster.StartTimer();
             ShaderLoader();
+
+            {
+                if (!File.Exists(containingFolder + "\\settings.dwnsettings"))
+                    GeneratePlayerSettings();
+                else
+                    ReadPlayerSettings(containingFolder + "\\settings.dwnsettings");
+            }
+
+            RenderLoadBackdrop();
+
             GameSettingsLoader();
             LoadAudio();
             LoadBullets();
@@ -326,6 +344,7 @@ namespace DawnmakuEngine
         {
             UITextureLoader();
             FontLoader();
+            BitmapFontLoader();
         }
 
         public void LoadStage(string[] bgmPaths)
@@ -333,7 +352,68 @@ namespace DawnmakuEngine
             StageDataLoader(bgmPaths);
             //Stage-specific data
         }
+        #endregion
 
+        #region Load Screen
+        void RenderLoadBackdrop()
+        {
+            GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
+
+            Shader shader = gameMaster.shaders["spriteshader"];
+            shader.Use();
+
+            int vertexBufferHandle = GL.GenBuffer();
+            int elementBufferHandle = GL.GenBuffer();
+
+            float[] vertices = new float[] {
+                -1, -1, 0,  0, 0,
+                 1, -1, 0,  1, 0,
+                 1,1, 0,  1, 1,
+                -1,1, 0,  0, 1
+            };
+
+            uint[] triangleData = new uint[6]
+            {
+                0, 1, 2,
+                0, 2, 3
+            };
+
+            Texture tex = new Texture(loadTexDir + "\\back.png", false);
+            tex.Use();
+
+            GameMaster.LogPositiveNotice("Load image backdrop loaded");
+
+            GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBufferHandle);
+            GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.StaticDraw);
+
+            int positionLocation = shader.GetAttribLocation("position");
+            GL.EnableVertexAttribArray(positionLocation);
+            GL.VertexAttribPointer(positionLocation, 3, VertexAttribPointerType.Float, false, 5 * sizeof(float), 0);
+            int texCoordLocation = shader.GetAttribLocation("texCoordAttrib");
+            GL.EnableVertexAttribArray(texCoordLocation);
+            GL.VertexAttribPointer(texCoordLocation, 2, VertexAttribPointerType.Float, false, 5 * sizeof(float), 3 * sizeof(float));
+
+            GL.BindBuffer(BufferTarget.ElementArrayBuffer, elementBufferHandle);
+            GL.BufferData(BufferTarget.ElementArrayBuffer, triangleData.Length * sizeof(uint), triangleData, BufferUsageHint.StaticDraw);
+
+
+            shader.SetVector4("colorMod", new Vector4(1, 1, 1, 1));
+            shader.SetMatrix4("model", Matrix4.Identity);
+            shader.SetMatrix4("view", Matrix4.Identity);
+            shader.SetMatrix4("projection", Matrix4.Identity);
+            shader.SetVector4("ambientLight", new Vector4(1, 1, 1, 1));
+
+            GL.DrawElements(PrimitiveType.Triangles, triangleData.Length, DrawElementsType.UnsignedInt, IntPtr.Zero);
+
+            GameMaster.window.Context.SwapBuffers();
+            GameMaster.LogPositiveNotice("Load image backdrop rendered");
+        }
+        #endregion
+
+        #region File Iterators
+
+        #region Game Settings
         public void GameSettingsLoader()
         {
             string file = Directory.GetFiles(generalDir, "*.dwngame")[0];
@@ -395,6 +475,52 @@ namespace DawnmakuEngine
             }
         }
 
+        public void GeneratePlayerSettings()
+        {
+            GameMaster.LogWarningMessage("settings.dwnsettings not found", "creating settings file");
+            File.Create(containingFolder + "\\settings.dwnsettings").Close();
+            List<string> lines = new List<string>();
+            lines.Add("windowsizeindex=0;");
+            lines.Add("framecap=60;");
+            lines.Add("fullscreen=false;");
+            lines.Add("mastervolume=1.0;");
+            lines.Add("bgmvolume=1.0;");
+            lines.Add("sfxvolume=0.25;");
+            lines.Add("bulletspawnvolume=0.02;");
+            lines.Add("bulletstagevolume=0.1;");
+            lines.Add("playershootvolume=0.75;");
+            lines.Add("playerbulletvolume=0.2;");
+            lines.Add("playerdeathvolume=1.0;");
+            lines.Add("enemydeathvolume=0.5;");
+            File.WriteAllLines(containingFolder + "\\settings.dwnsettings", lines.ToArray());
+        }
+
+        public void ReadPlayerSettings(string file)
+        {
+            string[] allLines = File.ReadAllLines(file);
+            try
+            {
+                GameMaster.playerSettings.windowSizeIndex = GetParseRoundedNum(allLines, "windowsizeindex=");
+                GameMaster.playerSettings.frameCap = GetParseRoundedNum(allLines, "framecap=");
+                GameMaster.playerSettings.fullscreen = GetParseBool(allLines, "fullscreen=");
+                GameMaster.playerSettings.masterVolume = GetParseRoundedNum(allLines, "mastervolume=");
+                GameMaster.playerSettings.bgmVolume = GetParseRoundedNum(allLines, "bgmvolume=");
+                GameMaster.playerSettings.sfxVolume = GetParseRoundedNum(allLines, "sfxvolume=");
+                GameMaster.playerSettings.bulletSpawnVolume = GetParseRoundedNum(allLines, "bulletspawnvolume=");
+                GameMaster.playerSettings.bulletStageVolume = GetParseRoundedNum(allLines, "bulletstagevolume=");
+                GameMaster.playerSettings.playerShootVolume = GetParseRoundedNum(allLines, "playershootvolume=");
+                GameMaster.playerSettings.playerBulletVolume = GetParseRoundedNum(allLines, "playerbulletvolume=");
+                GameMaster.playerSettings.playerDeathVolume = GetParseRoundedNum(allLines, "playerdeathvolume=");
+                GameMaster.playerSettings.enemyDeathVolume = GetParseRoundedNum(allLines, "enemydeathvolume=");
+            }
+            catch (Exception e)
+            {
+                GameMaster.LogErrorMessage("There was an error loading the player settings!", e.Message);
+            }
+        }
+        #endregion
+
+        #region Shaders
         public void ShaderLoader()
         {
             string[] files = Directory.GetFiles(shaderDir, "*.dwnshader");
@@ -406,7 +532,9 @@ namespace DawnmakuEngine
                 gameMaster.shaders.Add(GetFileNameOnly(files[i]), ReadShaderData(files[i]));
             }
         }
+        #endregion
 
+        #region Bullets
         public void BulletTextureLoader()
         {
             string[] files = Directory.GetFiles(bulletTexDir, "*.png");
@@ -466,7 +594,9 @@ namespace DawnmakuEngine
                 gameMaster.bulletData.Add(GetFileNameOnly(files[i]), ReadBulletData(files[i]));
             }
         }
+        #endregion
 
+        #region Player Orbs
         public void PlayerOrbTextureLoader()
         {
             string[] files = Directory.GetFiles(playerOrbTexDir, "*.png");
@@ -525,6 +655,9 @@ namespace DawnmakuEngine
                 gameMaster.playerOrbData.Add(GetFileNameOnly(files[i]), ReadOrbData(files[i]));
             }
         }
+        #endregion
+
+        #region Player Characters
         public void PlayerTextureLoader()
         {
             string[] files = Directory.GetFiles(playerTexDir, "*.png");
@@ -571,7 +704,9 @@ namespace DawnmakuEngine
                 }
             }
         }
+        #endregion
 
+        #region Player FX
         public void PlayerFxTextureLoader()
         {
             string[] files = Directory.GetFiles(playerFxTexDir, "*.png");
@@ -617,7 +752,9 @@ namespace DawnmakuEngine
                 }
             }
         }
+        #endregion
 
+        #region Player Shots
         public void PlayerShotLoader()
         {
             string[] files = Directory.GetFiles(playerDataDir, "*.dwnshot");
@@ -667,7 +804,9 @@ namespace DawnmakuEngine
                     gameMaster.playerPatterns.Add(GetFileNameOnly(files[i]), ReadPatternData(files[i], gameMaster.playerPatterns));
             }
         }
+        #endregion
 
+        #region Items
         public void ItemTextureLoader()
         {
             string[] files = Directory.GetFiles(itemTexDir, "*.png");
@@ -726,7 +865,9 @@ namespace DawnmakuEngine
                 gameMaster.itemTypes.Add(GetFileNameOnly(files[i]));
             }
         }
+        #endregion
 
+        #region Audio
         public void SoundEffectLoader()
         {
             string[] directories = Directory.GetDirectories(soundEffectDir),
@@ -755,7 +896,9 @@ namespace DawnmakuEngine
                 paths.Add(files[i]);
             return paths.ToArray();
         }
+        #endregion
 
+        #region Enemies
         public void EnemyPatternLoader()
         {
             string[] files = Directory.GetFiles(enemyPatternDir, "*.dwnpattern");
@@ -844,9 +987,9 @@ namespace DawnmakuEngine
                 gameMaster.enemyData.Add(GetFileNameOnly(files[i]), ReadEnemyData(files[i]));
             }
         }
+        #endregion
 
-
-
+        #region Stage Backgrounds
         public void BackgroundObjLoader()
         {
             string[] files = Directory.GetFiles(backgroundModelDir, "*.obj");
@@ -886,7 +1029,6 @@ namespace DawnmakuEngine
                 }
             }
         }
-
         public void BackgroundSectionDataLoader()
         {
             string[] files = Directory.GetFiles(backgroundSecDir, "*.dwnbacksec");
@@ -897,9 +1039,9 @@ namespace DawnmakuEngine
                 gameMaster.backgroundSections.Add(GetFileNameOnly(files[i]), ReadBackgroundSectionData(files[i]));
             }
         }
+        #endregion
 
-
-
+        #region UI
         public void UITextureLoader()
         {
             string[] files = Directory.GetFiles(UITexDir, "*.png");
@@ -911,14 +1053,14 @@ namespace DawnmakuEngine
                 gameMaster.UITextures.Add(GetFileNameOnly(files[i]), new Texture(files[i], false));
             }
         }
-
         public void FontLoader()
         {
             GameMaster.LogPositiveNotice("\nFonts:");
-            string[] files = Directory.GetFiles(fontDir, "*.ttf");
+            string[] files = null;
             int i = 0;
             try
             {
+                files = Directory.GetFiles(fontDir, "*.ttf");
                 for (i = 0; i < files.Length; i++)
                 {
                     GameMaster.Log(GetFileNameOnly(files[i]));
@@ -942,8 +1084,52 @@ namespace DawnmakuEngine
                 GameMaster.LogErrorMessage("Failed to load font file: " + files[i], e.Message);
             }
         }
+        public void BitmapFontLoader()
+        {
+            GameMaster.LogPositiveNotice("\nBitmap Fonts:");
+            string[] files = null;
+            int i = 0, c = 0;
+            try
+            {
+                files = Directory.GetFiles(fontDir, "*.png");
+                for (i = 0; i < files.Length; i++)
+                {
+                    GameMaster.Log(GetFileNameOnly(files[i]));
+                    gameMaster.fontSheets.Add(GetFileNameOnly(files[i]), new Texture(files[i], false));
+                }
+                files = Directory.GetFiles(fontDir, "*.jpg");
+                for (i = 0; i < files.Length; i++)
+                {
+                    GameMaster.Log(GetFileNameOnly(files[i]));
+                    gameMaster.fontSheets.Add(GetFileNameOnly(files[i]), new Texture(files[i], false));
+                }
+                files = Directory.GetFiles(fontDir, "*.dwnsprites");
+                KeyValuePair<string, SpriteSet>[] spritePairs;
+                for (i = 0; i < files.Length; i++)
+                {
+                    GameMaster.Log(GetFileNameOnly(files[i]));
+                    spritePairs = ReadSpriteData(files[i], gameMaster.fontSheets[GetFileNameOnly(files[i])]);
+                    for (c = 0; c < spritePairs.Length; c++)
+                    {
+                        GameMaster.LogSecondary(spritePairs[c].Key);
+                        gameMaster.fontGlyphSprites.Add(spritePairs[c].Key, spritePairs[c].Value);
+                    }
+                }
+                files = Directory.GetFiles(fontDir, "*.dwnfnt");
+                for (i = 0; i < files.Length; i++)
+                {
+                    GameMaster.Log(GetFileNameOnly(files[i]));
+                    gameMaster.dawnFonts.Add(GetFileNameOnly(files[i]), ReadDawnFont(files[i]));
+                }
+            }
+            catch (Exception e)
+            {
+                GameMaster.LogErrorMessage("Failed to load file: " + files[i], e.Message);
+            }
+        }
+        #endregion
 
-
+        #region Stage
         public void StageDataLoader(string[] bgmPaths)
         {
             string file = Directory.GetFiles(curStageDir, "*.dwnstage")[0];
@@ -953,25 +1139,31 @@ namespace DawnmakuEngine
             {
                 ReadStageData(file, bgmPaths);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 GameMaster.LogErrorMessage("Failed to load stage file: " + file, e.Message);
             }
         }
+        #endregion
 
+        #endregion
 
-
-        //Loading Assistance
-        public string SimplifyText(string data)
+        #region Loading Assistance
+        public string SimplifyText(string data, bool lowercase = true)
         {
-            return data.Replace(" ", "").Replace("\n", "").Replace("\r", "").Replace("{", "").Replace("}", "").ToLower();
+            if (lowercase)
+                return data.Replace(" ", "").Replace("\n", "").Replace("\r", "").Replace("{", "").Replace("}", "").ToLower();
+            return data.Replace(" ", "").Replace("\n", "").Replace("\r", "").Replace("{", "").Replace("}", "");
         }
 
         public int[] FindIndexes(string text, string opener, int startIndex = 0, string closer = ";")
         {
+            text = SimplifyText(text);
             if (!text.Contains(opener))
                 return new int[] { text.Length - 1, text.Length };
             int indexStart = text.IndexOf(opener, startIndex) + opener.Length;
+            if (startIndex < indexStart)
+                startIndex = indexStart;
 
             int indexEnd = text.IndexOf(closer, indexStart);
             if (indexEnd == -1)
@@ -979,14 +1171,28 @@ namespace DawnmakuEngine
             return new int[] { indexStart, indexEnd };
         }
 
-        public string GetInputSubstring(int[] indexes, string data)
+        public string GetInputSubstring(int[] indexes, string data, bool simplify = false)
         {
+            if (indexes[0] == -1)
+                return "";
+            if (simplify)
+                return SimplifyText(data.Substring(indexes[0], indexes[1] - indexes[0]));
             return data.Substring(indexes[0], indexes[1] - indexes[0]);
         }
-        
         public string GetInputSubstring(int index, string data)
         {
             return data.Substring(index, data.Length - index);
+        }
+        public string GetInputSubstring(string[] allLines, string opener, int lineOffset = 0, bool simplify = true, string closer = ";")
+        {
+            string data = GetData(allLines, opener, lineOffset, simplify, closer);
+            return GetInputSubstring(FindIndexes(data, opener, lineOffset, closer), data);
+        }
+        public string GetInputSubstring(string data, string opener, int lineOffset = 0, bool simplify = true, string closer = ";")
+        {
+            if (simplify)
+                data = SimplifyText(data);
+            return GetInputSubstring(FindIndexes(data, opener, lineOffset, closer), data);
         }
         public bool TryGetInputSubstring(int[] indexes, string data, out string substring)
         {
@@ -1020,23 +1226,24 @@ namespace DawnmakuEngine
         }
         public string GetData(string[] data, string opener, int lineOffset = 0, bool simplify = true, string closer = ";")
         {
-            string finalString = "", currentString;
+            string finalString = "", currentString, simpleString;
             bool foundOpener = false;
             int i;
             for (i = lineOffset; i < data.Length; i++)
             {
                 currentString = data[i];
+                simpleString = SimplifyText(currentString);
 
                 if (simplify)
-                    currentString = SimplifyText(currentString);
+                    currentString = simpleString;
                 if (!foundOpener)
-                    if (currentString.Contains(opener))
+                    if (simpleString.Contains(opener))
                         foundOpener = true;
 
                 if (foundOpener)
                 {
                     finalString += currentString;
-                    if (currentString.Contains(closer))
+                    if (simpleString.Contains(closer))
                         break;
                 }
             }
@@ -1045,28 +1252,55 @@ namespace DawnmakuEngine
         }
         public string GetData(string[] data, string opener, ref int lineOffset, bool simplify = true, string closer = ";")
         {
-            string finalString = "", currentString;
+            string finalString = "", currentString, simpleString;
             bool foundOpener = false;
             int i;
             for (i = lineOffset; i < data.Length; i++)
             {
                 currentString = data[i];
+                simpleString = SimplifyText(currentString);
 
                 if (simplify)
-                    currentString = SimplifyText(currentString);
+                    currentString = simpleString;
                 if (!foundOpener)
-                    if (currentString.Contains(opener))
+                    if (simpleString.Contains(opener))
                         foundOpener = true;
 
                 if (foundOpener)
                 {
                     finalString += currentString;
-                    if (currentString.Contains(closer))
+                    if (simpleString.Contains(closer))
                         break;
                 }
             }
             lineOffset = i;
             return finalString;
+        }
+        public string GetData(string data, string opener, bool simplify = true, string closer = ";")
+        {
+            int firstInd, secondInd;
+            string simpleString = SimplifyText(data);
+
+            if (simplify)
+                data = simpleString;
+
+            if (simpleString.Contains(opener))
+                firstInd = simpleString.IndexOf(opener);
+            else
+                firstInd = -1;
+
+            if (firstInd > -1)
+            {
+                if (simpleString.Substring(firstInd, data.Length - firstInd).Contains(closer))
+                    secondInd = simpleString.IndexOf(closer, firstInd) + 1;
+                else
+                    secondInd = -1;
+
+                if (secondInd > -1)
+                    return GetInputSubstring(new int[] { firstInd, secondInd }, data);
+                return GetInputSubstring(new int[] { firstInd, data.Length - 1 }, data);
+            }
+            return "";
         }
         public bool TryGetData(string[] data, string opener, out string finalString, int lineOffset = 0, bool simplify = true, string closer = ";")
         {
@@ -1120,6 +1354,33 @@ namespace DawnmakuEngine
             lineOffset = i;
             return foundOpener;
         }
+        public bool TryGetData(string data, string opener, out string finalString, bool simplify = true, string closer = ";")
+        {
+            int firstInd, secondInd;
+            finalString = "";
+
+            if (simplify)
+                data = SimplifyText(data);
+
+            if (data.Contains(opener))
+                firstInd = data.IndexOf(opener);
+            else
+                firstInd = -1;
+
+            if (data.Contains(closer))
+                secondInd = data.IndexOf(closer);
+            else
+                secondInd = -1;
+
+            if (firstInd > -1)
+            {
+                if (secondInd > -1)
+                    finalString = GetInputSubstring(new int[] { firstInd, secondInd }, data);
+                finalString = GetInputSubstring(new int[] { firstInd, data.Length - 1 }, data);
+                return true;
+            }
+            return false;
+        }
         public bool CheckHasData(string[] data, string contains, int lineOffset = 0)
         {
             for (int i = lineOffset; i < data.Length; i++)
@@ -1134,11 +1395,17 @@ namespace DawnmakuEngine
                     return true;
             return false;
         }
+        public bool CheckHasData(string data, string contains)
+        {
+            if (data.Contains(contains))
+                return true;
+            return false;
+        }
 
         public float ParseFloat(int[] indexes, string data)
         {
             float numVal = 0;
-            float.TryParse(GetInputSubstring(indexes, data), out numVal);
+            float.TryParse(GetInputSubstring(indexes, data, true), out numVal);
             return numVal;
         }
         public float ParseFloat(string data)
@@ -1147,39 +1414,19 @@ namespace DawnmakuEngine
             float.TryParse(data, out numVal);
             return numVal;
         }
-        public Vector2 ParseVector2(int[] indexes, string data)
+        public float GetParseFloat(string[] allLines, string opener, int lineOffset = 0, bool simplify = true, string closer = ";")
         {
-            Vector2 vec2 = new Vector2();
-            string[] tempStrings = GetInputSubstring(indexes, data).Split(',', StringSplitOptions.RemoveEmptyEntries);
-            vec2.X = ParseFloat(tempStrings[0]);
-            vec2.Y = ParseFloat(tempStrings[1]);
-            return vec2;
+            string data = GetData(allLines, opener, lineOffset, simplify, closer);
+            return ParseFloat(FindIndexes(data, opener, lineOffset, closer), data);
         }
-        public Vector2 ParseVector2(string data)
+        public float GetParseFloat(string[] allLines, string opener, ref int lineOffset, bool simplify = true, string closer = ";")
         {
-            Vector2 vec2 = new Vector2();
-            string[] tempStrings = data.Split(',', StringSplitOptions.RemoveEmptyEntries);
-            vec2.X = ParseFloat(tempStrings[0]);
-            vec2.Y = ParseFloat(tempStrings[1]);
-            return vec2;
+            string data = GetData(allLines, opener, ref lineOffset, simplify, closer);
+            return ParseFloat(FindIndexes(data, opener, lineOffset, closer), data);
         }
-        public Vector3 ParseVector3(int[] indexes, string data)
+        public float GetParseFloat(string data, string opener, bool simplify = true, string closer = ";")
         {
-            Vector3 vec3 = new Vector3();
-            string[] tempStrings = GetInputSubstring(indexes, data).Split(',', StringSplitOptions.RemoveEmptyEntries);
-            vec3.X = ParseFloat(tempStrings[0]);
-            vec3.Y = ParseFloat(tempStrings[1]);
-            vec3.Z = ParseFloat(tempStrings[2]);
-            return vec3;
-        }
-        public Vector3 ParseVector3(string data)
-        {
-            Vector3 vec3 = new Vector3();
-            string[] tempStrings = data.Split(',', StringSplitOptions.RemoveEmptyEntries);
-            vec3.X = ParseFloat(tempStrings[0]);
-            vec3.Y = ParseFloat(tempStrings[1]);
-            vec3.Z = ParseFloat(tempStrings[3]);
-            return vec3;
+            return ParseFloat(GetInputSubstring(data, opener, 0, simplify, closer));
         }
         public bool TryParseFloat(int[] indexes, string data, out float numVal)
         {
@@ -1194,6 +1441,208 @@ namespace DawnmakuEngine
         {
             return float.TryParse(data, out numVal);
         }
+        public Vector2 ParseVector2(int[] indexes, string data)
+        {
+            Vector2 vec2 = new Vector2();
+            string[] tempStrings = GetInputSubstring(indexes, data, true).Split(',', StringSplitOptions.RemoveEmptyEntries);
+            vec2.X = ParseFloat(tempStrings[0]);
+            vec2.Y = ParseFloat(tempStrings[1]);
+            return vec2;
+        }
+        public Vector2 ParseVector2(string data)
+        {
+            Vector2 vec2 = new Vector2();
+            string[] tempStrings = data.Split(',', StringSplitOptions.RemoveEmptyEntries);
+            vec2.X = ParseFloat(tempStrings[0]);
+            vec2.Y = ParseFloat(tempStrings[1]);
+            return vec2;
+        }
+        public Vector2 GetParseVector2(string[] allLines, string opener, int lineOffset = 0, bool simplify = true, string closer = ";")
+        {
+            string data = GetData(allLines, opener, lineOffset, simplify, closer);
+            return ParseVector2(FindIndexes(data, opener, lineOffset, closer), data);
+        }
+        public Vector2 GetParseVector2(string[] allLines, string opener, ref int lineOffset, bool simplify = true, string closer = ";")
+        {
+            string data = GetData(allLines, opener, ref lineOffset, simplify, closer);
+            return ParseVector2(FindIndexes(data, opener, lineOffset, closer), data);
+        }
+        public Vector2 GetParseVector2(string data, string opener, bool simplify = true, string closer = ";")
+        {
+            return ParseVector2(GetInputSubstring(data, opener, 0, simplify, closer));
+        }
+        public Vector3 ParseVector3(int[] indexes, string data)
+        {
+            Vector3 vec3 = new Vector3();
+            string[] tempStrings = GetInputSubstring(indexes, data, true).Split(',', StringSplitOptions.RemoveEmptyEntries);
+            vec3.X = ParseFloat(tempStrings[0]);
+            vec3.Y = ParseFloat(tempStrings[1]);
+            vec3.Z = ParseFloat(tempStrings[2]);
+            return vec3;
+        }
+        public Vector3 ParseVector3(string data)
+        {
+            Vector3 vec3 = new Vector3();
+            string[] tempStrings = data.Split(',', StringSplitOptions.RemoveEmptyEntries);
+            vec3.X = ParseFloat(tempStrings[0]);
+            vec3.Y = ParseFloat(tempStrings[1]);
+            vec3.Z = ParseFloat(tempStrings[2]);
+            return vec3;
+        }
+        public Vector3 GetParseVector3(string[] allLines, string opener, int lineOffset = 0, bool simplify = true, string closer = ";")
+        {
+            string data = GetData(allLines, opener, lineOffset, simplify, closer);
+            return ParseVector3(FindIndexes(data, opener, lineOffset, closer), data);
+        }
+        public Vector3 GetParseVector3(string[] allLines, string opener, ref int lineOffset, bool simplify = true, string closer = ";")
+        {
+            string data = GetData(allLines, opener, ref lineOffset, simplify, closer);
+            return ParseVector3(FindIndexes(data, opener, lineOffset, closer), data);
+        }
+        public Vector3 GetParseVector3(string data, string opener, bool simplify = true, string closer = ";")
+        {
+            return ParseVector3(GetInputSubstring(data, opener, 0, simplify, closer));
+        }
+        public Vector4 ParseVector4(int[] indexes, string data)
+        {
+            Vector4 vec4 = new Vector4();
+            string[] tempStrings = GetInputSubstring(indexes, data, true).Split(',', StringSplitOptions.RemoveEmptyEntries);
+            vec4.X = ParseFloat(tempStrings[0]);
+            vec4.Y = ParseFloat(tempStrings[1]);
+            vec4.Z = ParseFloat(tempStrings[2]);
+            vec4.Z = ParseFloat(tempStrings[3]);
+            return vec4;
+        }
+        public Vector4 ParseVector4(string data)
+        {
+            Vector4 vec4 = new Vector4();
+            string[] tempStrings = data.Split(',', StringSplitOptions.RemoveEmptyEntries);
+            vec4.X = ParseFloat(tempStrings[0]);
+            vec4.Y = ParseFloat(tempStrings[1]);
+            vec4.Z = ParseFloat(tempStrings[2]);
+            vec4.Z = ParseFloat(tempStrings[3]);
+            return vec4;
+        }
+        public Vector4 GetParseVector4(string[] allLines, string opener, int lineOffset = 0, bool simplify = true, string closer = ";")
+        {
+            string data = GetData(allLines, opener, lineOffset, simplify, closer);
+            return ParseVector4(FindIndexes(data, opener, lineOffset, closer), data);
+        }
+        public Vector4 GetParseVector4(string[] allLines, string opener, ref int lineOffset, bool simplify = true, string closer = ";")
+        {
+            string data = GetData(allLines, opener, ref lineOffset, simplify, closer);
+            return ParseVector4(FindIndexes(data, opener, lineOffset, closer), data);
+        }
+        public Vector4 GetParseVector4(string data, string opener, bool simplify = true, string closer = ";")
+        {
+            return ParseVector4(GetInputSubstring(data, opener, 0, simplify, closer));
+        }
+
+
+        public Matrix3 ParseMat3(int[] indexes, string data)
+        {
+            Matrix3 mat3 = new Matrix3();
+            string[] tempStrings = GetInputSubstring(indexes, data, true).Split(',', StringSplitOptions.RemoveEmptyEntries);
+            mat3.M11 = ParseFloat(tempStrings[0]);
+            mat3.M12 = ParseFloat(tempStrings[1]);
+            mat3.M13 = ParseFloat(tempStrings[2]);
+            mat3.M21 = ParseFloat(tempStrings[3]);
+            mat3.M22 = ParseFloat(tempStrings[4]);
+            mat3.M23 = ParseFloat(tempStrings[5]);
+            mat3.M31 = ParseFloat(tempStrings[6]);
+            mat3.M32 = ParseFloat(tempStrings[7]);
+            mat3.M33 = ParseFloat(tempStrings[8]);
+            return mat3;
+        }
+        public Matrix3 ParseMat3(string data)
+        {
+            Matrix3 mat3 = new Matrix3();
+            string[] tempStrings = data.Split(',', StringSplitOptions.RemoveEmptyEntries);
+            mat3.M11 = ParseFloat(tempStrings[0]);
+            mat3.M12 = ParseFloat(tempStrings[1]);
+            mat3.M13 = ParseFloat(tempStrings[2]);
+            mat3.M21 = ParseFloat(tempStrings[3]);
+            mat3.M22 = ParseFloat(tempStrings[4]);
+            mat3.M23 = ParseFloat(tempStrings[5]);
+            mat3.M31 = ParseFloat(tempStrings[6]);
+            mat3.M32 = ParseFloat(tempStrings[7]);
+            mat3.M33 = ParseFloat(tempStrings[8]);
+            return mat3;
+        }
+        public Matrix3 GetParseMat3(string[] allLines, string opener, int lineOffset = 0, bool simplify = true, string closer = ";")
+        {
+            string data = GetData(allLines, opener, lineOffset, simplify, closer);
+            return ParseMat3(FindIndexes(data, opener, lineOffset, closer), data);
+        }
+        public Matrix3 GetParseMat3(string[] allLines, string opener, ref int lineOffset, bool simplify = true, string closer = ";")
+        {
+            string data = GetData(allLines, opener, ref lineOffset, simplify, closer);
+            return ParseMat3(FindIndexes(data, opener, lineOffset, closer), data);
+        }
+        public Matrix3 GetParseMat3(string data, string opener, bool simplify = true, string closer = ";")
+        {
+            return ParseMat3(GetInputSubstring(data, opener, 0, simplify, closer));
+        }
+
+        public Matrix4 ParseMat4(int[] indexes, string data)
+        {
+            Matrix4 mat4 = new Matrix4();
+            string[] tempStrings = GetInputSubstring(indexes, data, true).Split(',', StringSplitOptions.RemoveEmptyEntries);
+            mat4.M11 = ParseFloat(tempStrings[0]);
+            mat4.M12 = ParseFloat(tempStrings[1]);
+            mat4.M13 = ParseFloat(tempStrings[2]);
+            mat4.M14 = ParseFloat(tempStrings[3]);
+            mat4.M21 = ParseFloat(tempStrings[4]);
+            mat4.M22 = ParseFloat(tempStrings[5]);
+            mat4.M23 = ParseFloat(tempStrings[6]);
+            mat4.M24 = ParseFloat(tempStrings[7]);
+            mat4.M31 = ParseFloat(tempStrings[8]);
+            mat4.M32 = ParseFloat(tempStrings[9]);
+            mat4.M33 = ParseFloat(tempStrings[10]);
+            mat4.M34 = ParseFloat(tempStrings[11]);
+            mat4.M41 = ParseFloat(tempStrings[12]);
+            mat4.M42 = ParseFloat(tempStrings[13]);
+            mat4.M43 = ParseFloat(tempStrings[14]);
+            mat4.M44 = ParseFloat(tempStrings[15]);
+            return mat4;
+        }
+        public Matrix4 ParseMat4(string data)
+        {
+            Matrix4 mat4 = new Matrix4();
+            string[] tempStrings = data.Split(',', StringSplitOptions.RemoveEmptyEntries);
+            mat4.M11 = ParseFloat(tempStrings[0]);
+            mat4.M12 = ParseFloat(tempStrings[1]);
+            mat4.M13 = ParseFloat(tempStrings[2]);
+            mat4.M14 = ParseFloat(tempStrings[3]);
+            mat4.M21 = ParseFloat(tempStrings[4]);
+            mat4.M22 = ParseFloat(tempStrings[5]);
+            mat4.M23 = ParseFloat(tempStrings[6]);
+            mat4.M24 = ParseFloat(tempStrings[7]);
+            mat4.M31 = ParseFloat(tempStrings[8]);
+            mat4.M32 = ParseFloat(tempStrings[9]);
+            mat4.M33 = ParseFloat(tempStrings[10]);
+            mat4.M34 = ParseFloat(tempStrings[11]);
+            mat4.M41 = ParseFloat(tempStrings[12]);
+            mat4.M42 = ParseFloat(tempStrings[13]);
+            mat4.M43 = ParseFloat(tempStrings[14]);
+            mat4.M44 = ParseFloat(tempStrings[15]);
+            return mat4;
+        }
+        public Matrix4 GetParseMat4(string[] allLines, string opener, int lineOffset = 0, bool simplify = true, string closer = ";")
+        {
+            string data = GetData(allLines, opener, lineOffset, simplify, closer);
+            return ParseMat4(FindIndexes(data, opener, lineOffset, closer), data);
+        }
+        public Matrix4 GetParseMat4(string[] allLines, string opener, ref int lineOffset, bool simplify = true, string closer = ";")
+        {
+            string data = GetData(allLines, opener, ref lineOffset, simplify, closer);
+            return ParseMat4(FindIndexes(data, opener, lineOffset, closer), data);
+        }
+        public Matrix4 GetParseMat4(string data, string opener, bool simplify = true, string closer = ";")
+        {
+            return ParseMat4(GetInputSubstring(data, opener, 0, simplify, closer));
+        }
+
         public int ParseRoundedNum(int[] indexes, string data)
         {
             return Round(ParseFloat(indexes, data));
@@ -1201,6 +1650,20 @@ namespace DawnmakuEngine
         public int ParseRoundedNum(string data)
         {
             return Round(ParseFloat(data));
+        }
+        public int GetParseRoundedNum(string[] allLines, string opener, int lineOffset = 0, bool simplify = true, string closer = ";")
+        {
+            string data = GetData(allLines, opener, lineOffset, simplify, closer);
+            return ParseRoundedNum(FindIndexes(data, opener, lineOffset, closer), data);
+        }
+        public int GetParseRoundedNum(string[] allLines, string opener, ref int lineOffset, bool simplify = true, string closer = ";")
+        {
+            string data = GetData(allLines, opener, ref lineOffset, simplify, closer);
+            return ParseRoundedNum(FindIndexes(data, opener, lineOffset, closer), data);
+        }
+        public int GetParseRoundedNum(string data, string opener, bool simplify = true, string closer = ";")
+        {
+            return ParseRoundedNum(GetInputSubstring(data, opener, 0, simplify, closer));
         }
         public bool TryParseRoundedNum(string data, out int numVal)
         {
@@ -1233,6 +1696,20 @@ namespace DawnmakuEngine
             bool.TryParse(data, out boolVal);
             return boolVal;
         }
+        public bool GetParseBool(string[] allLines, string opener, int lineOffset = 0, bool simplify = true, string closer = ";")
+        {
+            string data = GetData(allLines, opener, lineOffset, simplify, closer);
+            return ParseBool(FindIndexes(data, opener, lineOffset, closer), data);
+        }
+        public bool GetParseBool(string[] allLines, string opener, ref int lineOffset, bool simplify = true, string closer = ";")
+        {
+            string data = GetData(allLines, opener, ref lineOffset, simplify, closer);
+            return ParseBool(FindIndexes(data, opener, lineOffset, closer), data);
+        }
+        public bool GetParseBool(string data, string opener, bool simplify = true, string closer = ";")
+        {
+            return ParseBool(GetInputSubstring(data, opener, 0, simplify, closer));
+        }
         public bool TryParseBool(int[] indexes, string data, out bool boolVal)
         {
             if (indexes[0] == -1 || indexes[1] == -1)
@@ -1248,25 +1725,277 @@ namespace DawnmakuEngine
             bool parsed = bool.TryParse(data, out boolVal);
             return parsed;
         }
+        #endregion
 
+        #region File Readers
+
+        #region Shaders
         public Shader ReadShaderData(string file)
         {
-            string[] allLines = File.ReadAllLines(file);
-            string vert, frag, data;
-            data = GetData(allLines, "vert=");
-            vert = shaderDir + "\\" + GetInputSubstring(FindIndexes(data, "vert="), data);
-            data = GetData(allLines, "frag=");
-            frag = shaderDir + "\\" + GetInputSubstring(FindIndexes(data, "frag="), data);
-            return new Shader(vert, frag);
+            string[] allLines = File.ReadAllLines(file), constant;
+            string vert, frag;
+
+            Shader final;
+
+            vert = shaderDir + "\\" + GetInputSubstring(allLines, "vert=");
+            frag = shaderDir + "\\" + GetInputSubstring(allLines, "frag=");
+
+            final = new Shader(vert, frag);
+
+            allLines = SimplifyText(GetInputSubstring(allLines, "constants=", 0, false, "EndOfFile"), false).Split(':', StringSplitOptions.RemoveEmptyEntries);
+            for (int i = 0; i < allLines.Length; i++)
+            {
+                constant = allLines[i].Split('/', StringSplitOptions.RemoveEmptyEntries);
+                if (constant.Length < 2)
+                {
+                    GameMaster.LogWarning("Please specify all constants' types on .dwnshader file.");
+                    break;
+                }
+                switch (SimplifyText(constant[1]))
+                {
+                    case "float":
+                    case "single":
+                        final.SetFloat(GetInputSubstring(new int[] { 0, constant[0].IndexOf('=') }, constant[0]), GetParseFloat(constant[0], "="));
+                        break;
+                    case "int":
+                    case "integer":
+                        final.SetInt(GetInputSubstring(new int[] { 0, constant[0].IndexOf('=') }, constant[0]), GetParseRoundedNum(constant[0], "="));
+                        break;
+                    case "vec2":
+                    case "vector2":
+                        final.SetVector2(GetInputSubstring(new int[] { 0, constant[0].IndexOf('=') }, constant[0]), GetParseVector2(constant[0], "="));
+                        break;
+                    case "vec3":
+                    case "vector3":
+                        final.SetVector3(GetInputSubstring(new int[] { 0, constant[0].IndexOf('=') }, constant[0]), GetParseVector3(constant[0], "="));
+                        break;
+                    case "vec4":
+                    case "vector4":
+                        final.SetVector4(GetInputSubstring(new int[] { 0, constant[0].IndexOf('=') }, constant[0]), GetParseVector4(constant[0], "="));
+                        break;
+                    case "mat3":
+                    case "mat3x3":
+                    case "matrix3":
+                    case "matrix3x3":
+                        final.SetMatrix3(GetInputSubstring(new int[] { 0, constant[0].IndexOf('=') }, constant[0]), GetParseMat3(constant[0], "="));
+                        break;
+                    case "mat4":
+                    case "mat4x4":
+                    case "matrix4":
+                    case "matrix4x4":
+                        final.SetMatrix4(GetInputSubstring(new int[] { 0, constant[0].IndexOf('=') }, constant[0]), GetParseMat4(constant[0], "="));
+                        break;
+                }
+
+            }
+
+            return final;
         }
+        #endregion
+
+        #region Fonts
+
+        //https://stackoverflow.com/a/45427497
+
+        /*[DllImport("freetype.dll")]
+        public static extern ulong FT_Get_First_Char();
+
+        [StructLayout(LayoutKind.Sequential)]
+        unsafe struct FT_FaceRec_
+        {
+            public long num_faces;
+            public long face_index;
+
+            public long face_flags;
+            public long style_flags;
+
+            public long num_glyphs;
+
+            public char* family_name;
+            public char* style_name;
+
+            public int num_fixed_sizes;
+            public FT_Bitmap_size_* available_sizes;
+
+            public int num_charmaps;
+            public FT_CharMapRec_* charmaps;
+
+            public FT_Generic_ generic;
+
+            public FT_BBox_ bbox;
+
+            public ushort units_per_EM;
+            public short ascender;
+            public short descender;
+            public short height;
+
+            public short max_advance_width;
+            public short max_advance_height;
+
+            public short underline_position;
+            public short underline_thickness;
+
+
+        }
+        unsafe struct FT_Generic_
+        {
+            public void* data;
+            public void* FT_Generic_Finalizer;
+        }
+        struct FT_BBox_
+        {
+            public long xMin, yMin;
+            public long xMax, yMax;
+
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        struct FT_Bitmap_size_
+        {
+            public short height;
+            public short width;
+
+            public long size;
+
+            public long x_ppem;
+            public long y_ppem;
+        }
+
+
+        [StructLayout(LayoutKind.Sequential)]
+        struct FT_CharMapRec_
+        {
+            public FT_FaceRec_ face;
+            public FT_Encoding_ encoding;
+            public ushort platform_id;
+            public ushort encoding_id;
+        }
+
+        enum FT_Encoding_
+        {
+            FT_ENCODING_NONE = 0,
+
+            FT_ENCODING_MS_SYMBOL = (int)(((uint)'s' << 24) | ((uint)'y' << 16) | ((uint)'m' << 8) | ((uint)'b')),
+            FT_ENCODING_UNICODE = (int)(((uint)'u' << 24) | ((uint)'n' << 16) | ((uint)'i' << 8) | ((uint)'c')),
+
+            FT_ENCODING_SJIS = (int)(((uint)'s' << 24) | ((uint)'j' << 16) | ((uint)'i' << 8) | ((uint)'s')),
+            FT_ENCODING_PRC = (int)(((uint)'g' << 24) | ((uint)'b' << 16) | ((uint)' ' << 8) | ((uint)' ')),
+            FT_ENCODING_BIG5 = (int)(((uint)'b' << 24) | ((uint)'i' << 16) | ((uint)'g' << 8) | ((uint)'5')),
+            FT_ENCODING_WANSUNG = (int)(((uint)'w' << 24) | ((uint)'a' << 16) | ((uint)'n' << 8) | ((uint)'s')),
+            FT_ENCODING_JOHAB = (int)(((uint)'j' << 24) | ((uint)'o' << 16) | ((uint)'h' << 8) | ((uint)'a')),
+
+            FT_ENCODING_GB2312 = FT_ENCODING_PRC,
+            FT_ENCODING_MS_SJIS = FT_ENCODING_SJIS,
+            FT_ENCODING_MS_GB2312 = FT_ENCODING_PRC,
+            FT_ENCODING_MS_BIG5 = FT_ENCODING_BIG5,
+            FT_ENCODING_MS_WANSUNG = FT_ENCODING_WANSUNG,
+            FT_ENCODING_MS_JOHAB = FT_ENCODING_JOHAB,
+
+            FT_ENCODING_ADOBE_STANDARD = (int)(((uint)'A' << 24) | ((uint)'D' << 16) | ((uint)'O' << 8) | ((uint)'B')),
+            FT_ENCODING_ADOBE_EXPERT = (int)(((uint)'A' << 24) | ((uint)'D' << 16) | ((uint)'B' << 8) | ((uint)'E')),
+            FT_ENCODING_ADOBE_CUSTOM = (int)(((uint)'A' << 24) | ((uint)'D' << 16) | ((uint)'B' << 8) | ((uint)'C')),
+            FT_ENCODING_ADOBE_LATIN_1 = (int)(((uint)'l' << 24) | ((uint)'a' << 16) | ((uint)'t' << 8) | ((uint)'1')),
+
+            FT_ENCODING_ADOBE_OLD_LATIN_2 = (int)(((uint)'l' << 24) | ((uint)'a' << 16) | ((uint)'t' << 8) | ((uint)'2')),
+
+            FT_ENCODING_APPLE_ROMAN = (int)(((uint)'a' << 24) | ((uint)'r' << 16) | ((uint)'m' << 8) | ((uint)'n')),
+        }
+
+        enum FT_Glyph_Format_
+        {
+            FT_GLYPH_FORMAT_NONE = 0,
+
+            FT_GLYPH_FORMAT_COMPOSITE  = (int)(((uint)'c' << 24) | ((uint)'o' << 16) | ((uint)'m' << 8) | ((uint)'p')),
+            FT_GLYPH_FORMAT_BITMAP = (int)(((uint)'b' << 24) | ((uint)'i' << 16) | ((uint)'t' << 8) | ((uint)'s')),
+            FT_GLYPH_FORMAT_OUTLINE = (int)(((uint)'o' << 24) | ((uint)'u' << 16) | ((uint)'t' << 8) | ((uint)'l')),
+            FT_GLYPH_FORMAT_PLOTTER = (int)(((uint)'p' << 24) | ((uint)'l' << 16) | ((uint)'o' << 8) | ((uint)'t')),
+            FT_GLYPH_FORMAT_SVG = (int)(((uint)'S' << 24) | ((uint)'V' << 16) | ((uint)'G' << 8) | ((uint)' ')),
+        }
+
+
+        unsafe struct FT_GlyphSlotRec_
+        {
+
+        }
+
+        unsafe struct FT_LibraryRec_
+        {
+            public FT_MemoryRec_ memory;
+
+            public int version_major;
+            public int version_minor;
+            public int version_patch;
+
+            public uint num_modules;
+            FT_ModuleRec_[] modules; // size of 32
+
+            public FT_ListRec_ renderers;
+            public FT_RendererRec_* cur_renderer;
+            public  FT_ModuleRec_* auto_hinter;
+        }
+
+        unsafe struct FT_MemoryRec_
+        {
+            public void* user;
+            public void* alloc;
+            public void* free;
+            public void* realloc;
+        }
+
+        unsafe struct FT_ModuleRec_
+        {
+            public void* clazz;
+            public FT_LibraryRec_ library;
+            public FT_MemoryRec_ memory;
+        }
+
+        unsafe struct FT_ListRec_
+        {
+            FT_ListNodeRec_* head;
+            FT_ListNodeRec_* tail;
+        }
+
+        unsafe struct FT_ListNodeRec_
+        {
+            public FT_ListNodeRec_* prev;
+            public FT_ListNodeRec_* next;
+            public void* data;
+        }
+
+        unsafe struct FT_RendererRec_
+        {
+            public FT_ModuleRec_ root;
+            public void* clazz;
+            public FT_Glyph_Format_ glyph_format;
+            public FT_Glyph_Class_ glyph_class;
+
+            public void* raster;
+            public void* raster_render;
+            public void* render;
+        }
+
+        unsafe struct FT_Glyph_Class_
+        {
+            public long glyph_size;
+            public FT_Glyph_Format_ glyph_format;
+
+            public void* glyph_init;
+            public void* glyph_done;
+            public void* glyph_copy;
+            public void* glyph_transform;
+            public void* glyph_bbox;
+            public void* glyph_prepare;
+        }*/
+
 
         public FontCharList CreateCharList(string file)
         {
             FontCharList charList = new FontCharList();
             char newChar;
             IDictionary<int, ushort> tempDict = new Dictionary<int, ushort>();
+            FileStream stream = new FileStream(file, FileMode.Open, FileAccess.Read);
 
-            Typeface typeFace = new OpenFontReader().Read(new FileStream(file, FileMode.Open, FileAccess.Read));
+            Typeface typeFace = new OpenFontReader().Read(stream);
             
             int t;
 
@@ -1281,6 +2010,8 @@ namespace DawnmakuEngine
             }
             if(gameMaster.logAllFontChars)
                 GameMaster.LogNeutralNotice(charList.everyCharInFont);
+
+            stream.Close();
 
             /*for (t = 0; t < typefaces.Length; t++)
             {
@@ -1299,7 +2030,7 @@ namespace DawnmakuEngine
             return charList;
         }
 
-        public Bitmap RenderFont(string fontName, string file, out List<SpriteSet.Sprite> sprites)
+        public Image<Rgba32> RenderFont(string fontName, string file, out List<SpriteSet.Sprite> sprites)
         {
             sprites = new List<SpriteSet.Sprite>();
             try
@@ -1310,9 +2041,92 @@ namespace DawnmakuEngine
                 string allCharacters = gameMaster.fontCharList[fontName].everyCharInFont;
                 int width = 0, height = 0;
 
+                FontFamily family = gameMaster.fonts.Get(fontName);
+                Font font = family.CreateFont(size);
+
+                TextOptions options = new TextOptions(font)
+                {
+                    KerningMode = KerningMode.None,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center,
+                };
+
+                FontRectangle[] rects = new FontRectangle[allCharacters.Length];
+
+                const int charLimit = 192;
+                int curWidth = 0, curHeight = 0, charsUnderLimit = 0;
+
+                const int widthLimit = 3500;
+
+                for (i = 0; i < allCharacters.Length; i++)
+                {
+                    rects[i] = TextMeasurer.Measure(allCharacters[i].ToString(), options);
+                    curWidth += Ceil(rects[i].Width);
+                    charsUnderLimit++;
+
+                    if (rects[i].Height > curHeight)
+                        curHeight = Ceil(rects[i].Height);
+
+                    if (curWidth > widthLimit)
+                    {
+                        curWidth -= Ceil(rects[i].Width);
+                        if (curWidth > width)
+                            width = curWidth;
+                        curWidth = 0;
+                        height += curHeight;
+                        curHeight = 0;
+                    }
+                }
+
+                if (curWidth > width)
+                    width = curWidth;
+                height += curHeight;
+
+                System.Diagnostics.Stopwatch timer = System.Diagnostics.Stopwatch.StartNew();
+                Image<Rgba32> image = new Image<Rgba32>(width < widthLimit ? width : widthLimit, height, new Rgba32(0, 0, 0, 0));
+                PointF point = new PointF();
+                int xDrawn = 0, yDrawn = 0;
+                float imageCenter = height * 0.5f;
+                Color color = new Color(new Rgba32(255, 255, 255, 255));
+                curWidth = 0;
+                curHeight = 0;
+
+                for (i = 0; i < allCharacters.Length; i++)
+                {
+                    try
+                    {
+                        point.X = xDrawn;
+                        point.Y = yDrawn;
+                        image.Mutate(x => x.DrawText(allCharacters[i].ToString(), font, color, point));
+                    }
+                    catch (Exception e)
+                    {
+                        GameMaster.LogErrorMessage("There was an error rendering this font for character" + i + ": " + allCharacters[i], e.Message);
+                    }
+
+                    sprites.Add(new SpriteSet.Sprite(xDrawn, yDrawn, xDrawn + rects[i].Width, yDrawn + rects[i].Height, height, width, true));
+
+                    xDrawn += Ceil(rects[i].Width);
+
+                    charsUnderLimit++;
+
+                    if (rects[i].Height > curHeight)
+                        curHeight = Ceil(rects[i].Height);
+
+                    if (i < allCharacters.Length - 1 && xDrawn + Ceil(rects[i + 1].Width) > widthLimit)
+                    {
+                        charsUnderLimit = 0;
+                        xDrawn = 0;
+                        yDrawn += curHeight;
+                        curHeight = 0;
+                    }
+                }
+                GameMaster.LogTimeCustMilliseconds("rendering font", timer.Elapsed.TotalMilliseconds);
+
                 //SixLabors.Fonts.FontFamily family = gameMaster.fonts.Find(fontName);
                 //Font font = family.CreateFont(size);
-                Bitmap bm = new Bitmap(1, 1, System.Drawing.Imaging.PixelFormat.Format16bppRgb565);
+
+                /*Bitmap bm = new Bitmap(1, 1, System.Drawing.Imaging.PixelFormat.Format16bppRgb565);
                 Graphics graphic = Graphics.FromImage(bm);
 
                 System.Drawing.SizeF[] textRects = new System.Drawing.SizeF[allCharacters.Length];
@@ -1364,7 +2178,21 @@ namespace DawnmakuEngine
                 graphic.Dispose();
                 format.Dispose();
                 fontCollection.Dispose();
-                return bm;
+
+                /*string outputFileName = "D:/Damio/source/repos/DawnmakuEngine/DawnmakuEngine/bin/Debug/netcoreapp3.1/Data/General/Fonts/font.bmp";
+                using (MemoryStream memory = new MemoryStream())
+                {
+                    using (FileStream fs = new FileStream(outputFileName, FileMode.Create, FileAccess.ReadWrite))
+                    {
+                        bm.Save(memory, System.Drawing.Imaging.ImageFormat.Bmp);
+                        byte[] bytes = memory.ToArray();
+                        fs.Write(bytes, 0, bytes.Length);
+                    }
+                }*/
+
+                //image.SaveAsPng("D:/Damio/source/repos/DawnmakuEngine/DawnmakuEngine/bin/Debug/netcoreapp3.1/Data/General/Fonts/" + fontName + ".png");
+
+                return image;
             } catch (Exception e)
             {
                 GameMaster.LogErrorMessage("There was an error setting up font rendering for this font: " + fontName, e.Message);
@@ -1414,164 +2242,63 @@ namespace DawnmakuEngine
                 distanceDrawn += Ceil(rects[i].Width);
             }*/
 
-            return new Bitmap(1,1, System.Drawing.Imaging.PixelFormat.Format16bppRgb565);
+            GameMaster.LogError("Something went wrong with rendering a font, returning a 1x1 purple texture: " + fontName);
+            return new Image<Rgba32>(1, 1, new Rgba32(255, 0, 255, 255));
+            //return new Bitmap(1,1, System.Drawing.Imaging.PixelFormat.Format16bppRgb565);
         }
 
         public void InstallAndRenderFont(string file)
         {
             List<SpriteSet.Sprite> tempSprites;
-            gameMaster.fonts.Install(file);
+            gameMaster.fonts.Add(file);
             string fontName = gameMaster.fonts.Families.Last().Name;
             gameMaster.fontNames.Add(fontName);
             gameMaster.fontCharList.Add(fontName, CreateCharList(file));
-            Texture tempTex = new Texture(RenderFont(fontName, file, out tempSprites), true);
+            gameMaster.fontImages.Add(fontName, RenderFont(fontName, file, out tempSprites));
+            Texture tempTex = new Texture(gameMaster.fontImages[fontName], false);
             gameMaster.fontSheets.Add(fontName, tempTex);
             gameMaster.fontGlyphSprites.Add(fontName, new SpriteSet(tempSprites, tempTex));
         }
 
-
-        public BulletData ReadBulletData(string file)
+        public DawnFont ReadDawnFont(string file)
         {
-            BulletData thisData = new BulletData();
+            DawnFont thisData = new DawnFont();
+            DawnFont.CharSpecs spec;
             int i, s;
-            int[] indexes = { 0, 0 };
-            string[] tempStrings, allLines = File.ReadAllLines(file);
-            TextureAnimator.AnimationState state;
-            string data;
+            string[] specs, kernings, kernVals, allLines = File.ReadAllLines(file);
 
             try
             {
-                data = GetData(allLines, "shader=");
-                thisData.shader = gameMaster.shaders[GetInputSubstring(FindIndexes(data, "shader="), data)];
-
-                data = GetData(allLines, "isanimated=");
-                thisData.isAnimated = ParseBool(FindIndexes(data, "isanimated="), data);
-
-                data = GetData(allLines, "shouldspin=");
-                thisData.shouldSpin = ParseBool(FindIndexes(data, "shouldspin="), data);
-
-                data = GetData(allLines, "shouldturn=");
-                thisData.shouldTurn = ParseBool(FindIndexes(data, "shouldturn="), data);
-
-                data = GetData(allLines, "collidersize=");
-                tempStrings = GetInputSubstring(FindIndexes(data, "collidersize="), data).Split(':', StringSplitOptions.RemoveEmptyEntries);
-                thisData.colliderSize = new Vector2[tempStrings.Length];
-                for (i = 0; i < tempStrings.Length; i++)
-                    thisData.colliderSize[i] = ParseVector2(tempStrings[i]) / 2;
-
-                data = GetData(allLines, "collideroffset=");
-                tempStrings = GetInputSubstring(FindIndexes(data, "collideroffset="), data).Split(':', StringSplitOptions.RemoveEmptyEntries);
-                thisData.colliderOffset = new Vector2[tempStrings.Length >= thisData.colliderSize.Length ? tempStrings.Length : thisData.colliderSize.Length];
-                for (i = 0; i < thisData.colliderSize.Length; i++)
-                    thisData.colliderOffset[i] = ParseVector2(tempStrings[Math.Clamp(i, 0, tempStrings.Length - 1)]);
-
-                if (thisData.colliderOffset.Length > thisData.colliderSize.Length)
+                thisData.supportedChars = GetInputSubstring(allLines, "supportedcharacters=\"", 0, false, "\";").Replace(" ", "").Replace("\n", "").Replace("\r", "");
+                thisData.sprites = gameMaster.fontGlyphSprites[GetInputSubstring(allLines, "sprites=")];
+                thisData.defaultSize = GetParseFloat(allLines, "defaultsize=");
+                thisData.defaultAdvance = GetParseFloat(allLines, "defaultadvance=");
+                thisData.defaultHeight = GetParseFloat(allLines, "defaultheightoffset=");
+                specs = GetData(allLines, "charspecs=", 0, false, "EndOfFile").Split(':', StringSplitOptions.RemoveEmptyEntries);
+                for (i = 0; i < specs.Length; i++)
                 {
-                    Vector2[] prevColliderSizeList = thisData.colliderSize;
-                    thisData.colliderSize = new Vector2[thisData.colliderOffset.Length];
-                    for (i = 0; i < thisData.colliderSize.Length; i++)
-                        thisData.colliderSize[i] = prevColliderSizeList[Math.Clamp(i, 0, prevColliderSizeList.Length - 1)];
-                }
-
-                if(CheckHasData(allLines, "boundsexitdistance="))
-                {
-                    data = GetData(allLines, "boundsexitdistance=");
-                    thisData.boundsExitDist = ParseFloat(FindIndexes(data, "boundsexitdistance="), data);
-                }
-                else
-                {
-                    float dist;
-                    for (i = 0; i < thisData.colliderSize.Length; i++)
+                    spec = new DawnFont.CharSpecs();
+                    spec.advance = GetParseFloat(specs[i], "advance=");
+                    spec.heightOffset = GetParseFloat(specs[i], "heightoffset=");
+                    kernings = GetInputSubstring(specs[i], "kerning=", 0, false).Split('/', StringSplitOptions.RemoveEmptyEntries);
+                    for (s = 0; s < kernings.Length; s++)
                     {
-                        dist = thisData.colliderSize[i].X + Math.Abs(thisData.colliderOffset[i].X);
-                        if (dist > thisData.boundsExitDist)
-                            thisData.boundsExitDist = dist;
-
-                        dist = thisData.colliderSize[i].Y + Math.Abs(thisData.colliderOffset[i].Y);
-                        if (dist > thisData.boundsExitDist)
-                            thisData.boundsExitDist = dist;
+                        kernVals = kernings[s].Split(',');
+                        spec.kerning.Add(kernVals[0][0], ParseFloat(kernVals[1]));
                     }
+                    thisData.charSpecs.Add(GetInputSubstring(FindIndexes(specs[i], "char="), specs[i])[0], spec);
                 }
-
-                data = GetData(allLines, "spritecolorcount=");
-                thisData.spriteColors = (ushort)ParseRoundedNum(FindIndexes(data, "spritecolorcount="), data);
-
-                data = GetData(allLines, "randomizesprite=");
-                thisData.randomizeSprite = ParseBool(FindIndexes(data, "randomizesprite="), data);
-
-                if (thisData.isAnimated)
-                {
-                    data = GetData(allLines, "animstates=", 0);
-                    indexes = FindIndexes(data, "animstates=");
-                    string[] stateStrings = GetInputSubstring(indexes, data).Split(':', StringSplitOptions.RemoveEmptyEntries);
-
-                    thisData.animStates = new TextureAnimator.AnimationState[stateStrings.Length][];
-
-                    for (i = 0; i < stateStrings.Length; i++)
-                    {
-                        tempStrings = stateStrings[i].Split(',', StringSplitOptions.RemoveEmptyEntries);
-                        thisData.animStates[i] = new TextureAnimator.AnimationState[tempStrings.Length];
-                        for (s = 0; s < tempStrings.Length; s++)
-                        {
-                            gameMaster.bulletAnimStates.TryGetValue(tempStrings[s], out state);
-                            thisData.animStates[i][s] = state;
-                        }
-                    }
-                }
-                else
-                    thisData.animStates = new TextureAnimator.AnimationState[0][];
             }
             catch (Exception e)
             {
-                GameMaster.LogErrorMessage("There was an error loading this bullet data!", e.Message);
+                GameMaster.LogErrorMessage("There was an error loading this Dawn Font!", e.Message);
             }
 
             return thisData;
         }
+        #endregion
 
-        public Bezier ReadBezierData(string file)
-        {
-            Bezier thisBezier = new Bezier();
-            int[] indexes = { 0, 0 };
-            float numVal;
-            ushort shortVal;
-            Vector2 vec2Val;
-            string[] tempStrings, allLines = File.ReadAllLines(file);
-            string data;
-
-            try
-            {
-                data = GetData(allLines, "scale=");
-                thisBezier.scale = ParseRoundedNum(FindIndexes(data, "scale="), data);
-
-                data = GetData(allLines, "autosetpoints=");
-                thisBezier.AutoSetPoints = ParseBool(FindIndexes(data, "autosetpoints="), data);
-
-                data = GetData(allLines, "pointslist=", 0, true, "end");
-                indexes = FindIndexes(data, "pointslist=", indexes[1], "end");
-                tempStrings = GetInputSubstring(indexes[0], data).Split(':', StringSplitOptions.RemoveEmptyEntries);
-                thisBezier.points = new List<Bezier.Point>();
-                indexes[1] = indexes[0];
-                for (int i = 0; i < tempStrings.Length; i++)
-                {
-                    indexes = FindIndexes(tempStrings[i], "pos=", indexes[1]);
-                    vec2Val = ParseVector2(tempStrings[i].Substring(indexes[0] + 1, indexes[1] - indexes[0] - 1));
-
-                    numVal = ParseFloat(FindIndexes(tempStrings[i], "time=", indexes[1]), tempStrings[i]);
-
-                    shortVal = (ushort)ParseRoundedNum(FindIndexes(tempStrings[i], "waittime=", indexes[1]), tempStrings[i]); ;
-
-                    thisBezier.points.Add(new Bezier.Point(vec2Val, numVal, shortVal));
-                }
-            }
-            catch (Exception e)
-            {
-                GameMaster.LogErrorMessage("There was an error loading this bezier data!", e.Message);
-            }
-
-            return thisBezier;
-        }
-
+        #region Sprites and Animation
         public KeyValuePair<string, SpriteSet>[] ReadSpriteData(string file, Texture tex)
         {
             int i = 0, s = 0, lineOffset = 0;
@@ -1650,29 +2377,23 @@ namespace DawnmakuEngine
                         data = data.Remove(data.Length - 1);
 
                     thisState = new TextureAnimator.AnimationState();
-                    indexes = FindIndexes(data, "name=");
-                    key = GetInputSubstring(indexes, data);
 
-                    thisState.autoTransition = ParseRoundedNum(FindIndexes(data, "autotransition="), data);
+                    key = GetInputSubstring(data, "name=");
+                    thisState.autoTransition = GetParseRoundedNum(data, "autotransition=");
+                    thisState.loop = GetParseBool(data, "loop=");
 
-                    thisState.loop = ParseBool(FindIndexes(data, "loop="), data);
-
-                    indexes = FindIndexes(data, "frames=", 0, "end");
-                    frameSets = GetInputSubstring(indexes, data).Split(':', StringSplitOptions.RemoveEmptyEntries);
+                    frameSets = GetInputSubstring(data, "frames=", 0, true, "EndOfFile").Split(':', StringSplitOptions.RemoveEmptyEntries);
                     thisState.animFrames = new TextureAnimator.AnimationFrame[frameSets.Length];
                     for (i = 0; i < frameSets.Length; i++)
                     {
                         thisState.animFrames[i] = new TextureAnimator.AnimationFrame();
-                        indexes = FindIndexes(frameSets[i], "duration=");
-                        thisState.animFrames[i].frameDuration = ParseFloat(indexes, frameSets[i]);
 
-                        indexes = FindIndexes(frameSets[i], "spriteset=", indexes[1]);
-                        stringVal = GetInputSubstring(indexes, frameSets[i]);
+                        thisState.animFrames[i].frameDuration = GetParseFloat(frameSets[i], "duration=");
+                        stringVal = GetInputSubstring(frameSets[i], "spriteset=");
 
-                        indexes = FindIndexes(frameSets[i], "sprite=", indexes[1]);
                         sprites.TryGetValue(stringVal, out set);
                         if (set != null)
-                            thisState.animFrames[i].sprite = set.sprites[ParseRoundedNum(indexes, frameSets[i])];
+                            thisState.animFrames[i].sprite = set.sprites[GetParseRoundedNum(frameSets[i], "sprite=")];
                     }
 
                     animPairs.Add(new KeyValuePair<string, TextureAnimator.AnimationState>(key, thisState));
@@ -1685,7 +2406,94 @@ namespace DawnmakuEngine
 
             return animPairs.ToArray(); ;
         }
+        #endregion
 
+        #region Bullets
+        public BulletData ReadBulletData(string file)
+        {
+            BulletData thisData = new BulletData();
+            int i, s;
+            int[] indexes = { 0, 0 };
+            string[] tempStrings, allLines = File.ReadAllLines(file);
+            TextureAnimator.AnimationState state;
+
+            try
+            {
+                thisData.shader = gameMaster.shaders[GetInputSubstring(allLines, "shader=")];
+                thisData.isAnimated = GetParseBool(allLines, "isanimated=");
+                thisData.shouldSpin = GetParseBool(allLines, "shouldspin=");
+                thisData.shouldTurn = GetParseBool(allLines, "shouldturn=");
+
+                tempStrings = GetInputSubstring(allLines, "collidersize=").Split(':', StringSplitOptions.RemoveEmptyEntries);
+                thisData.colliderSize = new Vector2[tempStrings.Length];
+                for (i = 0; i < tempStrings.Length; i++)
+                    thisData.colliderSize[i] = ParseVector2(tempStrings[i]) / 2;
+
+                tempStrings = GetInputSubstring(allLines, "collideroffset=").Split(':', StringSplitOptions.RemoveEmptyEntries);
+                thisData.colliderOffset = new Vector2[tempStrings.Length >= thisData.colliderSize.Length ? tempStrings.Length : thisData.colliderSize.Length];
+                for (i = 0; i < thisData.colliderSize.Length; i++)
+                    thisData.colliderOffset[i] = ParseVector2(tempStrings[Math.Clamp(i, 0, tempStrings.Length - 1)]);
+
+                if (thisData.colliderOffset.Length > thisData.colliderSize.Length)
+                {
+                    Vector2[] prevColliderSizeList = thisData.colliderSize;
+                    thisData.colliderSize = new Vector2[thisData.colliderOffset.Length];
+                    for (i = 0; i < thisData.colliderSize.Length; i++)
+                        thisData.colliderSize[i] = prevColliderSizeList[Math.Clamp(i, 0, prevColliderSizeList.Length - 1)];
+                }
+
+                if (CheckHasData(allLines, "boundsexitdistance="))
+                {
+                    thisData.boundsExitDist = GetParseFloat(allLines, "boundsexitdistance=");
+                }
+                else
+                {
+                    float dist;
+                    for (i = 0; i < thisData.colliderSize.Length; i++)
+                    {
+                        dist = thisData.colliderSize[i].X + Math.Abs(thisData.colliderOffset[i].X);
+                        if (dist > thisData.boundsExitDist)
+                            thisData.boundsExitDist = dist;
+
+                        dist = thisData.colliderSize[i].Y + Math.Abs(thisData.colliderOffset[i].Y);
+                        if (dist > thisData.boundsExitDist)
+                            thisData.boundsExitDist = dist;
+                    }
+                }
+
+                thisData.spriteColors = (ushort)GetParseRoundedNum(allLines, "spritecolorcount=");
+                thisData.randomizeSprite = GetParseBool(allLines, "randomizesprite=");
+
+                if (thisData.isAnimated)
+                {
+                    string[] stateStrings = GetInputSubstring(allLines, "animstates=").Split(':', StringSplitOptions.RemoveEmptyEntries);
+
+                    thisData.animStates = new TextureAnimator.AnimationState[stateStrings.Length][];
+
+                    for (i = 0; i < stateStrings.Length; i++)
+                    {
+                        tempStrings = stateStrings[i].Split(',', StringSplitOptions.RemoveEmptyEntries);
+                        thisData.animStates[i] = new TextureAnimator.AnimationState[tempStrings.Length];
+                        for (s = 0; s < tempStrings.Length; s++)
+                        {
+                            gameMaster.bulletAnimStates.TryGetValue(tempStrings[s], out state);
+                            thisData.animStates[i][s] = state;
+                        }
+                    }
+                }
+                else
+                    thisData.animStates = new TextureAnimator.AnimationState[0][];
+            }
+            catch (Exception e)
+            {
+                GameMaster.LogErrorMessage("There was an error loading this bullet data!", e.Message);
+            }
+
+            return thisData;
+        }
+        #endregion
+
+        #region Player Character
         public PlayerOrbData ReadOrbData(string file)
         {
             PlayerOrbData thisData = new PlayerOrbData();
@@ -1693,54 +2501,33 @@ namespace DawnmakuEngine
             int[] indexes = { 0, 0 };
             float numVal = 0;
             string[] tempStrings, allLines = File.ReadAllLines(file);
-            string data;
 
             try
             {
-                data = GetData(allLines, "shader=");
-                thisData.shader = gameMaster.shaders[GetInputSubstring(FindIndexes(data, "shader="), data)];
+                thisData.shader = gameMaster.shaders[GetInputSubstring(allLines, "shader=")];
 
-                data = GetData(allLines, "activepowerlevels=");
-                indexes = FindIndexes(data, "activepowerlevels=");
-                tempStrings = GetInputSubstring(indexes, data).Split(",");
+                tempStrings = GetInputSubstring(allLines, "activepowerlevels=").Split(",");
                 thisData.activePowerLevels = new bool[tempStrings.Length];
                 for (i = 0; i < tempStrings.Length; i++)
                 {
                     thisData.activePowerLevels[i] = ParseBool(tempStrings[i]);
                 }
 
-                data = GetData(allLines, "unfocuspos=");
-                indexes = FindIndexes(data, "unfocuspos=");
-                thisData.unfocusPosition = ParseVector2(indexes, data);
+                thisData.unfocusPosition = GetParseVector2(allLines, "unfocuspos=");
+                thisData.focusPosition = GetParseVector2(allLines, "focusedpos=");
+                thisData.framesToMove = GetParseFloat(allLines, "framestomove=");
+                thisData.rotateDegreesPerSecond = GetParseFloat(allLines, "rotatedegreespersecond=");
 
-                data = GetData(allLines, "focusedpos=");
-                indexes = FindIndexes(data, "focusedpos=");
-                thisData.focusPosition = ParseVector2(indexes, data);
-
-                data = GetData(allLines, "framestomove=");
-                indexes = FindIndexes(data, "framestomove=");
-                thisData.framesToMove = ParseFloat(indexes, data);
-
-                data = GetData(allLines, "rotatedegreespersecond=");
-                indexes = FindIndexes(data, "rotatedegreespersecond=");
-                thisData.rotateDegreesPerSecond = ParseFloat(indexes, data);
-
-                data = GetData(allLines, "animstates=");
-                indexes = FindIndexes(data, "animstates=");
-                tempStrings = GetInputSubstring(indexes, data).Split(",");
+                tempStrings = GetInputSubstring(allLines, "animstates=").Split(",");
                 thisData.animStates = new TextureAnimator.AnimationState[tempStrings.Length];
                 for (i = 0; i < tempStrings.Length; i++)
                 {
                     thisData.animStates[i] = gameMaster.playerOrbAnimStates[tempStrings[i]];
                 }
 
-                data = GetData(allLines, "startanimframe=");
-                indexes = FindIndexes(data, "startanimframe=");
-                thisData.startAnimFrame = ParseRoundedNum(indexes, data);
+                thisData.startAnimFrame = GetParseRoundedNum(allLines, "startanimframe=");
 
-                data = GetData(allLines, "leavebehind=");
-                indexes = FindIndexes(data, "leavebehind=");
-                switch (GetInputSubstring(indexes, data))
+                switch (GetInputSubstring(allLines, "leavebehind="))
                 {
                     case "focus":
                     case "focused":
@@ -1760,32 +2547,23 @@ namespace DawnmakuEngine
                         break;
                 }
 
-                data = GetData(allLines, "followprevious=");
-                indexes = FindIndexes(data, "followprevious=");
-                thisData.followPrevious = ParseBool(indexes, data);
+                thisData.followPrevious = GetParseBool(allLines, "followprevious=");
 
                 if (thisData.followPrevious)
                 {
-                    data = GetData(allLines, "followdist=");
-                    indexes = FindIndexes(data, "followdist=");
-                    numVal = ParseFloat(indexes, data);
+                    numVal = GetParseFloat(allLines, "followdist=");
                     thisData.followDist = numVal;
                     thisData.followDistSq = numVal * numVal;
                 }
 
-
-                data = GetData(allLines, "unfocuspatternsbypower=");
-                indexes = FindIndexes(data, "unfocuspatternsbypower=");
-                tempStrings = GetInputSubstring(indexes, data).Split(":");
+                tempStrings = GetInputSubstring(allLines, "unfocuspatternsbypower=").Split(":");
                 thisData.unfocusedPatterns = new Pattern[tempStrings.Length];
                 for (i = 0; i < tempStrings.Length; i++)
                 {
                     thisData.unfocusedPatterns[i] = gameMaster.playerPatterns[tempStrings[i]];
                 }
 
-                data = GetData(allLines, "focusedpatternsbypower=");
-                indexes = FindIndexes(data, "focusedpatternsbypower=");
-                tempStrings = GetInputSubstring(indexes, data).Split(":");
+                tempStrings = GetInputSubstring(allLines, "focusedpatternsbypower=").Split(":");
                 thisData.focusedPatterns = new Pattern[tempStrings.Length];
                 for (i = 0; i < tempStrings.Length; i++)
                 {
@@ -1805,39 +2583,22 @@ namespace DawnmakuEngine
             int i = 0;
             int[] indexes = { 0, 0 };
             string[] tempStrings, allLines = File.ReadAllLines(file);
-            string data;
 
             try
             {
-                data = GetData(allLines, "bombname=");
-                indexes = FindIndexes(data, "bombname=");
-                tempStrings = GetInputSubstring(indexes, data).Replace('_', ' ').Split(",");
+                tempStrings = GetInputSubstring(allLines, "bombname=").Replace('_', ' ').Split(",");
                 thisData.bombName = new string[tempStrings.Length];
                 for (i = 0; i < tempStrings.Length; i++)
                 {
                     thisData.bombName[i] = tempStrings[i];
                 }
 
-                data = GetData(allLines, "movespeed=");
-                indexes = FindIndexes(data, "movespeed=");
-                thisData.moveSpeed = ParseFloat(indexes, data);
+                thisData.moveSpeed = GetParseFloat(allLines, "movespeed=");
+                thisData.focusModifier = GetParseFloat(allLines, "focusspeedpercent=");
+                thisData.colliderSize = GetParseFloat(allLines, "collidersize=");
+                thisData.colliderOffset = GetParseVector2(allLines, "collideroffset=");
 
-                data = GetData(allLines, "focusspeedpercent=");
-                indexes = FindIndexes(data, "focusspeedpercent=");
-                thisData.focusModifier = ParseFloat(indexes, data);
-
-                data = GetData(allLines, "collidersize=");
-                indexes = FindIndexes(data, "collidersize=");
-                thisData.colliderSize = ParseFloat(indexes, data);
-
-                data = GetData(allLines, "collideroffset=");
-                indexes = FindIndexes(data, "collideroffset=");
-                thisData.colliderOffset = ParseVector2(indexes, data);
-
-
-                data = GetData(allLines, "orbs=");
-                indexes = FindIndexes(data, "orbs=");
-                tempStrings = GetInputSubstring(indexes, data).Split(",");
+                tempStrings = GetInputSubstring(allLines, "orbs=").Split(",");
                 thisData.orbData = new PlayerOrbData[tempStrings.Length];
                 for (i = 0; i < tempStrings.Length; i++)
                 {
@@ -1858,31 +2619,24 @@ namespace DawnmakuEngine
             int i = 0;
             int[] indexes = { 0, 0 };
             string[] tempStrings, allLines = File.ReadAllLines(file);
-            string data;
 
             try
             {
-                data = GetData(allLines, "name=");
-                indexes = FindIndexes(data, "name=");
-                tempStrings = GetInputSubstring(indexes, data).Replace('_', ' ').Split(",");
+                tempStrings = GetInputSubstring(allLines, "name=").Replace('_', ' ').Split(",");
                 thisData.name = new string[tempStrings.Length];
                 for (i = 0; i < tempStrings.Length; i++)
                 {
                     thisData.name[i] = tempStrings[i];
                 }
 
-                data = GetData(allLines, "desc=");
-                indexes = FindIndexes(data, "desc=");
-                tempStrings = GetInputSubstring(indexes, data).Replace('_', ' ').Split(",");
+                tempStrings = GetInputSubstring(allLines, "desc=").Replace('_', ' ').Split(",");
                 thisData.desc = new string[tempStrings.Length];
                 for (i = 0; i < tempStrings.Length; i++)
                 {
                     thisData.desc[i] = tempStrings[i];
                 }
 
-                data = GetData(allLines, "shotdata=");
-                indexes = FindIndexes(data, "shotdata=");
-                tempStrings = GetInputSubstring(indexes, data).Split(",");
+                tempStrings = GetInputSubstring(allLines, "shotdata=").Split(",");
                 thisData.shotData = new PlayerShotData[tempStrings.Length];
                 for (i = 0; i < tempStrings.Length; i++)
                 {
@@ -1902,90 +2656,56 @@ namespace DawnmakuEngine
             int i = 0;
             int[] indexes = { 0, 0 };
             string[] tempStrings, allLines = File.ReadAllLines(file);
-            string data;
             AudioData audioVal;
 
             try
             {
-                data = GetData(allLines, "charactershader=");
-                thisData.charShader = gameMaster.shaders[GetInputSubstring(FindIndexes(data, "charactershader="), data)];
+                thisData.charShader = gameMaster.shaders[GetInputSubstring(allLines, "charactershader=")];
+                thisData.hitboxShader = gameMaster.shaders[GetInputSubstring(allLines, "hitboxshader=")];
+                thisData.focusEffectShader = gameMaster.shaders[GetInputSubstring(allLines, "focuseffectshader=")];
 
-                data = GetData(allLines, "hitboxshader=");
-                thisData.hitboxShader = gameMaster.shaders[GetInputSubstring(FindIndexes(data, "hitboxshader="), data)];
+                thisData.name = GetInputSubstring(allLines, "name=").Replace('_', ' ');
+                thisData.jpName = GetInputSubstring(allLines, "jpname=").Replace('_', ' ');
 
-                data = GetData(allLines, "focuseffectshader=");
-                thisData.focusEffectShader = gameMaster.shaders[GetInputSubstring(FindIndexes(data, "focuseffectshader="), data)];
+                thisData.moveSpeed = GetParseFloat(allLines, "movespeed=");
+                thisData.focusModifier = GetParseFloat(allLines, "focusspeedpercent=");
+                thisData.colliderSize = GetParseFloat(allLines, "collidersize=") / 2;
+                thisData.colliderOffset = GetParseVector2(allLines, "collideroffset=");
 
-                data = GetData(allLines, "name=");
-                indexes = FindIndexes(data, "name=");
-                thisData.name = GetInputSubstring(indexes, data).Replace('_', ' ');
-                data = GetData(allLines, "jpname=");
-                indexes = FindIndexes(data, "jpname=");
-                thisData.jpName = GetInputSubstring(indexes, data).Replace('_', ' ');
-
-                data = GetData(allLines, "movespeed=");
-                indexes = FindIndexes(data, "movespeed=");
-                thisData.moveSpeed = ParseFloat(indexes, data);
-
-                data = GetData(allLines, "focusspeedpercent=");
-                indexes = FindIndexes(data, "focusspeedpercent=");
-                thisData.focusModifier = ParseFloat(indexes, data);
-
-                data = GetData(allLines, "collidersize=");
-                indexes = FindIndexes(data, "collidersize=");
-                thisData.colliderSize = ParseFloat(indexes, data) / 2;
-
-                data = GetData(allLines, "collideroffset=");
-                indexes = FindIndexes(data, "collideroffset=");
-                thisData.colliderOffset = ParseVector2(indexes, data);
-
-                data = GetData(allLines, "hitsound=");
-                indexes = FindIndexes(data, "hitsound=");
-                if (gameMaster.sfx.TryGetValue(GetInputSubstring(indexes, data), out audioVal))
+                if (gameMaster.sfx.TryGetValue(GetInputSubstring(allLines, "hitsound="), out audioVal))
                     thisData.hitSound = audioVal;
 
-                data = GetData(allLines, "focussound=");
-                indexes = FindIndexes(data, "focussound=");
-                if (gameMaster.sfx.TryGetValue(GetInputSubstring(indexes, data), out audioVal))
+                if (gameMaster.sfx.TryGetValue(GetInputSubstring(allLines, "focussound="), out audioVal))
                     thisData.focusSound = audioVal;
 
-                data = GetData(allLines, "grazesound=");
-                indexes = FindIndexes(data, "grazesound=");
-                if (gameMaster.sfx.TryGetValue(GetInputSubstring(indexes, data), out audioVal))
+                if (gameMaster.sfx.TryGetValue(GetInputSubstring(allLines, "grazesound="), out audioVal))
                     thisData.grazeSound = audioVal;
 
-                data = GetData(allLines, "shottypes=");
-                indexes = FindIndexes(data, "shottypes=");
-                tempStrings = GetInputSubstring(indexes, data).Split(",");
+                tempStrings = GetInputSubstring(allLines, "shottypes=").Split(",");
                 thisData.types = new PlayerTypeData[tempStrings.Length];
                 for (i = 0; i < tempStrings.Length; i++)
                 {
                     thisData.types[i] = gameMaster.playerTypes[tempStrings[i]];
+                    for (int k = 0; k < thisData.types[i].shotData.Length; k++)
+                    {
+                        if (thisData.types[i].shotData[k].moveSpeed == -1)
+                            thisData.types[i].shotData[k].moveSpeed = thisData.moveSpeed;
+                        if (thisData.types[i].shotData[k].focusModifier == -1)
+                            thisData.types[i].shotData[k].focusModifier = thisData.focusModifier;
+                    }
                 }
 
-                data = GetData(allLines, "animstates=");
-                indexes = FindIndexes(data, "animstates=");
-                tempStrings = GetInputSubstring(indexes, data).Split(",");
+                tempStrings = GetInputSubstring(allLines, "animstates=").Split(",");
                 thisData.animStates = new TextureAnimator.AnimationState[tempStrings.Length];
                 for (i = 0; i < tempStrings.Length; i++)
                 {
                     thisData.animStates[i] = gameMaster.playerAnimStates[tempStrings[i]];
                 }
 
-                data = GetData(allLines, "hitboxanim=");
-                indexes = FindIndexes(data, "hitboxanim=");
-                thisData.hitboxAnim = gameMaster.playerEffectAnimStates[GetInputSubstring(indexes, data)];
-
-                data = GetData(allLines, "hitboxpixelinset=");
-                indexes = FindIndexes(data, "hitboxpixelinset=");
-                thisData.hitboxInsetAmount = ParseFloat(indexes, data) * 2;
-
-                data = GetData(allLines, "focuseffectanim=");
-                indexes = FindIndexes(data, "focuseffectanim=");
-                thisData.focusEffectAnim = gameMaster.playerEffectAnimStates[GetInputSubstring(indexes, data)];
-                data = GetData(allLines, "focuseffectrotspeed=");
-                indexes = FindIndexes(data, "focuseffectrotspeed=");
-                thisData.focusEffectRotSpeed = ParseFloat(indexes, data);
+                thisData.hitboxAnim = gameMaster.playerEffectAnimStates[GetInputSubstring(allLines, "hitboxanim=")];
+                thisData.hitboxInsetAmount = GetParseFloat(allLines, "hitboxpixelinset=") * 2;
+                thisData.focusEffectAnim = gameMaster.playerEffectAnimStates[GetInputSubstring(allLines, "focuseffectanim=")];
+                thisData.focusEffectRotSpeed = GetParseFloat(allLines, "focuseffectrotspeed=");
             }
             catch (Exception e)
             {
@@ -1993,6 +2713,40 @@ namespace DawnmakuEngine
             }
 
             return thisData;
+        }
+        #endregion
+
+        #region Enemies
+        public Bezier ReadBezierData(string file)
+        {
+            Bezier thisBezier = new Bezier();
+            float numVal;
+            ushort shortVal;
+            Vector2 vec2Val;
+            string[] tempStrings, allLines = File.ReadAllLines(file);
+
+            try
+            {
+                thisBezier.scale = GetParseRoundedNum(allLines, "scale=");
+                thisBezier.AutoSetPoints = GetParseBool(allLines, "autosetpoints=");
+
+                tempStrings = GetInputSubstring(allLines, "pointslist=", 0, true, "EndOfFile").Split(':', StringSplitOptions.RemoveEmptyEntries);
+                thisBezier.points = new List<Bezier.Point>();
+                for (int i = 0; i < tempStrings.Length; i++)
+                {
+                    vec2Val = GetParseVector2(tempStrings[i], "pos=");
+                    numVal = GetParseFloat(tempStrings[i], "time=");
+                    shortVal = (ushort)GetParseRoundedNum(tempStrings[i], "waittime=");
+
+                    thisBezier.points.Add(new Bezier.Point(vec2Val, numVal, shortVal));
+                }
+            }
+            catch (Exception e)
+            {
+                GameMaster.LogErrorMessage("There was an error loading this bezier data!", e.Message);
+            }
+
+            return thisBezier;
         }
 
         public EnemyData ReadEnemyData(string file)
@@ -2007,45 +2761,22 @@ namespace DawnmakuEngine
             {
                 thisData.enemyName = GetFileNameOnly(file);
 
-                data = GetData(allLines, "shader=");
-                thisData.shader = gameMaster.shaders[GetInputSubstring(FindIndexes(data, "shader="), data)];
+                thisData.shader = gameMaster.shaders[GetInputSubstring(allLines, "shader=")];
+                thisData.health = GetParseRoundedNum(allLines, "health=");
+                thisData.invTime = GetParseRoundedNum(allLines, "iframes=");
+                thisData.deathScoreValue = GetParseRoundedNum(allLines, "deathscore=");
+                thisData.colliderSize = GetParseFloat(allLines, "collidersize=");
+                thisData.colliderOffset = GetParseVector2(allLines, "collideroffset=");
+                thisData.movementCurve = gameMaster.enemyMovementPaths[GetInputSubstring(allLines, "movementcurve=")];
 
-                data = GetData(allLines, "health=");
-                indexes = FindIndexes(data, "health=");
-                thisData.health = ParseRoundedNum(indexes, data);
-
-                data = GetData(allLines, "iframes=");
-                indexes = FindIndexes(data, "iframes=");
-                thisData.invTime = ParseRoundedNum(indexes, data);
-
-                data = GetData(allLines, "deathscore=");
-                indexes = FindIndexes(data, "deathscore=");
-                thisData.deathScoreValue = ParseRoundedNum(indexes, data);
-
-                data = GetData(allLines, "collidersize=");
-                indexes = FindIndexes(data, "collidersize=");
-                thisData.colliderSize = ParseFloat(indexes, data);
-
-                data = GetData(allLines, "collideroffset=");
-                indexes = FindIndexes(data, "collideroffset=");
-                thisData.colliderOffset = ParseVector2(indexes, data);
-
-                data = GetData(allLines, "movementcurve=");
-                indexes = FindIndexes(data, "movementcurve=");
-                thisData.movementCurve = gameMaster.enemyMovementPaths[GetInputSubstring(indexes, data)];
-
-                data = GetData(allLines, "animations=");
-                indexes = FindIndexes(data, "animations=");
-                tempStrings = GetInputSubstring(indexes, data).Split(',', StringSplitOptions.RemoveEmptyEntries);
+                tempStrings = GetInputSubstring(allLines, "animations=").Split(',', StringSplitOptions.RemoveEmptyEntries);
                 thisData.animations = new TextureAnimator.AnimationState[tempStrings.Length];
                 for (i = 0; i < tempStrings.Length; i++)
                 {
                     thisData.animations[i] = gameMaster.enemyAnimStates[tempStrings[i]];
                 }
 
-                data = GetData(allLines, "patternsbydifficulty=", 0, true, "end");
-                indexes = FindIndexes(data, "patternsbydifficulty=", 0, "end");
-                tempStrings = GetInputSubstring(indexes[0], data).Split(':', StringSplitOptions.RemoveEmptyEntries);
+                tempStrings = GetInputSubstring(allLines, "patternsbydifficulty=", 0, true, "end").Split(':', StringSplitOptions.RemoveEmptyEntries);
                 thisData.patternsByDifficulty = new EnemyData.Difficulty[tempStrings.Length];
 
                 for (int p = 0; p < tempStrings.Length; p++)
@@ -2083,16 +2814,12 @@ namespace DawnmakuEngine
             string patternBase = null,
                 data;
 
-            /*data = File.ReadAllText(file);
-            data = SimplifyText(data);*/
-
             try
             {
                 data = GetData(allLines, "patternbase=");
                 if (data.Contains("patternbase="))
                 {
-                    indexes = FindIndexes(data, "patternbase=");
-                    patternBase = GetInputSubstring(indexes, data);
+                    patternBase = GetInputSubstring(data, "patternbase=");
                     finalPattern = patternDic[patternBase].CopyPattern();
                 }
 
@@ -2440,190 +3167,90 @@ namespace DawnmakuEngine
 
             return finalPattern;
         }
+        #endregion
 
+        #region Game Settings
         public GameSettings ReadGameSettings(string file)
         {
             GameSettings thisData = new GameSettings();
             int[] indexes = { 0, 0 };
             string[] substrings, tempSubstrings, allLines = File.ReadAllLines(file);
-            string data, key;
+            string key;
             int i, value;
             GameMaster.RenderLayer layerSettings;
 
             try
             {
-                data = GetData(allLines, "runindebugmode=");
-                indexes = FindIndexes(data, "runindebugmode=");
-                thisData.runInDebugMode = ParseBool(indexes, data);
-                data = GetData(allLines, "logallfontchars=");
-                indexes = FindIndexes(data, "logallfontchars=");
-                thisData.logAllFontChars = ParseBool(indexes, data);
-                data = GetData(allLines, "pressitotoggleinvincible=");
-                indexes = FindIndexes(data, "pressitotoggleinvincible=");
-                thisData.canToggleInvincible = ParseBool(indexes, data);
-                data = GetData(allLines, "logtimers=");
-                indexes = FindIndexes(data, "logtimers=");
-                thisData.logTimers = ParseBool(indexes, data);
+                thisData.runInDebugMode = GetParseBool(allLines, "runindebugmode=");
+                thisData.logAllFontChars = GetParseBool(allLines, "logallfontchars=");
+                thisData.canToggleInvincible = GetParseBool(allLines, "pressitotoggleinvincible=");
+                thisData.logTimers = GetParseBool(allLines, "logtimers=");
+                thisData.maxPower = GetParseRoundedNum(allLines, "maxpower=");
+                thisData.powerLostOnDeath = GetParseRoundedNum(allLines, "powerlostondeath=");
+                thisData.powerTotalDroppedOnDeath = GetParseRoundedNum(allLines, "powertotaldroppedondeath=");
 
-                data = GetData(allLines, "maxpower=");
-                indexes = FindIndexes(data, "maxpower=");
-                thisData.maxPower = ParseRoundedNum(indexes, data);
-
-                data = GetData(allLines, "powerlostondeath=");
-                indexes = FindIndexes(data, "powerlostondeath=");
-                thisData.powerLostOnDeath = ParseRoundedNum(indexes, data);
-
-                data = GetData(allLines, "powertotaldroppedondeath=");
-                indexes = FindIndexes(data, "powertotaldroppedondeath=");
-                thisData.powerTotalDroppedOnDeath = ParseRoundedNum(indexes, data);
-
-                data = GetData(allLines, "powerlevelsplits=");
-                indexes = FindIndexes(data, "powerlevelsplits=");
-                substrings = GetInputSubstring(indexes, data).Split(',', StringSplitOptions.RemoveEmptyEntries);
+                substrings = GetInputSubstring(allLines, "powerlevelsplits=").Split(',', StringSplitOptions.RemoveEmptyEntries);
                 thisData.powerLevelSplits = new int[substrings.Length];
                 thisData.maxPowerLevel = substrings.Length;
                 for (i = 0; i < substrings.Length; i++)
                     thisData.powerLevelSplits[i] = ParseRoundedNum(substrings[i]);
 
-                data = GetData(allLines, "fullpowerforpoc=");
-                indexes = FindIndexes(data, "fullpowerforpoc=");
-                thisData.fullPowerPOC = ParseBool(indexes, data);
+                thisData.fullPowerPOC = GetParseBool(allLines, "fullpowerforpoc=");
+                thisData.shiftForPOC = GetParseBool(allLines, "shiftattoptocollectitems=");
+                thisData.playerBoundsX = GetParseVector2(allLines, "playerboundsx=");
+                thisData.playerBoundsY = GetParseVector2(allLines, "playerboundsy=");
+                thisData.grazeDistance = GetParseFloat(allLines, "grazedistance=");
+                thisData.bulletBoundsX = GetParseVector2(allLines, "bulletboundsx=");
+                thisData.bulletBoundsY = GetParseVector2(allLines, "bulletboundsy=");
+                thisData.enemyBoundsX = GetParseVector2(allLines, "enemyboundsx=");
+                thisData.enemyBoundsY = GetParseVector2(allLines, "enemyboundsy=");
+                thisData.maxItemCount = (ushort)GetParseRoundedNum(allLines, "maxitemcount=");
+                thisData.pocHeight = GetParseRoundedNum(allLines, "pointofcollectionheight=");
+                thisData.itemDisableHeight = GetParseRoundedNum(allLines, "itemdisableheight=");
+                thisData.itemRandXRange = GetParseVector2(allLines, "itemrandxvelrange=");
+                thisData.itemRandYRange = GetParseVector2(allLines, "itemrandyvelrange=");
+                thisData.itemMaxFallSpeed = GetParseFloat(allLines, "itemmaxfallspeed=");
+                thisData.itemGravAccel = GetParseFloat(allLines, "itemgravaccel=");
+                thisData.itemXDecel = GetParseFloat(allLines, "itemxdecel=");
+                thisData.itemMagnetDist = GetParseFloat(allLines, "itemmagnetdist=");
+                thisData.itemMagnetSpeed = GetParseFloat(allLines, "itemmagnetspeed=");
+                thisData.itemDrawSpeed = GetParseFloat(allLines, "itemdrawspeed=");
+                thisData.itemCollectDist = GetParseFloat(allLines, "itemcollectdist=");
 
-                data = GetData(allLines, "shiftattoptocollectitems=");
-                indexes = FindIndexes(data, "shiftattoptocollectitems=");
-                thisData.shiftForPOC = ParseBool(indexes, data);
+                thisData.generalTextShader = gameMaster.shaders[GetInputSubstring(allLines, "generaltextshader=")];
+                thisData.dialogueTextShader = gameMaster.shaders[GetInputSubstring(allLines, "dialoguetextshader=")];
 
-                data = GetData(allLines, "playerboundsx=");
-                indexes = FindIndexes(data, "playerboundsx=");
-                thisData.playerBoundsX = ParseVector2(indexes, data);
-
-                data = GetData(allLines, "playerboundsy=");
-                indexes = FindIndexes(data, "playerboundsy=");
-                thisData.playerBoundsY = ParseVector2(indexes, data);
-
-                data = GetData(allLines, "grazedistance=");
-                indexes = FindIndexes(data, "grazedistance=");
-                thisData.grazeDistance = ParseFloat(indexes, data);
-
-
-                data = GetData(allLines, "bulletboundsx=");
-                indexes = FindIndexes(data, "bulletboundsx=");
-                thisData.bulletBoundsX = ParseVector2(indexes, data);
-
-                data = GetData(allLines, "bulletboundsy=");
-                indexes = FindIndexes(data, "bulletboundsy=");
-                thisData.bulletBoundsY = ParseVector2(indexes, data);
-
-
-                data = GetData(allLines, "enemyboundsx=");
-                indexes = FindIndexes(data, "enemyboundsx=");
-                thisData.enemyBoundsX = ParseVector2(indexes, data);
-
-                data = GetData(allLines, "enemyboundsy=");
-                indexes = FindIndexes(data, "enemyboundsy=");
-                thisData.enemyBoundsY = ParseVector2(indexes, data);
-
-
-                data = GetData(allLines, "maxitemcount=");
-                indexes = FindIndexes(data, "maxitemcount=");
-                thisData.maxItemCount = (ushort)ParseRoundedNum(indexes, data);
-
-                data = GetData(allLines, "pointofcollectionheight=");
-                indexes = FindIndexes(data, "pointofcollectionheight=");
-                thisData.pocHeight = ParseRoundedNum(indexes, data);
-
-                data = GetData(allLines, "itemdisableheight=");
-                indexes = FindIndexes(data, "itemdisableheight=");
-                thisData.itemDisableHeight = ParseRoundedNum(indexes, data);
-
-
-                data = GetData(allLines, "itemrandxvelrange=");
-                indexes = FindIndexes(data, "itemrandxvelrange=");
-                thisData.itemRandXRange = ParseVector2(indexes, data);
-
-                data = GetData(allLines, "itemrandyvelrange=");
-                indexes = FindIndexes(data, "itemrandyvelrange=");
-                thisData.itemRandYRange = ParseVector2(indexes, data);
-
-                data = GetData(allLines, "itemmaxfallspeed=");
-                indexes = FindIndexes(data, "itemmaxfallspeed=");
-                thisData.itemMaxFallSpeed = ParseFloat(indexes, data);
-
-                data = GetData(allLines, "itemgravaccel=");
-                indexes = FindIndexes(data, "itemgravaccel=");
-                thisData.itemGravAccel = ParseFloat(indexes, data);
-
-                data = GetData(allLines, "itemxdecel=");
-                indexes = FindIndexes(data, "itemxdecel=");
-                thisData.itemXDecel = ParseFloat(indexes, data);
-
-                data = GetData(allLines, "itemmagnetdist=");
-                indexes = FindIndexes(data, "itemmagnetdist=");
-                thisData.itemMagnetDist = ParseFloat(indexes, data);
-
-                data = GetData(allLines, "itemmagnetspeed=");
-                indexes = FindIndexes(data, "itemmagnetspeed=");
-                thisData.itemMagnetSpeed = ParseFloat(indexes, data);
-
-                data = GetData(allLines, "itemdrawspeed=");
-                indexes = FindIndexes(data, "itemdrawspeed=");
-                thisData.itemDrawSpeed = ParseFloat(indexes, data);
-
-                data = GetData(allLines, "itemcollectdist=");
-                indexes = FindIndexes(data, "itemcollectdist=");
-                thisData.itemCollectDist = ParseFloat(indexes, data);
-
-
-                data = GetData(allLines, "generaltextshader=");
-                thisData.generalTextShader = gameMaster.shaders[GetInputSubstring(FindIndexes(data, "generaltextshader="), data)];
-                data = GetData(allLines, "dialoguetextshader=");
-                thisData.dialogueTextShader = gameMaster.shaders[GetInputSubstring(FindIndexes(data, "dialoguetextshader="), data)];
-
-
-                data = GetData(allLines, "mainstages=");
-                indexes = FindIndexes(data, "mainstages=");
-                substrings = GetInputSubstring(indexes, data).Split(',', StringSplitOptions.RemoveEmptyEntries);
+                substrings = GetInputSubstring(allLines, "mainstages=").Split(',', StringSplitOptions.RemoveEmptyEntries);
                 thisData.mainStageFolderNames = new string[substrings.Length];
                 for (i = 0; i < substrings.Length; i++)
                     thisData.mainStageFolderNames[i] = substrings[i];
 
-                data = GetData(allLines, "exstages=");
-                indexes = FindIndexes(data, "exstages=");
-                substrings = GetInputSubstring(indexes, data).Split(',', StringSplitOptions.RemoveEmptyEntries);
+                substrings = GetInputSubstring(allLines, "exstages=").Split(',', StringSplitOptions.RemoveEmptyEntries);
                 thisData.exStageFolderNames = new string[substrings.Length];
                 for (i = 0; i < substrings.Length; i++)
                     thisData.exStageFolderNames[i] = substrings[i];
 
-                data = GetData(allLines, "languages=");
-                indexes = FindIndexes(data, "languages=");
-                substrings = GetInputSubstring(indexes, data).Split(',', StringSplitOptions.RemoveEmptyEntries);
+                substrings = GetInputSubstring(allLines, "languages=").Split(',', StringSplitOptions.RemoveEmptyEntries);
                 thisData.languages = new string[substrings.Length];
                 for (i = 0; i < substrings.Length; i++)
                     thisData.languages[i] = substrings[i];
 
-
-                data = GetData(allLines, "renderlayerindexes=");
-                indexes = FindIndexes(data, "renderlayerindexes=");
-                substrings = GetInputSubstring(indexes, data).Split(':', StringSplitOptions.RemoveEmptyEntries);
+                substrings = GetInputSubstring(allLines, "renderlayerindexes=").Split(':', StringSplitOptions.RemoveEmptyEntries);
                 for (i = 0; i < substrings.Length; i++)
                 {
                     tempSubstrings = substrings[i].Split(',', StringSplitOptions.RemoveEmptyEntries);
-                    indexes = FindIndexes(tempSubstrings[0], "layername=", 0, ",");
-                    key = GetInputSubstring(indexes, tempSubstrings[0]);
-                    indexes = FindIndexes(tempSubstrings[1], "index=", 0, ",");
-                    value = ParseRoundedNum(indexes, tempSubstrings[1]);
+                    key = GetInputSubstring(tempSubstrings[0], "layername=", 0, true, ",");
+                    value = GetParseRoundedNum(tempSubstrings[1], "index=", true, ",");
                     thisData.renderLayers.Add(key, value);
                 }
 
 
-                data = GetData(allLines, "renderlayersettings=", 0, true, "endOfFile");
-                indexes = FindIndexes(data, "renderlayersettings=", 0, "endOfFile");
-                substrings = GetInputSubstring(indexes, data).Split(':', StringSplitOptions.RemoveEmptyEntries);
+                substrings = GetInputSubstring(allLines, "renderlayersettings=", 0, true, "EndOfFile").Split(':', StringSplitOptions.RemoveEmptyEntries);
                 for (i = 0; i < substrings.Length; i++)
                 {
                     layerSettings = new GameMaster.RenderLayer();
-                    indexes = FindIndexes(substrings[i], "hasdepth=");
-                    layerSettings.hasDepth = ParseBool(indexes, substrings[i]);
+                    layerSettings.hasDepth = GetParseBool(substrings[i], "hasdepth=");
+                    layerSettings.hasLight = GetParseBool(substrings[i], "haslighting=");
 
                     thisData.renderLayerSettings.Add(layerSettings);
                 }
@@ -2635,7 +3262,9 @@ namespace DawnmakuEngine
 
             return thisData;
         }
+        #endregion
 
+        #region Items
         public ItemData ReadItemData(string file)
         {
             ItemData thisData = new ItemData();
@@ -2707,21 +3336,11 @@ namespace DawnmakuEngine
                         thisData.collectDist = ParseFloat(indexes, data);
                 }
 
-                data = GetData(allLines, "shader=");
-                indexes = FindIndexes(data, "shader=");
-                thisData.shader = gameMaster.shaders[GetInputSubstring(indexes, data)];
+                thisData.shader = gameMaster.shaders[GetInputSubstring(allLines, "shader=")];
+                thisData.canBePOC = GetParseBool(allLines, "canbeautocollectedattop=");
+                thisData.autoDraw = GetParseBool(allLines, "autodraw=");
 
-                data = GetData(allLines, "canbeautocollectedattop=");
-                indexes = FindIndexes(data, "canbeautocollectedattop=");
-                thisData.canBePOC = ParseBool(indexes, data);
-
-                data = GetData(allLines, "autodraw=");
-                indexes = FindIndexes(data, "autodraw=");
-                thisData.autoDraw = ParseBool(indexes, data);
-
-                data = GetData(allLines, "animstates=");
-                indexes = FindIndexes(data, "animstates=");
-                tempStrings = GetInputSubstring(indexes, data).Split(',', StringSplitOptions.RemoveEmptyEntries);
+                tempStrings = GetInputSubstring(allLines, "animstates=").Split(',', StringSplitOptions.RemoveEmptyEntries);
                 thisData.animations = new TextureAnimator.AnimationState[tempStrings.Length];
                 for (i = 0; i < tempStrings.Length; i++)
                 {
@@ -2736,8 +3355,9 @@ namespace DawnmakuEngine
             thisData.collectDistSqr = thisData.collectDist * thisData.collectDist;
             return thisData;
         }
+        #endregion
 
-
+        #region Models
         public KeyValuePair<string, TexturedModel>[] ReadModelData(string file, Dictionary<string, Mesh> meshDic, Dictionary<string, Texture> texDic)
         {
             List<KeyValuePair<string, TexturedModel>> modelLinks = new List<KeyValuePair<string, TexturedModel>>();
@@ -3154,53 +3774,137 @@ namespace DawnmakuEngine
 
             return finalMesh;
         }
+        #endregion
 
+        #region Stages
         public BackgroundSection ReadBackgroundSectionData(string file)
         {
             BackgroundSection thisData = new BackgroundSection();
-            string[] tempStrings, allLines = File.ReadAllLines(file);
+            string[] tempStrings, subTempStrings, allLines = File.ReadAllLines(file);
             int[] indexes;
-            int i, lineOffset = 0;
-            string data;
+            int i, c, p, lineOffset = 0;
+            string data, elementType;
             TexturedModel[] modelArray;
+            List<Element> tempElementList;
+
+            Type tempType;
+            ConstructorInfo[] tempConInf;
+            ParameterInfo[] tempParamInf;
+            bool constructorIsPossible;
+            object[] tempParamVals = null;
 
             try
             {
-                data = GetData(allLines, "sectionlength=");
-                indexes = FindIndexes(data, "sectionlength=");
-                thisData.secLength = ParseFloat(indexes, data);
+                thisData.secLength = GetParseFloat(allLines, "sectionlength=");
 
-                data = GetData(allLines, "offset=");
-                indexes = FindIndexes(data, "offset=");
-                thisData.offset = ParseVector3(indexes, data);
+                thisData.offset = GetParseVector3(allLines, "offset=");
 
                 while(lineOffset < allLines.Length - 1)
                 {
-                    data = GetData(allLines, "object=", ref lineOffset, true, ":");
+                    data = GetData(allLines, "object=", ref lineOffset, false, ":");
                     indexes = FindIndexes(data, "object=");
-                    tempStrings = GetInputSubstring(indexes, data).Split(',', StringSplitOptions.RemoveEmptyEntries);
+                    tempStrings = GetInputSubstring(indexes, data, true).Split(',', StringSplitOptions.RemoveEmptyEntries);
                     modelArray = new TexturedModel[tempStrings.Length];
                     for (i = 0; i < tempStrings.Length; i++)
-                        modelArray[i] = gameMaster.backgroundModels[tempStrings[i]];
+                    {
+                        if (gameMaster.backgroundModels.ContainsKey(tempStrings[i]))
+                            modelArray[i] = gameMaster.backgroundModels[tempStrings[i]];
+                        else
+                            modelArray[i] = null;
+                    }
                     thisData.models.Add(modelArray);
 
-                    indexes = FindIndexes(data, "pos=");
-                    if (indexes[0] != data.Length - 1 || indexes[1] != data.Length)
-                        thisData.modelPos.Add(ParseVector3(indexes, data));
+                    if (SimplifyText(data).Contains("pos="))
+                        thisData.modelPos.Add(GetParseVector3(data, "pos="));
                     else
                         thisData.modelPos.Add(Vector3.Zero);
 
-                    indexes = FindIndexes(data, "rot=");
-                    if (indexes[0] != data.Length - 1 || indexes[1] != data.Length)
-                        thisData.modelRot.Add(ParseVector3(indexes, data));
+                    if (SimplifyText(data).Contains("parentnum="))
+                        thisData.parentInds.Add(GetParseRoundedNum(data, "parentnum="));
+                    else
+                        thisData.parentInds.Add(-1);
+
+                    if (SimplifyText(data).Contains("rot="))
+                        thisData.modelRot.Add(GetParseVector3(data, "rot="));
                     else
                         thisData.modelRot.Add(Vector3.Zero);
 
-                    indexes = FindIndexes(data, "scale=");
-                    if (indexes[0] != data.Length - 1 || indexes[1] != data.Length)
-                        thisData.modelScale.Add(ParseVector3(indexes, data));
+                    if (SimplifyText(data).Contains("scale="))
+                        thisData.modelScale.Add(GetParseVector3(data, "scale="));
                     else
                         thisData.modelScale.Add(Vector3.One);
+
+                    tempElementList = new List<Element>();
+                    if(SimplifyText(data).Contains("elements="))
+                    {
+                        tempStrings = GetInputSubstring(data, "elements=", 0, false, ":").Split('/', StringSplitOptions.RemoveEmptyEntries);
+                        if (tempStrings[0][0] == '{')
+                            tempStrings[0] = tempStrings[0].Remove(0, 1);
+                        for (i = 0; i < tempStrings.Length; i++)
+                        {
+                            elementType = GetInputSubstring(new int[] { 0, tempStrings[i].IndexOf('=') }, tempStrings[i]);
+                            tempType = Type.GetType("DawnmakuEngine.Elements." + elementType,false,true);
+                            if (tempType.BaseType != typeof(Element))
+                                continue;
+                            tempConInf = tempType.GetConstructors();
+                            subTempStrings = GetInputSubstring(tempStrings[i], "=", 0, false).Split(',', StringSplitOptions.RemoveEmptyEntries);
+                            for (c  = 0; c < tempConInf.Length; c++)
+                            {
+                                constructorIsPossible = true;
+                                tempParamInf = tempConInf[c].GetParameters();
+                                if (tempParamInf.Length != subTempStrings.Length)
+                                    continue;
+                                tempParamVals = new object[tempParamInf.Length];
+                                for (p = 0; p < tempParamInf.Length; p++)
+                                {
+                                    switch(tempParamInf[p].ParameterType.ToString().ToLower().Replace("system.", ""))
+                                    {
+                                        case "byte":
+                                        case "int16":
+                                        case "int32":
+                                        case "int64":
+                                        case "uint16":
+                                        case "uint32":
+                                        case "uint64":
+                                            if (!TryParseRoundedNum(subTempStrings[p], out int tempInt))
+                                                constructorIsPossible = false;
+                                            else
+                                                tempParamVals[p] = tempInt;
+                                            break;
+                                        case "single":
+                                        case "double":
+                                        case "decimal":
+                                            if (!TryParseFloat(subTempStrings[p], out float tempFloat))
+                                                constructorIsPossible = false;
+                                            else
+                                                tempParamVals[p] = tempFloat;
+                                            break;
+                                        case "string":
+                                            tempParamVals[p] = subTempStrings[p];
+                                            break;
+                                        case "char":
+                                            tempParamVals[p] = subTempStrings[p][0];
+                                            break;
+                                        case "boolean":
+                                            if (!TryParseBool(subTempStrings[p], out bool tempBool))
+                                                constructorIsPossible = false;
+                                            else
+                                                tempParamVals[p] = tempBool;
+                                            break;
+                                    }
+                                    if (!constructorIsPossible)
+                                        break;
+                                }
+                                if(constructorIsPossible)
+                                {
+                                    tempElementList.Add((Element)tempConInf[c].Invoke(tempParamVals));
+                                    tempElementList[tempElementList.Count - 1].Disable();
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    thisData.elements.Add(tempElementList);
                 }
             }
             catch(Exception e)
@@ -3215,25 +3919,55 @@ namespace DawnmakuEngine
         {
             StageData thisData = new StageData();
             string[] tempStrings, subTempStrings, allLines = File.ReadAllLines(file);
-            int[] indexes;
             int i, f, lineOffset = 0;
-            string data;
+            string data; 
+            Vector3 tempColor;
+            StageData.AmbientLights newAmbient;
             StageData.SectionSpawns newSectionSpawn;
             StageData.CamVelocities newCamVel;
             StageData.EnemySpawn newEnemySpawn;
 
             try
             {
-                data = GetData(allLines, "stagebgm=");
-                data = GetInputSubstring(FindIndexes(data, "stagebgm="), data);
+                data = GetInputSubstring(allLines, "stagebgm=");
                 for (i = 0; i < bgmPaths.Length; i++)
                     if (SimplifyText(bgmPaths[i]).Contains(data))
                         thisData.stageTrackFile = bgmPaths[i];
-                data = GetData(allLines, "bossbgm=");
-                data = GetInputSubstring(FindIndexes(data, "bossbgm="), data);
+                data = GetInputSubstring(allLines, "bossbgm=");
                 for (i = 0; i < bgmPaths.Length; i++)
                     if (SimplifyText(bgmPaths[i]).Contains(data))
                         thisData.bossTrackFile = bgmPaths[i];
+
+
+                data = GetData(allLines, "ambientlights=", 0, true, "backgroundcamvelocities=");
+                data = data.Remove(data.Length - "backgroundcamvelocities=".Length, "backgroundcamvelocities=".Length);
+                data = data.Remove(0, "ambientlights=".Length);
+                tempStrings = data.Split(':', StringSplitOptions.RemoveEmptyEntries);
+                for (i = 0; i < tempStrings.Length; i++)
+                {
+                    newAmbient = new StageData.AmbientLights();
+
+                    data = GetInputSubstring(tempStrings[i], "colorform=");
+
+                    subTempStrings = GetInputSubstring(tempStrings[i], "colorval=").Split(',', StringSplitOptions.RemoveEmptyEntries);
+                    tempColor = new Vector3();
+                    tempColor.X = ParseFloat(subTempStrings[0]);
+                    tempColor.Y = ParseFloat(subTempStrings[1]);
+                    tempColor.Z = ParseFloat(subTempStrings[2]);
+                    newAmbient.intensity = ParseFloat(subTempStrings[3]);
+
+                    tempColor = ConvertColorToRgb(data, tempColor, false);
+
+                    newAmbient.r = tempColor.X;
+                    newAmbient.g = tempColor.Y;
+                    newAmbient.b = tempColor.Z;
+
+
+                    newAmbient.time = (uint)GetParseRoundedNum(tempStrings[i], "starttime=");
+                    newAmbient.transitionTime = GetParseFloat(tempStrings[i], "transitiontime=");
+
+                    thisData.ambientLights.Add(newAmbient);
+                }
 
                 data = GetData(allLines, "backgroundsegments=", 0, true, "enemyspawns=");
                 data = data.Remove(data.Length - "enemyspawns=".Length, "enemyspawns=".Length);
@@ -3243,16 +3977,12 @@ namespace DawnmakuEngine
                 {
                     newSectionSpawn = new StageData.SectionSpawns();
 
-                    indexes = FindIndexes(tempStrings[i], "spawndirection=");
-                    newSectionSpawn.spawnDirection = ParseVector3(indexes, tempStrings[i]);
-                    indexes = FindIndexes(tempStrings[i], "segmentcount=");
-                    newSectionSpawn.segmentCount = (byte)ParseRoundedNum(indexes, tempStrings[i]);
-                    indexes = FindIndexes(tempStrings[i], "segments=");
-                    subTempStrings = GetInputSubstring(indexes, tempStrings[i]).Split(',', StringSplitOptions.RemoveEmptyEntries);
+                    newSectionSpawn.spawnDirection = GetParseVector3(tempStrings[i], "spawndirection=");
+                    newSectionSpawn.segmentCount = (byte)GetParseRoundedNum(tempStrings[i], "segmentcount=");
+                    subTempStrings = GetInputSubstring(tempStrings[i], "segments=").Split(',', StringSplitOptions.RemoveEmptyEntries);
                     for (f = 0; f < subTempStrings.Length; f++)
                         newSectionSpawn.section.Add(gameMaster.backgroundSections[subTempStrings[f]]);
-                    indexes = FindIndexes(tempStrings[i], "time=");
-                    newSectionSpawn.time = (uint)ParseRoundedNum(indexes, tempStrings[i]);
+                    newSectionSpawn.time = (uint)GetParseRoundedNum(tempStrings[i], "time=");
 
                     thisData.secSpawns.Add(newSectionSpawn);
                 }
@@ -3265,22 +3995,14 @@ namespace DawnmakuEngine
                 {
                     newCamVel = new StageData.CamVelocities();
 
-                    indexes = FindIndexes(tempStrings[i], "vel=");
-                    newCamVel.vel = ParseVector3(indexes, tempStrings[i]);
-                    indexes = FindIndexes(tempStrings[i], "randminpos=");
-                    newCamVel.randMinPos = ParseVector3(indexes, tempStrings[i]);
-                    indexes = FindIndexes(tempStrings[i], "randmaxpos=");
-                    newCamVel.randMaxPos = ParseVector3(indexes, tempStrings[i]);
-                    indexes = FindIndexes(tempStrings[i], "randminrot=");
-                    newCamVel.randMinRot = ParseVector3(indexes, tempStrings[i]);
-                    indexes = FindIndexes(tempStrings[i], "randmaxrot=");
-                    newCamVel.randMaxRot = ParseVector3(indexes, tempStrings[i]);
-                    indexes = FindIndexes(tempStrings[i], "randomizationdelay=");
-                    newCamVel.randDelay = (uint)ParseRoundedNum(indexes, tempStrings[i]);
-                    indexes = FindIndexes(tempStrings[i], "starttime=");
-                    newCamVel.time = (uint)ParseRoundedNum(indexes, tempStrings[i]);
-                    indexes = FindIndexes(tempStrings[i], "transitiontime=");
-                    newCamVel.transitionTime = ParseFloat(indexes, tempStrings[i]);
+                    newCamVel.vel = GetParseVector3(tempStrings[i], "vel=");
+                    newCamVel.randMinPos = GetParseVector3(tempStrings[i], "randminpos=");
+                    newCamVel.randMaxPos = GetParseVector3(tempStrings[i], "randmaxpos=");
+                    newCamVel.randMinRot = GetParseVector3(tempStrings[i], "randminrot=");
+                    newCamVel.randMaxRot = GetParseVector3(tempStrings[i], "randmaxrot=");
+                    newCamVel.randDelay = (uint)GetParseRoundedNum(tempStrings[i], "randomizationdelay=");
+                    newCamVel.time = (uint)GetParseRoundedNum(tempStrings[i], "starttime=");
+                    newCamVel.transitionTime = GetParseFloat(tempStrings[i], "transitiontime=");
 
                     thisData.camVel.Add(newCamVel);
                 }
@@ -3294,33 +4016,23 @@ namespace DawnmakuEngine
                     if(thisData.enemySpawns.Count > 0 && !data.Contains("enemy="))
                         newEnemySpawn.enemy = thisData.enemySpawns[thisData.enemySpawns.Count - 1].enemy;
                     else
-                    {
-                        indexes = FindIndexes(data, "enemy=");
-                        newEnemySpawn.enemy = gameMaster.enemyData[GetInputSubstring(indexes, data)];
-                    }
+                        newEnemySpawn.enemy = gameMaster.enemyData[GetInputSubstring(data, "enemy=")];
 
                     if (thisData.enemySpawns.Count > 0 && !data.Contains("time="))
                         newEnemySpawn.time = thisData.enemySpawns[thisData.enemySpawns.Count - 1].time;
                     else
-                    {
-                        indexes = FindIndexes(data, "time=");
-                        newEnemySpawn.time = (uint)ParseRoundedNum(indexes, data);
-                    }
+                        newEnemySpawn.time = (uint)GetParseRoundedNum(data, "time=");
 
                     if (thisData.enemySpawns.Count > 0 && !data.Contains("pos="))
                         newEnemySpawn.pos = thisData.enemySpawns[thisData.enemySpawns.Count - 1].pos;
                     else
-                    {
-                        indexes = FindIndexes(data, "pos=");
-                        newEnemySpawn.pos = new Vector3(ParseVector2(indexes, data));
-                    }
+                        newEnemySpawn.pos = new Vector3(GetParseVector2(data, "pos="));
 
                     if (thisData.enemySpawns.Count > 0 && !data.Contains("items="))
                         newEnemySpawn.itemSpawns = thisData.enemySpawns[thisData.enemySpawns.Count - 1].itemSpawns;
                     else
                     {
-                        indexes = FindIndexes(data, "items=");
-                        tempStrings = GetInputSubstring(indexes, data).Split(',', StringSplitOptions.RemoveEmptyEntries);
+                        tempStrings = GetInputSubstring(data, "items=").Split(',', StringSplitOptions.RemoveEmptyEntries);
                         newEnemySpawn.itemSpawns = new ItemData[tempStrings.Length];
                         for (i = 0; i < tempStrings.Length; i++)
                             newEnemySpawn.itemSpawns[i] = gameMaster.itemData[tempStrings[i]];
@@ -3336,5 +4048,8 @@ namespace DawnmakuEngine
             }
             stageData = thisData;
         }
+        #endregion
+
+        #endregion
     }
 }

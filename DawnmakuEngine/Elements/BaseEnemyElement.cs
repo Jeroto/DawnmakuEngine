@@ -4,7 +4,7 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using DawnmakuEngine.Data;
-using OpenTK;
+using OpenTK.Mathematics;
 
 namespace DawnmakuEngine.Elements
 {

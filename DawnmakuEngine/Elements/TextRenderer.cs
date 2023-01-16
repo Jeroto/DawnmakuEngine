@@ -4,7 +4,6 @@ using System.Diagnostics;
 using DawnmakuEngine.Data;
 using OpenTK;
 using OpenTK.Graphics;
-using OpenTK.Graphics.ES10;
 using SixLabors.Fonts;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Advanced;
@@ -12,6 +11,7 @@ using SixLabors.ImageSharp.Drawing;
 using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
+using OpenTK.Mathematics;
 
 namespace DawnmakuEngine.Elements
 {
@@ -21,6 +21,7 @@ namespace DawnmakuEngine.Elements
         GameMaster gameMaster = GameMaster.gameMaster;
         MeshRenderer refRend;
         public bool uiText;
+        Vector4 color;
         float textSize;
         float wrapWidth;
         Font font;
@@ -37,6 +38,29 @@ namespace DawnmakuEngine.Elements
         List<Entity> charObjects = new List<Entity>();
         List<MeshRenderer> renderers = new List<MeshRenderer>();
 
+        /// <summary>
+        /// Forces text to have this width between characters. Only takes effect when not 0.
+        /// </summary>
+        float monospaceWidth = 0;
+
+        public Vector4 Color
+        {
+            get { return color; }
+            set
+            {
+                color = value;
+                generated = false;
+            }
+        }
+        public float MonospaceWidth
+        {
+            get { return monospaceWidth; }
+            set
+            {
+                monospaceWidth = value;
+                generated = false;
+            }
+        }
         public float TextSize
         {
             get { return textSize; }
@@ -47,7 +71,8 @@ namespace DawnmakuEngine.Elements
                     WriteFont = new Font(font, textSize);
                 /*if (textTex != null)
                     GenerateImage();*/
-                    UpdateText();
+                generated = false;
+                //UpdateText();
             }
         }
         public float WrapWidth
@@ -59,7 +84,9 @@ namespace DawnmakuEngine.Elements
 
                 /*if (textTex != null)
                     GenerateImage();*/
-                UpdateText();
+
+                generated = false;
+                //UpdateText();
             }
         }
         public Font WriteFont
@@ -70,7 +97,8 @@ namespace DawnmakuEngine.Elements
                 font = value;
                 /*if (textTex != null)
                     GenerateImage();*/
-                UpdateText();
+                generated = false;
+                //UpdateText();
             }
         }
         public string WriteFontFamilyName
@@ -78,15 +106,26 @@ namespace DawnmakuEngine.Elements
             get { return font.Family.Name; }
             set
             {
-                FontFamily family = gameMaster.fonts.Find(value);
-                if(family.IsStyleAvailable(style))
-                    font = family.CreateFont(textSize, style);
-                else
+                FontFamily family = gameMaster.fonts.Get(value);
+
+                bool foundStyle = false;
+                foreach (FontStyle fs in family.GetAvailableStyles())
+                {
+                    if (fs == style)
+                    {
+                        font = family.CreateFont(textSize, style);
+                        foundStyle = true;
+                        break;
+                    }
+                }
+
+                if (!foundStyle)
                     font = family.CreateFont(textSize);
 
                 /*if (textTex != null)
                     GenerateImage();*/
-                UpdateText();
+                generated = false;
+                //UpdateText();
             }
         }
         public FontStyle Style
@@ -98,14 +137,24 @@ namespace DawnmakuEngine.Elements
                 if(font != null)
                 {
                     FontFamily family = font.Family;
-                    if (family.IsStyleAvailable(style))
-                        font = family.CreateFont(textSize, style);
-                    else
+                    bool foundStyle = false;
+                    foreach (FontStyle fs in family.GetAvailableStyles())
+                    {
+                        if (fs == style)
+                        {
+                            font = family.CreateFont(textSize, style);
+                            foundStyle = true;
+                            break;
+                        }
+                    }
+
+                    if (!foundStyle)
                         font = family.CreateFont(textSize);
 
                     /*if (textTex != null)
                         GenerateImage();*/
-                    UpdateText();
+                    generated = false;
+                    //UpdateText();
                 }
             }
         }
@@ -118,7 +167,8 @@ namespace DawnmakuEngine.Elements
 
                 /*if (textTex != null)
                     GenerateImage();*/
-                UpdateText();
+                generated = false;
+                //UpdateText();
             }
         }
         public bool AntiAlias
@@ -130,7 +180,8 @@ namespace DawnmakuEngine.Elements
 
                 /*if (textTex != null)
                     GenerateImage();*/
-                UpdateText();
+                generated = false;
+                //UpdateText();
             }
         }
         public string Text
@@ -141,7 +192,8 @@ namespace DawnmakuEngine.Elements
                 text = value;
                 /*if (textTex != null)
                     GenerateImage();*/
-                UpdateText();
+                generated = false;
+                //UpdateText();
             }
         }
         public HorizontalAlignment HoriAlign
@@ -150,6 +202,7 @@ namespace DawnmakuEngine.Elements
             set
             {
                 horiAlign = value;
+                generated = false;
             }
         }
         public VerticalAlignment VertAlign
@@ -158,6 +211,7 @@ namespace DawnmakuEngine.Elements
             set
             {
                 vertAlign = value;
+                generated = false;
             }
         }
 
@@ -173,7 +227,7 @@ namespace DawnmakuEngine.Elements
             }
         }
 
-        void GenerateImage()
+        /*void GenerateImage()
         {
             TextGraphicsOptions finalRendOpt = new TextGraphicsOptions()
             {
@@ -220,9 +274,9 @@ namespace DawnmakuEngine.Elements
             refRend.tex = textTex;
 
             Console.WriteLine("Text rewrite time: {0}", watch.ElapsedMilliseconds);
-        }
+        }*/
 
-        void UpdateText()
+        public void UpdateText()
         {
             generated = true;
             GenerateObjects();
@@ -256,7 +310,7 @@ namespace DawnmakuEngine.Elements
                         newRenderer.LayerName = uiText ? "borderui" : "effects";
                         newRenderer.shader = currentShader;
                         newRenderer.resizeSprite = true;
-                        newRenderer.ColorByte = new Vector4(255, 255, 255, 255);
+                        newRenderer.ColorByte = color;
 
                         newCharObj.AddElement(newRenderer);
 
@@ -295,85 +349,176 @@ namespace DawnmakuEngine.Elements
                     fontCharIsIn[i] = (byte)f;
                     curCharSprite = gameMaster.fontGlyphSprites[gameMaster.fontNames[f]].sprites[gameMaster.fontCharList[gameMaster.fontNames[f]].indexes[(ushort)curChar]];
                 }
-                curCharSprite = gameMaster.playerSprites["reimu"].sprites[0];
+                //curCharSprite = gameMaster.playerSprites["reimu"].sprites[0];
                 renderers[i].mesh.SetUVs(curCharSprite.GetUVs());
                 renderers[i].tex = curCharSprite.tex;
+
+
+                //renderers[i].modelScale = textSize;
+                renderers[i].ColorByte = color;
+                renderers[i].mesh.SetUp(OpenTK.Graphics.ES30.BufferUsageHint.DynamicDraw);
             }
             return fontCharIsIn;
         }
 
         void SetCharPositions(byte[] fontCharIsIn)
         {
-            RendererOptions measureOptions;
+            TextOptions measureOptions;
 
             char curChar;
             string textSoFar = "";
             int charObjectLength = charObjects.Count, i;
-            Font currentFont;
-            GlyphInstance glyph;
+            Font currentFont = font;
+            //GlyphInstance glyph;
             FontRectangle rect;
             float width = 0, prevWidth, difference;
-
-            for (i = 0; i < charObjectLength; i++)
-            {
-                prevWidth = width;
-                curChar = text[i];
-                textSoFar += curChar;
-                if (fontCharIsIn[i] == 255)
-                {
-                    currentFont = font;
-                }
-                else
-                {
-                    currentFont = gameMaster.fonts.Find(gameMaster.fontNames[fontCharIsIn[i]]).CreateFont(font.Size);
-                }
-                measureOptions = new RendererOptions(currentFont)
-                {
-                    ApplyKerning = kerning,
-                    WrappingWidth = wrapWidth,
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    VerticalAlignment = VerticalAlignment.Center,
-                };
-                //glyph = currentFont.GetGlyph(curChar).Instance;
-                rect = TextMeasurer.Measure(curChar.ToString(), measureOptions);
-
-                width += rect.Width;
-
-                /*if (HoriAlign == HorizontalAlignment.Left)
-                {
-                    charObjects[i].LocalPosition = new Vector3(width + rect.Width, 0, 0);
-                    width += rect.Width;
-                }
-                else
-                    width += rect.Width;*/
-            }
-
-
-            float widthPerChar = width / charObjectLength,
-                startPoint = 0;
             Vector3 charObjPos;
 
-            switch (horiAlign)
+
+            measureOptions = new TextOptions(currentFont)
             {
-                case HorizontalAlignment.Center:
-                    startPoint = -width / 2;
-                    break;
-                case HorizontalAlignment.Right:
-                    startPoint = -width;
-                    break;
-                case HorizontalAlignment.Left:
-                    startPoint = 0 + widthPerChar / 2;
-                    break;
+                KerningMode = kerning ? KerningMode.Normal : KerningMode.None,
+                WrappingLength = wrapWidth,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+
+            if (monospaceWidth == 0)
+            {
+                if(kerning)
+                {
+                    //write out the first character normally
+                    curChar = text[0]; 
+                    rect = TextMeasurer.Measure(curChar.ToString(), measureOptions);
+                    charObjPos = charObjects[0].LocalPosition;
+                    charObjPos.X = rect.Width * 0.5f;
+                    charObjects[0].LocalPosition = charObjPos;
+                    width += rect.Width;
+
+                    FontRectangle rectOther, rectBoth;
+                    for (i = 1; i < charObjectLength; i++)
+                    {
+                        currentFont = font;
+
+                        if (fontCharIsIn[i] != 255)
+                            currentFont = gameMaster.fonts.Get(gameMaster.fontNames[fontCharIsIn[i]]).CreateFont(font.Size);
+
+                        measureOptions.Font = currentFont;
+
+                        curChar = text[i];
+
+                        rectOther = rect;
+                        rect = TextMeasurer.Measure(curChar.ToString(), measureOptions);
+                        rectBoth = TextMeasurer.Measure(text.Substring(i - 1, 2), measureOptions);
+
+                        difference = (rectBoth.Width - ((rect.Width * 0.6f) + (rectOther.Width * 0.6f)));
+
+                        charObjPos = charObjects[i].LocalPosition;
+                        charObjPos.X = charObjects[i - 1].LocalPosition.X + difference;
+                        charObjects[i].LocalPosition = charObjPos;
+                    }
+                    width = charObjects[charObjectLength - 1].LocalPosition.X + rect.Width * 0.5f;
+                }
+                else //No Kerning
+                {
+                    for (i = 0; i < charObjectLength; i++)
+                    {
+                        currentFont = font;
+
+                        if (fontCharIsIn[i] != 255)
+                            currentFont = gameMaster.fonts.Get(gameMaster.fontNames[fontCharIsIn[i]]).CreateFont(font.Size);
+
+                        measureOptions.Font = currentFont;
+
+                        curChar = text[i];
+
+                        rect = TextMeasurer.Measure(curChar.ToString(), measureOptions);
+
+
+                        charObjPos = charObjects[i].LocalPosition;
+                        charObjPos.X = width + rect.Width * 0.5f;
+                        charObjects[i].LocalPosition = charObjPos;
+
+                        width += rect.Width;
+                    }
+                }
+
+                switch (horiAlign)
+                {
+                    case HorizontalAlignment.Center:
+                        width *= 0.5f;
+                        for (i = 0; i < charObjectLength; i++)
+                        {
+                            charObjPos = charObjects[i].LocalPosition;
+                            charObjPos.X -= width;
+                            charObjects[i].LocalPosition = charObjPos;
+                        }
+                        break;
+                    case HorizontalAlignment.Right:
+                        for (i = 0; i < charObjectLength; i++)
+                        {
+                            charObjPos = charObjects[i].LocalPosition;
+                            charObjPos.X -= width;
+                            charObjects[i].LocalPosition = charObjPos;
+                        }
+                        break;
+                    case HorizontalAlignment.Left:
+                        break;
+                }
+
+                for (i = 0; i < charObjectLength; i++)
+                {
+                    prevWidth = width;
+                    curChar = text[i];
+                    textSoFar += curChar;
+                    //glyph = currentFont.GetGlyph(curChar).Instance;
+                    rect = TextMeasurer.Measure(curChar.ToString(), measureOptions);
+
+                    /*renderers[i].mesh.SetVertex(0, new Vector3(-rect.Width * 0.5f, rect.Height * 0.5f, 0)); //tl
+                    renderers[i].mesh.SetVertex(1, new Vector3(rect.Width * 0.5f, rect.Height * 0.5f, 0)); //tr
+                    renderers[i].mesh.SetVertex(2, new Vector3(rect.Width * 0.5f, -rect.Height * 0.5f, 0)); //br
+                    renderers[i].mesh.SetVertex(3, new Vector3(-rect.Width * 0.5f, -rect.Height * 0.5f, 0)); //bl*/
+
+                    width += rect.Width;
+
+                    /*if (HoriAlign == HorizontalAlignment.Left)
+                    {
+                        charObjects[i].LocalPosition = new Vector3(width + rect.Width, 0, 0);
+                        width += rect.Width;
+                    }
+                    else
+                        width += rect.Width;*/
+                }
             }
-
-
-            for (i = 0; i < charObjectLength; i++)
+            else // monospace
             {
-                charObjPos = charObjects[i].LocalPosition;
+                width = charObjectLength * monospaceWidth;
 
-                charObjPos.X = startPoint + widthPerChar * i;
+                float widthPerChar = width / charObjectLength,
+                    startPoint = 0;
 
-                charObjects[i].LocalPosition = charObjPos;
+                switch (horiAlign)
+                {
+                    case HorizontalAlignment.Center:
+                        startPoint = -width / 2;
+                        break;
+                    case HorizontalAlignment.Right:
+                        startPoint = -width;
+                        break;
+                    case HorizontalAlignment.Left:
+                        startPoint = 0;
+                        break;
+                }
+
+
+                for (i = 0; i < charObjectLength; i++)
+                {
+                    charObjPos = charObjects[i].LocalPosition;
+
+                    charObjPos.X = startPoint + widthPerChar * i;
+
+                    charObjects[i].LocalPosition = charObjPos;
+                }
             }
         }
 

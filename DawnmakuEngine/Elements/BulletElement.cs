@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using OpenTK;
 using DawnmakuEngine.Data;
+using OpenTK.Mathematics;
 
 namespace DawnmakuEngine.Elements
 {
@@ -618,7 +619,7 @@ namespace DawnmakuEngine.Elements
             int i;
             Entity newBullet = new Entity(stages[0].bulletColor.ToString() + " "+ stages[0].spriteType.ToString());
             newBullet.LocalPosition = position;
-            if (OpenTK.Input.Keyboard.GetState().IsKeyDown(OpenTK.Input.Key.ControlLeft))
+            if (GameMaster.window.KeyboardState.IsKeyDown(OpenTK.Windowing.GraphicsLibraryFramework.Keys.LeftControl))
                 newBullet.LocalScale = Vector3.One * 2;
             MeshRenderer renderer = new MeshRenderer();
             renderer.tex = GameMaster.gameMaster.bulletSprites[stages[0].spriteType].sprites[stages[0].bulletColor].tex;

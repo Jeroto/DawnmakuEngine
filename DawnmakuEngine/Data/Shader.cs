@@ -5,6 +5,7 @@ using System.IO;
 using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.ES30;
+using OpenTK.Mathematics;
 
 namespace DawnmakuEngine.Data
 {
@@ -72,7 +73,17 @@ namespace DawnmakuEngine.Data
             int location = GL.GetUniformLocation(handle, name);
             GL.UniformMatrix4(location, true, ref matr);
         }
+        public void SetMatrix3(string name, Matrix3 matr)
+        {
+            int location = GL.GetUniformLocation(handle, name);
+            GL.UniformMatrix3(location, true, ref matr);
+        }
         public void SetInt(string name, int value)
+        {
+            int location = GL.GetUniformLocation(handle, name);
+            GL.Uniform1(location, value);
+        }
+        public void SetFloat(string name, float value)
         {
             int location = GL.GetUniformLocation(handle, name);
             GL.Uniform1(location, value);
@@ -86,6 +97,11 @@ namespace DawnmakuEngine.Data
         {
             int location = GL.GetUniformLocation(handle, name);
             GL.Uniform3(location, value);
+        }
+        public void SetVector2(string name, Vector2 value)
+        {
+            int location = GL.GetUniformLocation(handle, name);
+            GL.Uniform2(location, value);
         }
         public int GetAttribLocation(string attribName)
         {

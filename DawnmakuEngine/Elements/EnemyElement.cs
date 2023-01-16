@@ -4,6 +4,7 @@ using System.Text;
 using DawnmakuEngine.Data;
 using OpenTK;
 using Typography.OpenFont.Tables;
+using OpenTK.Mathematics;
 
 namespace DawnmakuEngine.Elements
 {

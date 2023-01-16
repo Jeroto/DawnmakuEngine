@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using DawnmakuEngine.Elements;
 using OpenTK;
+using OpenTK.Mathematics;
 
 namespace DawnmakuEngine
 {
@@ -179,6 +180,70 @@ namespace DawnmakuEngine
             return start;
         }
 
+        public static Vector3 ConvertColorToRgb(string format, Vector3 colorVal, bool returnIn255 = true)
+        {
+
+            switch (format.ToLower())
+            {
+                case "rgb":
+                    colorVal /= 255;
+                    return colorVal;
+                case "rgb01":
+                    return colorVal;
+                case "hsv":
+                    return HsvToRgb(colorVal, returnIn255);
+                case "hsl":
+                    return HslToRgb(colorVal, returnIn255);
+                default:
+                    GameMaster.LogWarningMessage("Color format \"" + format + "\" not supported. Please use rgb, rgb01, hsv, or hsl instead.",
+                        "Defaulting color to rgb 255,255,255");
+                    return Vector3.One;
+            }
+        }
+        public static Vector3 HsvToRgb(Vector3 Hsv, bool returnIn255  = true)
+        {
+            Vector3 outputColor;
+            float c, x, m;
+            c = Hsv.Z * Hsv.Y;
+            x = c * (1 - Math.Abs((Hsv.X / 60) % 2 - 1));
+            m = Hsv.Z - c;
+
+            if (Hsv.X <= 60)
+                outputColor = new Vector3(c + m, x + m, m);
+            else if (Hsv.X <= 120)
+                outputColor = new Vector3(x + m, c + m, m);
+            else if (Hsv.X <= 180)
+                outputColor = new Vector3(m, c + m, x + m);
+            else if (Hsv.X <= 240)
+                outputColor = new Vector3(m, x + m, c + m);
+            else if (Hsv.X <= 300)
+                outputColor = new Vector3(x + m, m, c + m);
+            else
+                outputColor = new Vector3(c + m, m, x + m);
+            return outputColor * (returnIn255 ? 255 : 1);
+        }
+        public static Vector3 HslToRgb(Vector3 Hsl, bool returnIn255 = true)
+        {
+            Vector3 outputColor;
+            float c, x, m;
+            c = (1 - Math.Abs(2 * Hsl.Z)) * Hsl.Y;
+            x = c * (1 - Math.Abs((Hsl.X / 60) % 2 - 1));
+            m = Hsl.Z - c / 2;
+
+            if (Hsl.X <= 60)
+                outputColor = new Vector3(c + m, x + m, m);
+            else if (Hsl.X <= 120)
+                outputColor = new Vector3(x + m, c + m, m);
+            else if (Hsl.X <= 180)
+                outputColor = new Vector3(m, c + m, x + m);
+            else if (Hsl.X <= 240)
+                outputColor = new Vector3(m, x + m, c + m);
+            else if (Hsl.X <= 300)
+                outputColor = new Vector3(x + m, m, c + m);
+            else
+                outputColor = new Vector3(c + m, m, x + m);
+            return outputColor * (returnIn255 ? 255 : 1);
+        }
 
         public static float EaseIn(float start, float end, float t, float inAmount = 0.25f)
         {

@@ -3,20 +3,21 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using OpenTK;
+using OpenTK.Mathematics;
 
 namespace DawnmakuEngine.Elements
 {
     class StageElement : Element
     {
         public StageData data;
-        public float backgroundTime, enemyTime;
+        public float backgroundTime, enemyTime, ambientTime;
         GameMaster gameMaster = GameMaster.gameMaster;
         Entity backgroundContainer = new Entity("Background");
         public List<float> sectionLength = new List<float>();
         Entity backgroundCam;
 
-        int sectionSpawnIndex, secIndividualIndex, camVelIndex, enemyIndex;
-        float sectionTransition, camTransition,
+        int sectionSpawnIndex, secIndividualIndex, camVelIndex, ambientIndex, enemyIndex;
+        float sectionTransition, camTransition, ambientTransition,
             camRandomTime, camRandomCur;
         Vector3 curVel = Vector3.Zero, prevPos, newPos;
         Vector3 prevRot, newRot;
@@ -53,6 +54,11 @@ namespace DawnmakuEngine.Elements
                 GameMaster.Random(data.camVel[0].randMinRot.Y, data.camVel[0].randMaxRot.Y),
                 GameMaster.Random(data.camVel[0].randMinRot.Z, data.camVel[0].randMaxRot.Z));
 
+            gameMaster.ambientR = data.ambientLights[0].r;
+            gameMaster.ambientG = data.ambientLights[0].g;
+            gameMaster.ambientB = data.ambientLights[0].b;
+            gameMaster.ambientIntensity = data.ambientLights[0].intensity;
+
             //gameMaster.audioManager.PlaySound(data.stageTrack);
             gameMaster.audioManager.PlaySound(data.stageTrackFile, AudioController.AudioCategory.BGM, gameMaster.BgmVol);
 
@@ -67,6 +73,7 @@ namespace DawnmakuEngine.Elements
             BackgroundIndexes();
             BackgroundCam();
             Background();
+            AmbientLight();
 
             EnemySpawns();
 
@@ -75,16 +82,21 @@ namespace DawnmakuEngine.Elements
 
         public void BackgroundIndexes()
         {
-            if (data.secSpawns[Math.Clamp(sectionSpawnIndex + 1, 0, data.secSpawns.Count - 1)].time <= backgroundTime)
+            if (sectionSpawnIndex < data.secSpawns.Count - 1 && data.secSpawns[Math.Clamp(sectionSpawnIndex + 1, 0, data.secSpawns.Count - 1)].time <= backgroundTime)
             {
                 sectionSpawnIndex = Math.Clamp(sectionSpawnIndex + 1, 0, data.secSpawns.Count - 1);
                 sectionTransition = 0;
                 secIndividualIndex = DawnMath.Repeat(secIndividualIndex, data.secSpawns[sectionSpawnIndex].section.Count - 1);
             }
-            if (data.camVel[Math.Clamp(camVelIndex + 1, 0, data.camVel.Count - 1)].time <= backgroundTime)
+            if (camVelIndex < data.camVel.Count - 1 && data.camVel[Math.Clamp(camVelIndex + 1, 0, data.camVel.Count - 1)].time <= backgroundTime)
             {
                 camVelIndex = Math.Clamp(camVelIndex + 1, 0, data.camVel.Count - 1);
                 camTransition = 0;
+            }
+            if (ambientIndex < data.ambientLights.Count - 1 && data.ambientLights[Math.Clamp(ambientIndex + 1, 0, data.ambientLights.Count - 1)].time <= backgroundTime)
+            {
+                ambientIndex = Math.Clamp(ambientIndex + 1, 0, data.ambientLights.Count - 1);
+                ambientTransition = 0;
             }
         }
 
@@ -139,6 +151,28 @@ namespace DawnmakuEngine.Elements
                 Vector3 easedRot = DawnMath.EaseInOut(prevRot, newRot, camRandomCur / camRandomTime);
                 backgroundCam.LocalRotation = Quaternion.FromEulerAngles(MathHelper.DegreesToRadians(easedRot.X),
                     MathHelper.DegreesToRadians(easedRot.Y), MathHelper.DegreesToRadians(easedRot.Z));
+            }
+        }
+
+        public void AmbientLight()
+        {
+            ambientTransition += gameMaster.timeScale;
+
+            if (data.ambientLights[ambientIndex].transitionTime > 0)
+            {
+                float transitionAmount = ambientTransition / data.ambientLights[ambientIndex].transitionTime;
+                int prevInd = Math.Clamp(ambientIndex - 1, 0, ambientIndex);
+                gameMaster.ambientR = DawnMath.Lerp(data.ambientLights[prevInd].r, data.ambientLights[ambientIndex].r, transitionAmount);
+                gameMaster.ambientG = DawnMath.Lerp(data.ambientLights[prevInd].g, data.ambientLights[ambientIndex].g, transitionAmount);
+                gameMaster.ambientB = DawnMath.Lerp(data.ambientLights[prevInd].b, data.ambientLights[ambientIndex].b, transitionAmount);
+                gameMaster.ambientIntensity = DawnMath.Lerp(data.ambientLights[prevInd].intensity, data.ambientLights[ambientIndex].intensity, transitionAmount);
+            }
+            else
+            {
+                gameMaster.ambientR = data.ambientLights[ambientIndex].r;
+                gameMaster.ambientG = data.ambientLights[ambientIndex].g;
+                gameMaster.ambientB = data.ambientLights[ambientIndex].b;
+                gameMaster.ambientIntensity = data.ambientLights[ambientIndex].intensity;
             }
         }
 

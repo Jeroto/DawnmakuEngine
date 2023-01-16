@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using OpenTK;
 using static DawnmakuEngine.DawnMath;
+using OpenTK.Mathematics;
 
 namespace DawnmakuEngine.Data
 {
@@ -18,12 +19,14 @@ namespace DawnmakuEngine.Data
             public Vector2 pos;
             public float time;
             public ushort waitTime;
+            public float size;
 
-            public Point(Vector2 pos_, float time_, ushort waitTime_ = 0)
+            public Point(Vector2 pos_, float time_, ushort waitTime_ = 0, float size_ = 1)
             {
                 pos = pos_;
                 time = time_;
                 waitTime = waitTime_;
+                size = size_;
             }
         }
 

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using OpenTK;
+using OpenTK.Mathematics;
 
 namespace DawnmakuEngine.Data
 {

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using OpenTK;
 using SixLabors.ImageSharp;
+using OpenTK.Mathematics;
 
 namespace DawnmakuEngine.Elements
 {

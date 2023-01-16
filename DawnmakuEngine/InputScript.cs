@@ -4,6 +4,8 @@ using System.Text;
 using OpenTK;
 using OpenTK.Input;
 using Typography.OpenFont.Tables;
+using OpenTK.Mathematics;
+using OpenTK.Windowing.GraphicsLibraryFramework;
 
 namespace DawnmakuEngine
 {
@@ -106,14 +108,14 @@ namespace DawnmakuEngine
 
         public static void GetInput()
         {
-            KeyboardState keyboardState = Keyboard.GetState();
+            KeyboardState keyboardState = GameMaster.window.KeyboardState;
 
             prevIPressed = iPressed;
-            iPressed = keyboardState.IsKeyDown(Key.I);
+            iPressed = keyboardState.IsKeyDown(Keys.I);
 
             //GamePadState gamepadState = GamePad.GetState(0);
-            directionalInput.X = keyboardState.IsKeyDown(Key.Left) ? -1 : keyboardState.IsKeyDown(Key.Right) ? 1 : 0;
-            directionalInput.Y = keyboardState.IsKeyDown(Key.Down) ? -1 : keyboardState.IsKeyDown(Key.Up) ? 1 : 0;
+            directionalInput.X = keyboardState.IsKeyDown(Keys.Left) ? -1 : keyboardState.IsKeyDown(Keys.Right) ? 1 : 0;
+            directionalInput.Y = keyboardState.IsKeyDown(Keys.Down) ? -1 : keyboardState.IsKeyDown(Keys.Up) ? 1 : 0;
 
             prevPause = pause;
             prevFocus = focus;
@@ -121,11 +123,11 @@ namespace DawnmakuEngine
             prevBomb = bomb;
             prevSpecial = special;
 
-            pause = keyboardState.IsKeyDown(Key.Escape);
-            focus = keyboardState.IsKeyDown(Key.ShiftLeft);
-            shoot = keyboardState.IsKeyDown(Key.Z);
-            bomb = keyboardState.IsKeyDown(Key.X);
-            special = keyboardState.IsKeyDown(Key.C);
+            pause = keyboardState.IsKeyDown(Keys.Escape);
+            focus = keyboardState.IsKeyDown(Keys.LeftShift);
+            shoot = keyboardState.IsKeyDown(Keys.Z);
+            bomb = keyboardState.IsKeyDown(Keys.X);
+            special = keyboardState.IsKeyDown(Keys.C);
         }
 
         public static void ResetUpDown()

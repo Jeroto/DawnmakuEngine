@@ -34,6 +34,11 @@ namespace DawnmakuEngine.Data
             public float left, top, right, bottom;
             public Texture tex;
 
+            public override string ToString()
+            {
+                return "Left: " + left + ", Top: " + top + ", Right: " + right + ", Bottom: " + bottom + "\n\t>Tex:" + tex.ToString();
+            }
+
             public float[] GetUVs()
             {
                 return new float[] { left, top, right, top, right, bottom, left, bottom };

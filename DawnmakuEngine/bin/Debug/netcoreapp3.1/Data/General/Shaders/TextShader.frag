@@ -2,7 +2,7 @@
 out vec4 outputColor;
 
 in vec2 texCoord;
-in vec4 colorMod;
+uniform vec4 colorMod;
 
 
 uniform sampler2D texture0;

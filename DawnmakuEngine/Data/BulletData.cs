@@ -1,5 +1,6 @@
 ﻿using DawnmakuEngine.Elements;
 using OpenTK;
+using OpenTK.Mathematics;
 
 namespace DawnmakuEngine.Data
 {

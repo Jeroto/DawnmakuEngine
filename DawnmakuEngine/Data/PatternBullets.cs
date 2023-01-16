@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using OpenTK;
 using DawnmakuEngine.Elements;
+using OpenTK.Mathematics;
 
 namespace DawnmakuEngine.Data
 {

@@ -8,6 +8,7 @@ using DawnmakuEngine.Data;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Input;
+using OpenTK.Mathematics;
 
 namespace DawnmakuEngine.Elements
 {

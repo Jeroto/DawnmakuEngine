@@ -5,6 +5,7 @@ using System.Text;
 using DawnmakuEngine.Data;
 using OpenTK;
 using OpenTK.Graphics.ES30;
+using OpenTK.Mathematics;
 
 namespace DawnmakuEngine.Elements
 {
@@ -43,30 +44,41 @@ namespace DawnmakuEngine.Elements
         }
 
         public BufferUsageHint bufferUsageType = BufferUsageHint.DynamicDraw;
-        public byte colorR = 255, colorG = 255, colorB = 255, colorA = 255;
+        public float colorR = 1, colorG = 1, colorB = 1, colorA = 1;
 
 
         public Vector4 ColorFloat
         {
-            get { return new Vector4(colorR / 255f, colorG / 255f, colorB / 255f, colorA / 255f); }
+            get { return new Vector4(colorR, colorG, colorB, colorA); }
             set
             {
-                colorR = (byte)Math.Floor(value.X * 255);
-                colorG = (byte)Math.Floor(value.Y * 255);
-                colorB = (byte)Math.Floor(value.Z * 255);
-                colorA = (byte)Math.Floor(value.W * 255);
+                colorR = value.X;
+                colorG = value.Y;
+                colorB = value.Z;
+                colorA = value.W;
             }
         }
         public Vector4 ColorByte
         {
-            get { return new Vector4(colorR, colorG, colorB, colorA); }
+            get { return new Vector4((int)Math.Floor(colorR * 255),
+                (int)Math.Floor(colorG * 255),
+                (int)Math.Floor(colorB * 255),
+                (int)Math.Floor(colorA * 255)); }
             set
             {
-                colorR = (byte)Math.Clamp(Math.Floor(value.X), 0, 255);
-                colorG = (byte)Math.Clamp(Math.Floor(value.Y), 0, 255);
-                colorB = (byte)Math.Clamp(Math.Floor(value.Z), 0, 255);
-                colorA = (byte)Math.Clamp(Math.Floor(value.W), 0, 255);
+                colorR = value.X / 255;
+                colorG = value.Y / 255;
+                colorB = value.Z / 255;
+                colorA = value.W / 255;
             }
+        }
+
+        public void ClampColor()
+        {
+            if (colorR < 0)
+                colorR = 0;
+            else if (colorR > 255)
+                colorR = 255;
         }
 
         public void BindRendering()
@@ -88,13 +100,21 @@ namespace DawnmakuEngine.Elements
             if(mesh != null && mesh != GameMaster.lastBoundMesh)
                 mesh.Use();
 
-
-            int positionLocation = shader.GetAttribLocation("aPosition");
+            int positionLocation = shader.GetAttribLocation("position");
             GL.EnableVertexAttribArray(positionLocation);
             GL.VertexAttribPointer(positionLocation, 3, VertexAttribPointerType.Float, false, 5 * sizeof(float), 0);
-            int texCoordLocation = shader.GetAttribLocation("aTexCoord");
+            int texCoordLocation = shader.GetAttribLocation("texCoordAttrib");
             GL.EnableVertexAttribArray(texCoordLocation);
             GL.VertexAttribPointer(texCoordLocation, 2, VertexAttribPointerType.Float, false, 5 * sizeof(float), 3 * sizeof(float));
+            /*int positionLocation = shader.GetAttribLocation("position");
+            GL.EnableVertexAttribArray(positionLocation);
+            GL.VertexAttribPointer(positionLocation, 3, VertexAttribPointerType.Float, false, 8 * sizeof(float), 0);
+            int texCoordLocation = shader.GetAttribLocation("texCoordAttrib");
+            GL.EnableVertexAttribArray(texCoordLocation);
+            GL.VertexAttribPointer(texCoordLocation, 2, VertexAttribPointerType.Float, false, 8 * sizeof(float), 3 * sizeof(float));
+            int normalLocation = shader.GetAttribLocation("normalAttrib");
+            GL.EnableVertexAttribArray(normalLocation);
+            GL.VertexAttribPointer(normalLocation, 3, VertexAttribPointerType.Float, false, 8 * sizeof(float), 5 * sizeof(float));*/
 
             if (tex != null && tex != GameMaster.lastBoundTexture)
                 tex.Use();
@@ -105,7 +125,8 @@ namespace DawnmakuEngine.Elements
                 Matrix4.CreateScale(entityAttachedTo.WorldScale * modelScale * new Vector3(modelScaleX, modelScaleY, modelScaleZ))
                 * Matrix4.CreateFromQuaternion(entityAttachedTo.WorldRotation) * Matrix4.CreateTranslation(entityAttachedTo.WorldPosition);
             shader.SetMatrix4("model", model);
-            shader.SetVector4("colorModInput", ColorFloat);
+            shader.SetMatrix3("normalMatrix", Matrix3.Transpose(Matrix3.Invert(new Matrix3(model))));
+            shader.SetVector4("colorMod", ColorFloat);
         }
 
         /*public void SetShaderPositionAndView(Matrix4 view, Matrix4 proj)

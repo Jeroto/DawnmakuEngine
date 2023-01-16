@@ -10,8 +10,25 @@ scale=2,1,1;
 }
 :
 {
+object=none;
+pos=0,30,05;
+elements={
+LightElement=rgb,255,255,255,1,10;/
+RotateElement=360,true,true,0,1,0;
+}
+}
+:
+{
+object=redmushroom;
+parentNum=1;
+pos=20,0,0;
+scale=0.5,1,0.5;
+}
+:
+{
 object=redmushroom, greenmushroom;
 pos=80,6,15;
+scale=2,1,1;
 }
 :
 {

@@ -82,33 +82,26 @@ namespace DawnmakuEngine.Data
 
         public void SetUpTexture(Image<Rgba32> image, bool generateMipmaps)
         {
-            int i, k;
-            image.Mutate(x => x.Flip(FlipMode.Vertical));
-            Rgba32[] tempPixels = new Rgba32[image.Height * image.Width];
-            Rgba32[] superTempPixels;
-            int height = image.Height, width = image.Width, pixelsRead = 0, length;
-            for (i = 0; i < height; i++)
+            int height = image.Height, width = image.Width, pixelsRead = 0;
+            int y, x;
+            byte[] pixels = new byte[height * width * 4];
+            image.ProcessPixelRows(accessor =>
             {
-                superTempPixels = image.GetPixelRowSpan(i).ToArray();
-                length = superTempPixels.Length;
-                for (k = 0; k < length; k++)
+                for (y = height - 1; y >= 0; y--)
                 {
-                    tempPixels[pixelsRead + k] = superTempPixels[k];
-                }
-                pixelsRead += width;
-            }
+                    Span<Rgba32> span = accessor.GetRowSpan(y);
 
-            int pixelCount = tempPixels.Length;
-            pixelsRead = 0;
-            byte[] pixels = new byte[pixelCount * 4];
-            for (i = 0; i < pixelCount; i++)
-            {
-                pixels[pixelsRead] = tempPixels[i].R;
-                pixels[pixelsRead + 1] = tempPixels[i].G;
-                pixels[pixelsRead + 2] = tempPixels[i].B;
-                pixels[pixelsRead + 3] = tempPixels[i].A;
-                pixelsRead += 4;
-            }
+                    for (x = 0; x < width; x++)
+                    {
+                        pixels[pixelsRead] = span[x].R;
+                        pixels[pixelsRead + 1] = span[x].G;
+                        pixels[pixelsRead + 2] = span[x].B;
+                        pixels[pixelsRead + 3] = span[x].A;
+                        pixelsRead += 4;
+                    }
+                }
+
+            });
 
             GL.TexImage2D(TextureTarget2d.Texture2D, 0, TextureComponentCount.Rgba, image.Width, image.Height,
                 0, PixelFormat.Rgba, PixelType.UnsignedByte, pixels);
@@ -121,28 +114,23 @@ namespace DawnmakuEngine.Data
         }
         public void SetUpTexture(Image<A8> image, bool generateMipmaps)
         {
-            int i, k;
-            image.Mutate(x => x.Flip(FlipMode.Vertical));
-            A8[] tempPixels = new A8[image.Height * image.Width];
-            A8[] superTempPixels;
-            int height = image.Height, width = image.Width, pixelsRead = 0, length;
-            for (i = 0; i < height; i++)
+            int height = image.Height, width = image.Width, pixelsRead = 0;
+            int y, x;
+            byte[] pixels = new byte[height * width * 4];
+            image.ProcessPixelRows(accessor =>
             {
-                superTempPixels = image.GetPixelRowSpan(i).ToArray();
-                length = superTempPixels.Length;
-                for (k = 0; k < length; k++)
+                for (y = height - 1; y >= 0; y--)
                 {
-                    tempPixels[pixelsRead + k] = superTempPixels[k];
-                }
-                pixelsRead += width;
-            }
+                    Span<A8> span = accessor.GetRowSpan(y);
 
-            int pixelCount = tempPixels.Length;
-            byte[] pixels = new byte[pixelCount];
-            for (i = 0; i < pixelCount; i++)
-            {
-                pixels[i] = tempPixels[i].PackedValue;
-            }
+                    for (x = 0; x < width; x++)
+                    {
+                        pixels[pixelsRead] = span[x].PackedValue;
+                        pixelsRead++;
+                    }
+                }
+
+            });
 
             GL.TexImage2D(TextureTarget2d.Texture2D, 0, TextureComponentCount.Alpha8Ext, image.Width, image.Height,
                 0, PixelFormat.Alpha, PixelType.UnsignedByte, pixels);

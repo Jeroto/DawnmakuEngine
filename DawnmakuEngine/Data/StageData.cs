@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using OpenTK.Mathematics;
 
 namespace DawnmakuEngine.Data
 {
@@ -9,10 +10,18 @@ namespace DawnmakuEngine.Data
     {
         public AudioData stageTrack, bossTrack;
         public string stageTrackFile, bossTrackFile;
+        public List<AmbientLights> ambientLights = new List<AmbientLights>();
         public List<CamVelocities> camVel = new List<CamVelocities>();
         public List<SectionSpawns> secSpawns = new List<SectionSpawns>();
         public List<EnemySpawn> enemySpawns = new List<EnemySpawn>();
 
+        public class AmbientLights
+        {
+            public float r, g, b, intensity;
+            public uint time;
+            public float transitionTime;
+
+        }
         public class CamVelocities
         {
             public Vector3 vel,
