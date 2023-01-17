@@ -1,0 +1,17 @@
+{
+    "shader": "spriteshader",
+    "isanimated": false,
+    "spinspeed": 0,
+    "shouldturn": true,
+    "spritecolorcount": 44,
+    "randomizesprite": false,
+    "colliders": [
+        {
+            "sizex": 5,
+            "sizey": 6,
+            "offsetx": 0,
+            "offsety": 10
+        }
+    ],
+    "animstates": []
+}

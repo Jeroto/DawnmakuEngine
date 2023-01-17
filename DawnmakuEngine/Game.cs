@@ -216,7 +216,7 @@ namespace DawnmakuEngine
                 if(input.IsKeyDown(Keys.B))
                 {
                     BulletElement.BulletStage[] stage = new BulletElement.BulletStage[] { new BulletElement.BulletStage() };
-                    stage[0].spriteType = gameMaster.bulletTypes[BulletElement.Random(0, gameMaster.bulletTypes.Count - 1)];
+                    stage[0].spriteType = gameMaster.bulletTypes[BulletElement.Random(0, gameMaster.bulletTypes.Count)];
                     stage[0].bulletColor = BulletElement.Random(0, gameMaster.bulletSprites[stage[0].spriteType].sprites.Count - 1);
                     stage[0].movementDirection = DawnMath.RandomCircle();
                     stage[0].startingSpeed = 20;
@@ -422,7 +422,7 @@ namespace DawnmakuEngine
 
                         GL.DrawElements(PrimitiveType.Triangles, thisRenderer.mesh.triangleData.Length, DrawElementsType.UnsignedInt, IntPtr.Zero);
                     }
-
+                    
                     GameMaster.LogTimeMilliseconds("rendering layer " + thisCam.renderableLayers[r].ToString() + " for " + thisCam.EntityAttachedTo.Name);
                     totalMilliseconds += GameMaster.timeLogger.Elapsed.TotalMilliseconds; 
                     totalTicks += GameMaster.timeLogger.ElapsedTicks;

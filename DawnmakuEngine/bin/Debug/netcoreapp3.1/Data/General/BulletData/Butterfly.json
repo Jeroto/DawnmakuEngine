@@ -1,0 +1,66 @@
+
+{
+    "shader": "spriteshader",
+    "isanimated": true,
+    "spinspeed": 0,
+    "shouldturn": true,
+    "spritecolorcount": 44,
+    "randomizesprite": false,
+    "colliders": [
+        {
+            "sizex": 3,
+            "sizey": 3,
+            "offsetx": 0,
+            "offsety": 0
+        }
+    ],
+    "animstates": [
+        ["whitebutterfly"],
+        ["redbutterfly"],
+        ["blackbutterfly"],
+        ["tealbutterfly"],
+        ["bluebutterfly"],
+        ["pinkbutterfly"],
+        ["orangebutterfly"],
+        ["yellowbutterfly"],
+        ["purplebutterfly"],
+
+        ["whitebutterflyinverse"],
+        ["redbutterflyinverse"],
+        ["blackbutterflyinverse"],
+        ["greenbutterflyinverse"],
+        ["tealbutterflyinverse"],
+        ["bluebutterflyinverse"],
+        ["pinkbutterflyinverse"],
+        ["orangebutterflyinverse"],
+        ["yellowbutterflyinverse"],
+        ["purplebutterflyinverse"],
+
+        ["whitebutterflyinvert"],
+        ["redbutterflyinvert"],
+        ["blackbutterflyinvert"],
+        ["greenbutterflyinvert"],
+        ["tealbutterflyinvert"],
+        ["bluebutterflyinvert"],
+        ["pinkbutterflyinvert"],
+        ["orangebutterflyinvert"],
+        ["yellowbutterflyinvert"],
+        ["purplebutterflyinvert"],
+
+        ["whitebutterflyinvinv"],
+        ["redbutterflyinvinv"],
+        ["blackbutterflyinvinv"],
+        ["greenbutterflyinvinv"],
+        ["tealbutterflyinvinv"],
+        ["bluebutterflyinvinv"],
+        ["pinkbutterflyinvinv"],
+        ["orangebutterflyinvinv"],
+        ["yellowbutterflyinvinv"],
+        ["purplebutterflyinvinv"],
+
+        ["flamebutterfly"],
+        ["flamebutterflyinvert"],
+        ["specialbutterfly"],
+        ["specialbutterflyinvert"]
+    ]
+}

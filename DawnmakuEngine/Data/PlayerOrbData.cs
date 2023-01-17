@@ -13,7 +13,7 @@ namespace DawnmakuEngine.Data
         public Vector2 unfocusPosition = Vector2.Zero, 
             focusPosition = Vector2.Zero;
         public float framesToMove = 10,
-            rotateDegreesPerSecond = 10;
+            rotateSpeed = 10;
         public TextureAnimator.AnimationState[] animStates = null;
         public int startAnimFrame = 0;
         public bool leaveBehindWhileFocused = false,

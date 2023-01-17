@@ -25,6 +25,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using DawnmakuEngine.Data.Resources;
 using DawnmakuEngine.Data.JSONFormats;
+using System.Threading;
 //using System.Windows.Media;
 
 namespace DawnmakuEngine
@@ -35,7 +36,7 @@ namespace DawnmakuEngine
         public string directory, containingFolder, generalDir, bulletDataDir, playerDataDir, itemDataDir,
             generalTexDir, bulletTexDir, playerTexDir, playerOrbTexDir, playerFxTexDir, itemTexDir, enemyTexDir, UITexDir, loadTexDir,
             generalAnimDir, bulletAnimDir, playerAnimDir, playerOrbAnimDir, playerFxAnimDir, itemAnimDir, enemyAnimDir, texAnimDir,
-            playerPatternDir, playerOrbDir,
+            playerPatternDir, playerOrbDir, playerShotTypeDir, playerShotTypePartsDir, playerCharactersDir,
             soundEffectDir,
             shaderDir, fontDir,
             stageDir, curStageDir, enemyDir, enemyPatternDir, enemyMovementDir, backgroundDir, backgroundModelDir, backgroundTexDir,
@@ -145,10 +146,19 @@ namespace DawnmakuEngine
             {
                 switch (dirs[i].Name)
                 {
-                    case "PlayerOrbs":
+                    case "Orbs":
                         playerOrbDir = dirs[i].FullName;
                         break;
-                    case "PlayerPatterns":
+                    case "ShotTypes":
+                        playerShotTypeDir = dirs[i].FullName;
+                        break;
+                    case "ShotTypeParts":
+                        playerShotTypePartsDir = dirs[i].FullName;
+                        break;
+                    case "Characters":
+                        playerCharactersDir = dirs[i].FullName;
+                        break;
+                    case "Patterns":
                         playerPatternDir = dirs[i].FullName;
                         break;
                 }
@@ -495,7 +505,7 @@ namespace DawnmakuEngine
                     throw new Exception("No 'Resources.json' file found.");
                 string fileText = File.ReadAllText(generalDir + "/Resources.json");
                 JsonSerializerSettings settings = new JsonSerializerSettings();
-                Dictionary<string,string>[] resources = JsonConvert.DeserializeObject<Dictionary<string, string>[]>(fileText, settings);
+                Dictionary<string, string>[] resources = JsonConvert.DeserializeObject<Dictionary<string, string>[]>(fileText, settings);
                 BaseResource newResource;
                 Type resourceType;
 
@@ -505,7 +515,7 @@ namespace DawnmakuEngine
 
                     resourceType = Type.GetType("DawnmakuEngine.Data.Resources." + resources[i]["type"] + "Resource");
 
-                    newResource = (BaseResource)resourceType.GetConstructor(new Type[] { typeof(string) }).Invoke(new object[] { resources[i]["name"] });
+                    newResource = (BaseResource)resourceType.GetConstructor(new Type[] { typeof(string) }).Invoke(new object[] { resources[i]["name"].ToLower() });
 
                     if (resources[i].ContainsKey("value"))
                     {
@@ -514,9 +524,9 @@ namespace DawnmakuEngine
                     else
                         newResource.InitValue("NULL");
                 }
-                
+
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 GameMaster.LogErrorMessage("There was an error loading the resource data!", e.Message);
             }
@@ -596,14 +606,14 @@ namespace DawnmakuEngine
 
         public void BulletSpriteLoader()
         {
-            string[] files = Directory.GetFiles(bulletTexDir, "*.dwnsprites");
+            string[] files = Directory.GetFiles(bulletTexDir, "*.json");
             KeyValuePair<string, SpriteSet>[] spritePairs;
 
             GameMaster.LogPositiveNotice("\nBullet Sprites:");
             for (int i = 0; i < files.Length; i++)
             {
                 GameMaster.Log(GetFileNameOnly(files[i]));
-                spritePairs = ReadSpriteData(files[i], gameMaster.bulletTextures[GetFileNameOnly(files[i])]);
+                spritePairs = ReadSpriteDataJSON(files[i], gameMaster.bulletTextures[GetFileNameOnly(files[i])]);
                 for (int e = 0; e < spritePairs.Length; e++)
                 {
                     GameMaster.LogSecondary(spritePairs[e].Key);
@@ -614,7 +624,7 @@ namespace DawnmakuEngine
         }
         public void BulletAnimLoader()
         {
-            string[] files = Directory.GetFiles(bulletAnimDir, "*.dwnanim");
+            string[] files = Directory.GetFiles(bulletAnimDir, "*.json");
             KeyValuePair<string, TextureAnimator.AnimationState>[] animPairs;
             int p;
 
@@ -622,23 +632,23 @@ namespace DawnmakuEngine
             for (int i = 0; i < files.Length; i++)
             {
                 GameMaster.Log(GetFileNameOnly(files[i]));
-                animPairs = ReadSpriteAnimData(files[i], gameMaster.bulletSprites);
+                animPairs = ReadSpriteAnimDataJSON(files[i], gameMaster.bulletSprites);
                 for (p = 0; p < animPairs.Length; p++)
                 {
                     GameMaster.LogSecondary(animPairs[p].Key);
-                    gameMaster.bulletAnimStates.Add(animPairs[p].Key, animPairs[p].Value);
+                    gameMaster.bulletAnimStates[animPairs[p].Key] = animPairs[p].Value;
                 }
             }
         }
 
         public void BulletDataLoader()
         {
-            string[] files = Directory.GetFiles(bulletDataDir, "*.dwnbullet");
+            string[] files = Directory.GetFiles(bulletDataDir, "*.json");
             GameMaster.LogPositiveNotice("\nBullet Data:");
             for (int i = 0; i < files.Length; i++)
             {
                 GameMaster.Log(GetFileNameOnly(files[i]));
-                gameMaster.bulletData.Add(GetFileNameOnly(files[i]), ReadBulletData(files[i]));
+                gameMaster.bulletData.Add(GetFileNameOnly(files[i]), ReadBulletDataJSON(files[i]));
             }
         }
         #endregion
@@ -658,14 +668,14 @@ namespace DawnmakuEngine
 
         public void PlayerOrbSpriteLoader()
         {
-            string[] files = Directory.GetFiles(playerOrbTexDir, "*.dwnsprites");
+            string[] files = Directory.GetFiles(playerOrbTexDir, "*.json");
             KeyValuePair<string, SpriteSet>[] spritePairs;
 
             GameMaster.LogPositiveNotice("\nPlayer Orb Sprites:");
             for (int i = 0; i < files.Length; i++)
             {
                 GameMaster.Log(GetFileNameOnly(files[i]));
-                spritePairs = ReadSpriteData(files[i], gameMaster.playerOrbTextures[GetFileNameOnly(files[i])]);
+                spritePairs = ReadSpriteDataJSON(files[i], gameMaster.playerOrbTextures[GetFileNameOnly(files[i])]);
                 for (int e = 0; e < spritePairs.Length; e++)
                 {
                     GameMaster.LogSecondary(spritePairs[e].Key);
@@ -675,7 +685,7 @@ namespace DawnmakuEngine
         }
         public void PlayerOrbAnimLoader()
         {
-            string[] files = Directory.GetFiles(playerOrbAnimDir, "*.dwnanim");
+            string[] files = Directory.GetFiles(playerOrbAnimDir, "*.json");
             KeyValuePair<string, TextureAnimator.AnimationState>[] animPairs;
             int p;
 
@@ -683,23 +693,23 @@ namespace DawnmakuEngine
             for (int i = 0; i < files.Length; i++)
             {
                 GameMaster.Log(GetFileNameOnly(files[i]));
-                animPairs = ReadSpriteAnimData(files[i], gameMaster.playerOrbSprites);
+                animPairs = ReadSpriteAnimDataJSON(files[i], gameMaster.playerOrbSprites);
                 for (p = 0; p < animPairs.Length; p++)
                 {
                     GameMaster.LogSecondary(animPairs[p].Key);
-                    gameMaster.playerOrbAnimStates.Add(animPairs[p].Key, animPairs[p].Value);
+                    gameMaster.playerOrbAnimStates[animPairs[p].Key] = animPairs[p].Value;
                 }
             }
         }
         public void PlayerOrbDataLoader()
         {
-            string[] files = Directory.GetFiles(playerOrbDir, "*.dwnorb");
+            string[] files = Directory.GetFiles(playerOrbDir, "*.json");
 
             GameMaster.LogPositiveNotice("\nPlayer Orb Data:");
             for (int i = 0; i < files.Length; i++)
             {
                 GameMaster.Log(GetFileNameOnly(files[i]));
-                gameMaster.playerOrbData.Add(GetFileNameOnly(files[i]), ReadOrbData(files[i]));
+                gameMaster.playerOrbData.Add(GetFileNameOnly(files[i]), ReadOrbDataJSON(files[i]));
             }
         }
         #endregion
@@ -718,14 +728,14 @@ namespace DawnmakuEngine
         }
         public void PlayerSpriteLoader()
         {
-            string[] files = Directory.GetFiles(playerTexDir, "*.dwnsprites");
+            string[] files = Directory.GetFiles(playerTexDir, "*.json");
             KeyValuePair<string, SpriteSet>[] spritePairs;
 
             GameMaster.LogPositiveNotice("\nPlayer Sprites:");
             for (int i = 0; i < files.Length; i++)
             {
                 GameMaster.Log(GetFileNameOnly(files[i]));
-                spritePairs = ReadSpriteData(files[i], gameMaster.playerTextures[GetFileNameOnly(files[i])]);
+                spritePairs = ReadSpriteDataJSON(files[i], gameMaster.playerTextures[GetFileNameOnly(files[i])]);
                 for (int e = 0; e < spritePairs.Length; e++)
                 {
                     GameMaster.LogSecondary(spritePairs[e].Key);
@@ -735,7 +745,7 @@ namespace DawnmakuEngine
         }
         public void PlayerAnimLoader()
         {
-            string[] files = Directory.GetFiles(playerAnimDir, "*.dwnanim");
+            string[] files = Directory.GetFiles(playerAnimDir, "*.json");
             KeyValuePair<string, TextureAnimator.AnimationState>[] animPairs;
             int p;
 
@@ -743,11 +753,11 @@ namespace DawnmakuEngine
             for (int i = 0; i < files.Length; i++)
             {
                 GameMaster.Log(GetFileNameOnly(files[i]));
-                animPairs = ReadSpriteAnimData(files[i], gameMaster.playerSprites);
+                animPairs = ReadSpriteAnimDataJSON(files[i], gameMaster.playerSprites);
                 for (p = 0; p < animPairs.Length; p++)
                 {
                     GameMaster.LogSecondary(animPairs[p].Key);
-                    gameMaster.playerAnimStates.Add(animPairs[p].Key, animPairs[p].Value);
+                    gameMaster.playerAnimStates[animPairs[p].Key] = animPairs[p].Value;
                 }
             }
         }
@@ -767,13 +777,13 @@ namespace DawnmakuEngine
         }
         public void PlayerFxSpriteLoader()
         {
-            string[] files = Directory.GetFiles(playerFxTexDir, "*.dwnsprites");
+            string[] files = Directory.GetFiles(playerFxTexDir, "*.json");
             KeyValuePair<string, SpriteSet>[] spritePairs;
 
             GameMaster.LogPositiveNotice("\nPlayer Effect Sprites:");
             for (int i = 0; i < files.Length; i++)
             {
-                spritePairs = ReadSpriteData(files[i], gameMaster.playerEffectTextures[GetFileNameOnly(files[i])]);
+                spritePairs = ReadSpriteDataJSON(files[i], gameMaster.playerEffectTextures[GetFileNameOnly(files[i])]);
                 for (int e = 0; e < spritePairs.Length; e++)
                 {
                     GameMaster.LogSecondary(spritePairs[e].Key);
@@ -783,7 +793,7 @@ namespace DawnmakuEngine
         }
         public void PlayerFxAnimLoader()
         {
-            string[] files = Directory.GetFiles(playerFxAnimDir, "*.dwnanim");
+            string[] files = Directory.GetFiles(playerFxAnimDir, "*.json");
             KeyValuePair<string, TextureAnimator.AnimationState>[] animPairs;
             int p;
 
@@ -791,11 +801,11 @@ namespace DawnmakuEngine
             for (int i = 0; i < files.Length; i++)
             {
                 GameMaster.Log(GetFileNameOnly(files[i]));
-                animPairs = ReadSpriteAnimData(files[i], gameMaster.playerEffectSprites);
+                animPairs = ReadSpriteAnimDataJSON(files[i], gameMaster.playerEffectSprites);
                 for (p = 0; p < animPairs.Length; p++)
                 {
                     GameMaster.LogSecondary(animPairs[p].Key);
-                    gameMaster.playerEffectAnimStates.Add(animPairs[p].Key, animPairs[p].Value);
+                    gameMaster.playerEffectAnimStates[animPairs[p].Key] = animPairs[p].Value;
                 }
             }
         }
@@ -804,33 +814,33 @@ namespace DawnmakuEngine
         #region Player Shots
         public void PlayerShotLoader()
         {
-            string[] files = Directory.GetFiles(playerDataDir, "*.dwnshot");
+            string[] files = Directory.GetFiles(playerShotTypePartsDir, "*.json");
 
             GameMaster.LogPositiveNotice("\nPlayer Shots:");
             for (int i = 0; i < files.Length; i++)
             {
                 GameMaster.Log(GetFileNameOnly(files[i]));
-                gameMaster.playerShot.Add(GetFileNameOnly(files[i]), ReadShotData(files[i]));
+                gameMaster.playerShot.Add(GetFileNameOnly(files[i]), ReadShotDataJSON(files[i]));
             }
         }
         public void PlayerTypeLoader()
         {
-            string[] files = Directory.GetFiles(playerDataDir, "*.dwntype");
+            string[] files = Directory.GetFiles(playerShotTypeDir, "*.json");
 
             GameMaster.LogPositiveNotice("\nPlayer Shot Types:");
             for (int i = 0; i < files.Length; i++)
             {
-                gameMaster.playerTypes.Add(GetFileNameOnly(files[i]), ReadTypeData(files[i]));
+                gameMaster.playerTypes.Add(GetFileNameOnly(files[i]), ReadTypeDataJSON(files[i]));
             }
         }
         public void PlayerCharLoader()
         {
-            string[] files = Directory.GetFiles(playerDataDir, "*.dwnchar");
+            string[] files = Directory.GetFiles(playerCharactersDir, "*.json");
 
             GameMaster.LogPositiveNotice("\nPlayer Characters:");
             for (int i = 0; i < files.Length; i++)
             {
-                gameMaster.playerChars.Add(GetFileNameOnly(files[i]), ReadPlayerCharData(files[i]));
+                gameMaster.playerChars.Add(GetFileNameOnly(files[i]), ReadPlayerCharDataJSON(files[i]));
             }
         }
         public void PlayerPatternLoader()
@@ -867,14 +877,14 @@ namespace DawnmakuEngine
         }
         public void ItemSpriteLoader()
         {
-            string[] files = Directory.GetFiles(itemTexDir, "*.dwnsprites");
+            string[] files = Directory.GetFiles(itemTexDir, "*.json");
             KeyValuePair<string, SpriteSet>[] spritePairs;
 
             GameMaster.LogPositiveNotice("\nItem Sprites:");
             for (int i = 0; i < files.Length; i++)
             {
                 GameMaster.Log(GetFileNameOnly(files[i]));
-                spritePairs = ReadSpriteData(files[i], gameMaster.itemTextures[GetFileNameOnly(files[i])]);
+                spritePairs = ReadSpriteDataJSON(files[i], gameMaster.itemTextures[GetFileNameOnly(files[i])]);
                 for (int e = 0; e < spritePairs.Length; e++)
                 {
                     GameMaster.LogSecondary(spritePairs[e].Key);
@@ -884,7 +894,7 @@ namespace DawnmakuEngine
         }
         public void ItemAnimLoader()
         {
-            string[] files = Directory.GetFiles(itemAnimDir, "*.dwnanim");
+            string[] files = Directory.GetFiles(itemAnimDir, "*.json");
             KeyValuePair<string, TextureAnimator.AnimationState>[] animPairs;
             int p;
 
@@ -892,11 +902,11 @@ namespace DawnmakuEngine
             for (int i = 0; i < files.Length; i++)
             {
                 GameMaster.Log(GetFileNameOnly(files[i]));
-                animPairs = ReadSpriteAnimData(files[i], gameMaster.itemSprites);
+                animPairs = ReadSpriteAnimDataJSON(files[i], gameMaster.itemSprites);
                 for (p = 0; p < animPairs.Length; p++)
                 {
                     GameMaster.LogSecondary(animPairs[p].Key);
-                    gameMaster.itemAnimStates.Add(animPairs[p].Key, animPairs[p].Value);
+                    gameMaster.itemAnimStates[animPairs[p].Key] = animPairs[p].Value;
                 }
             }
         }
@@ -988,14 +998,14 @@ namespace DawnmakuEngine
         }
         public void EnemySpriteLoader()
         {
-            string[] files = Directory.GetFiles(enemyTexDir, "*.dwnsprites");
+            string[] files = Directory.GetFiles(enemyTexDir, "*.json");
             KeyValuePair<string, SpriteSet>[] spritePairs;
 
             GameMaster.LogPositiveNotice("\nEnemy Sprites:");
             for (int i = 0; i < files.Length; i++)
             {
                 GameMaster.Log(GetFileNameOnly(files[i]));
-                spritePairs = ReadSpriteData(files[i], gameMaster.enemyTextures[GetFileNameOnly(files[i])]);
+                spritePairs = ReadSpriteDataJSON(files[i], gameMaster.enemyTextures[GetFileNameOnly(files[i])]);
                 for (int e = 0; e < spritePairs.Length; e++)
                 {
                     GameMaster.LogSecondary(spritePairs[e].Key);
@@ -1006,7 +1016,7 @@ namespace DawnmakuEngine
 
         public void EnemyAnimLoader()
         {
-            string[] files = Directory.GetFiles(enemyAnimDir, "*.dwnanim");
+            string[] files = Directory.GetFiles(enemyAnimDir, "*.json");
             KeyValuePair<string, TextureAnimator.AnimationState>[] animPairs;
             int p;
 
@@ -1014,11 +1024,11 @@ namespace DawnmakuEngine
             for (int i = 0; i < files.Length; i++)
             {
                 GameMaster.Log(GetFileNameOnly(files[i]));
-                animPairs = ReadSpriteAnimData(files[i], gameMaster.enemySprites);
+                animPairs = ReadSpriteAnimDataJSON(files[i], gameMaster.enemySprites);
                 for (p = 0; p < animPairs.Length; p++)
                 {
                     GameMaster.LogSecondary(animPairs[p].Key);
-                    gameMaster.enemyAnimStates.Add(animPairs[p].Key, animPairs[p].Value);
+                    gameMaster.enemyAnimStates[animPairs[p].Key] = animPairs[p].Value;
                 }
             }
         }
@@ -1150,12 +1160,12 @@ namespace DawnmakuEngine
                     GameMaster.Log(GetFileNameOnly(files[i]));
                     gameMaster.fontSheets.Add(GetFileNameOnly(files[i]), new Texture(files[i], false));
                 }
-                files = Directory.GetFiles(fontDir, "*.dwnsprites");
+                files = Directory.GetFiles(fontDir, "*.json");
                 KeyValuePair<string, SpriteSet>[] spritePairs;
                 for (i = 0; i < files.Length; i++)
                 {
                     GameMaster.Log(GetFileNameOnly(files[i]));
-                    spritePairs = ReadSpriteData(files[i], gameMaster.fontSheets[GetFileNameOnly(files[i])]);
+                    spritePairs = ReadSpriteDataJSON(files[i], gameMaster.fontSheets[GetFileNameOnly(files[i])]);
                     for (c = 0; c < spritePairs.Length; c++)
                     {
                         GameMaster.LogSecondary(spritePairs[c].Key);
@@ -2043,7 +2053,7 @@ namespace DawnmakuEngine
             FileStream stream = new FileStream(file, FileMode.Open, FileAccess.Read);
 
             Typeface typeFace = new OpenFontReader().Read(stream);
-            
+
             int t;
 
             for (t = 0; t < typeFace.GlyphCount; t++)
@@ -2055,7 +2065,7 @@ namespace DawnmakuEngine
                 if (!charList.indexes.ContainsKey((ushort)newChar))
                     charList.indexes.Add((ushort)newChar, t);
             }
-            if(gameMaster.logAllFontChars)
+            if (gameMaster.logAllFontChars)
                 GameMaster.LogNeutralNotice(charList.everyCharInFont);
 
             stream.Close();
@@ -2346,242 +2356,210 @@ namespace DawnmakuEngine
         #endregion
 
         #region Sprites and Animation
-        public KeyValuePair<string, SpriteSet>[] ReadSpriteData(string file, Texture tex)
+        public KeyValuePair<string, SpriteSet>[] ReadSpriteDataJSON(string file, Texture tex)
         {
-            int i = 0, s = 0, lineOffset = 0;
-            int[] indexes = { 0, 0 };
-            string[] spriteSets, sprites, spriteValues, allLines = File.ReadAllLines(file);
-            string key = "", data;
-            float coordinate;
+            List<KeyValuePair<string, SpriteSet>> spritePairs = new List<KeyValuePair<string, SpriteSet>>();
             SpriteSet value = null;
 
-            List<KeyValuePair<string, SpriteSet>> spritePairs = new List<KeyValuePair<string, SpriteSet>>();
+            string text = File.ReadAllText(file);
+            JSONSpriteList[] data = JsonConvert.DeserializeObject<JSONSpriteList[]>(text);
 
-            while (lineOffset < allLines.Length)
+            int i, k;
+            int coord;
+
+            try
             {
-                try
+                for (i = 0; i < data.Length; i++)
                 {
-                    data = GetData(allLines, "=", ref lineOffset);
-                    if (data == "")
-                        continue;
-                    spriteSets = data.Split(';', StringSplitOptions.RemoveEmptyEntries);
+                    value = new SpriteSet();
 
-                    for (i = 0; i < spriteSets.Length; i++)
+                    for (k = 0; k < data[i].sprites.Count; k++)
                     {
-                        spriteSets[i] += ";";
-                        indexes = FindIndexes(spriteSets[i], "=");
+                        value.sprites.Add(new SpriteSet.Sprite());
 
-                        key = spriteSets[i].Substring(0, indexes[0] - 1);
-                        value = new SpriteSet();
-                        sprites = GetInputSubstring(indexes, spriteSets[i]).Split(":", StringSplitOptions.RemoveEmptyEntries);
+                        value.sprites[k].left = data[i].sprites[k][0] / (float)tex.Width;
+                        value.sprites[k].top = 1 - (data[i].sprites[k][1] / (float)tex.Height);
+                        value.sprites[k].right = data[i].sprites[k][2] / (float)tex.Width;
+                        value.sprites[k].bottom = 1 - (data[i].sprites[k][3] / (float)tex.Height);
 
-                        for (s = 0; s < sprites.Length; s++)
-                        {
-                            value.sprites.Add(new SpriteSet.Sprite());
-                            spriteValues = sprites[s].Split(",", StringSplitOptions.RemoveEmptyEntries);
-                            coordinate = ParseFloat(spriteValues[0]);
-                            value.sprites[s].left = coordinate / tex.Width;
-                            coordinate = ParseFloat(spriteValues[1]);
-                            value.sprites[s].top = 1 - (coordinate / tex.Height);
-                            coordinate = ParseFloat(spriteValues[2]);
-                            value.sprites[s].right = coordinate / tex.Width;
-                            coordinate = ParseFloat(spriteValues[3]);
-                            value.sprites[s].bottom = 1 - (coordinate / tex.Height);
-
-                            value.sprites[s].tex = tex;
-                        }
-
-                        spritePairs.Add(new KeyValuePair<string, SpriteSet>(key, value));
+                        value.sprites[k].tex = tex;
                     }
+                    spritePairs.Add(new KeyValuePair<string, SpriteSet>(data[i].name.ToLower(), value));
                 }
-                catch (Exception e)
-                {
-                    GameMaster.LogErrorMessage("There was an error loading this sprite data!", e.Message);
-                }
+            }
+            catch (Exception e)
+            {
+                GameMaster.LogErrorMessage("There was an error loading this sprite data!", e.Message);
             }
 
             return spritePairs.ToArray();
+
         }
 
-        public KeyValuePair<string, TextureAnimator.AnimationState>[] ReadSpriteAnimData(string file, Dictionary<string, SpriteSet> sprites)
+        public KeyValuePair<string, TextureAnimator.AnimationState>[] ReadSpriteAnimDataJSON(string file, Dictionary<string, SpriteSet> sprites)
         {
-            int i = 0, lineOffset = 0;
-            int[] indexes = { 0, 0 };
-            string[] frameSets, allLines = File.ReadAllLines(file);
-            string stringVal, key, data;
+            string text = File.ReadAllText(file);
+            JSONSpriteAnim[] anims = JsonConvert.DeserializeObject<JSONSpriteAnim[]>(text);
+
             SpriteSet set;
             TextureAnimator.AnimationState thisState;
             List<KeyValuePair<string, TextureAnimator.AnimationState>> animPairs = new List<KeyValuePair<string, TextureAnimator.AnimationState>>();
 
+            int i, f;
+            int spriteIndex;
+            float duration;
 
-            while (lineOffset < allLines.Length)
+            try
             {
-                try
+                for (i = 0; i < anims.Length; i++)
                 {
-                    data = GetData(allLines, "name=", ref lineOffset, true, "/");
-
-                    if (data[data.Length - 1] == '/')
-                        data = data.Remove(data.Length - 1);
-
                     thisState = new TextureAnimator.AnimationState();
+                    thisState.autoTransition = int.Parse(anims[i].autotransition);
+                    thisState.loop = anims[i].loop == "true";
+                    thisState.animFrames = new TextureAnimator.AnimationFrame[anims[i].frames.Count];
 
-                    key = GetInputSubstring(data, "name=");
-                    thisState.autoTransition = GetParseRoundedNum(data, "autotransition=");
-                    thisState.loop = GetParseBool(data, "loop=");
-
-                    frameSets = GetInputSubstring(data, "frames=", 0, true, "EndOfFile").Split(':', StringSplitOptions.RemoveEmptyEntries);
-                    thisState.animFrames = new TextureAnimator.AnimationFrame[frameSets.Length];
-                    for (i = 0; i < frameSets.Length; i++)
+                    for (f = 0; f < anims[i].frames.Count; f++)
                     {
-                        thisState.animFrames[i] = new TextureAnimator.AnimationFrame();
+                        thisState.animFrames[f] = new TextureAnimator.AnimationFrame();
 
-                        thisState.animFrames[i].frameDuration = GetParseFloat(frameSets[i], "duration=");
-                        stringVal = GetInputSubstring(frameSets[i], "spriteset=");
+                        if (!float.TryParse(anims[i].frames[f].duration, out duration))
+                            throw new Exception("Cannot parse " + anims[i].name + " frame " + f + " duration.");
+                        thisState.animFrames[f].frameDuration = duration;
 
-                        sprites.TryGetValue(stringVal, out set);
-                        if (set != null)
-                            thisState.animFrames[i].sprite = set.sprites[GetParseRoundedNum(frameSets[i], "sprite=")];
+                        if (!sprites.TryGetValue(anims[i].frames[f].spriteset.ToLower(), out set))
+                            throw new Exception("Spriteset " + anims[i].frames[f].spriteset + " has not been defined for " + anims[i].name + " frame " + f + ".");
+
+                        if (!int.TryParse(anims[i].frames[f].sprite, out spriteIndex))
+                            throw new Exception("Cannot parse " + anims[i].name + " frame " + f + " sprite index.");
+                        thisState.animFrames[f].sprite = set.sprites[spriteIndex];
                     }
 
-                    animPairs.Add(new KeyValuePair<string, TextureAnimator.AnimationState>(key, thisState));
-                }
-                catch (Exception e)
-                {
-                    GameMaster.LogErrorMessage("There was an error loading this sprite anim!", e.Message);
+                    animPairs.Add(new KeyValuePair<string, TextureAnimator.AnimationState>(anims[i].name.ToLower(), thisState));
                 }
             }
+            catch (Exception e)
+            {
+                GameMaster.LogErrorMessage("There was an error loading this sprite anim!", e.Message);
+            }
 
-            return animPairs.ToArray(); ;
+            return animPairs.ToArray();
         }
         #endregion
 
         #region Bullets
-        public BulletData ReadBulletData(string file)
+        public BulletData ReadBulletDataJSON(string file)
         {
-            BulletData thisData = new BulletData();
-            int i, s;
-            int[] indexes = { 0, 0 };
-            string[] tempStrings, allLines = File.ReadAllLines(file);
+            BulletData outputData = new BulletData();
             TextureAnimator.AnimationState state;
+
+            string text = File.ReadAllText(file);
+            JSONBulletData bulletData = JsonConvert.DeserializeObject<JSONBulletData>(text);
+
+            int i, k;
 
             try
             {
-                thisData.shader = gameMaster.shaders[GetInputSubstring(allLines, "shader=")];
-                thisData.isAnimated = GetParseBool(allLines, "isanimated=");
-                thisData.shouldSpin = GetParseBool(allLines, "shouldspin=");
-                thisData.shouldTurn = GetParseBool(allLines, "shouldturn=");
+                if (!gameMaster.shaders.TryGetValue(bulletData.shader, out outputData.shader))
+                    throw new Exception("Can't find shader " + "\"" + bulletData.shader + "\" in dictionary");
 
-                tempStrings = GetInputSubstring(allLines, "collidersize=").Split(':', StringSplitOptions.RemoveEmptyEntries);
-                thisData.colliderSize = new Vector2[tempStrings.Length];
-                for (i = 0; i < tempStrings.Length; i++)
-                    thisData.colliderSize[i] = ParseVector2(tempStrings[i]) / 2;
+                outputData.isAnimated = bulletData.isAnimated;
+                outputData.spinSpeed = bulletData.spinSpeed;
+                outputData.shouldTurn = bulletData.shouldTurn;
+                outputData.spriteColors = (ushort)bulletData.spriteColorCount;
+                outputData.randomizeSprite = bulletData.randomizeSprite;
 
-                tempStrings = GetInputSubstring(allLines, "collideroffset=").Split(':', StringSplitOptions.RemoveEmptyEntries);
-                thisData.colliderOffset = new Vector2[tempStrings.Length >= thisData.colliderSize.Length ? tempStrings.Length : thisData.colliderSize.Length];
-                for (i = 0; i < thisData.colliderSize.Length; i++)
-                    thisData.colliderOffset[i] = ParseVector2(tempStrings[Math.Clamp(i, 0, tempStrings.Length - 1)]);
+                outputData.colliderSize = new Vector2[bulletData.colliders.Count];
+                outputData.colliderOffset = new Vector2[bulletData.colliders.Count];
 
-                if (thisData.colliderOffset.Length > thisData.colliderSize.Length)
+                for (i = 0; i < bulletData.colliders.Count; i++)
                 {
-                    Vector2[] prevColliderSizeList = thisData.colliderSize;
-                    thisData.colliderSize = new Vector2[thisData.colliderOffset.Length];
-                    for (i = 0; i < thisData.colliderSize.Length; i++)
-                        thisData.colliderSize[i] = prevColliderSizeList[Math.Clamp(i, 0, prevColliderSizeList.Length - 1)];
+                    outputData.colliderSize[i] = new Vector2(bulletData.colliders[i].sizeX, bulletData.colliders[i].sizeY);
+                    outputData.colliderOffset[i] = new Vector2(bulletData.colliders[i].offsetX, bulletData.colliders[i].offsetY);
                 }
 
-                if (CheckHasData(allLines, "boundsexitdistance="))
+                if (bulletData.boundsExitDist != -1)
                 {
-                    thisData.boundsExitDist = GetParseFloat(allLines, "boundsexitdistance=");
+                    outputData.boundsExitDist = bulletData.boundsExitDist;
                 }
                 else
                 {
                     float dist;
-                    for (i = 0; i < thisData.colliderSize.Length; i++)
+                    for (i = 0; i < outputData.colliderSize.Length; i++)
                     {
-                        dist = thisData.colliderSize[i].X + Math.Abs(thisData.colliderOffset[i].X);
-                        if (dist > thisData.boundsExitDist)
-                            thisData.boundsExitDist = dist;
+                        dist = outputData.colliderSize[i].X + Math.Abs(outputData.colliderOffset[i].X);
+                        if (dist > outputData.boundsExitDist)
+                            outputData.boundsExitDist = dist;
 
-                        dist = thisData.colliderSize[i].Y + Math.Abs(thisData.colliderOffset[i].Y);
-                        if (dist > thisData.boundsExitDist)
-                            thisData.boundsExitDist = dist;
+                        dist = outputData.colliderSize[i].Y + Math.Abs(outputData.colliderOffset[i].Y);
+                        if (dist > outputData.boundsExitDist)
+                            outputData.boundsExitDist = dist;
                     }
                 }
 
-                thisData.spriteColors = (ushort)GetParseRoundedNum(allLines, "spritecolorcount=");
-                thisData.randomizeSprite = GetParseBool(allLines, "randomizesprite=");
-
-                if (thisData.isAnimated)
+                if (outputData.isAnimated)
                 {
-                    string[] stateStrings = GetInputSubstring(allLines, "animstates=").Split(':', StringSplitOptions.RemoveEmptyEntries);
-
-                    thisData.animStates = new TextureAnimator.AnimationState[stateStrings.Length][];
-
-                    for (i = 0; i < stateStrings.Length; i++)
+                    outputData.animStates = new TextureAnimator.AnimationState[bulletData.animStates.Count][];
+                    for (i = 0; i < bulletData.animStates.Count; i++)
                     {
-                        tempStrings = stateStrings[i].Split(',', StringSplitOptions.RemoveEmptyEntries);
-                        thisData.animStates[i] = new TextureAnimator.AnimationState[tempStrings.Length];
-                        for (s = 0; s < tempStrings.Length; s++)
+                        outputData.animStates[i] = new TextureAnimator.AnimationState[bulletData.animStates[i].Count];
+
+                        for (k = 0; k < bulletData.animStates[i].Count; k++)
                         {
-                            gameMaster.bulletAnimStates.TryGetValue(tempStrings[s], out state);
-                            thisData.animStates[i][s] = state;
+                            if (!gameMaster.bulletAnimStates.TryGetValue(bulletData.animStates[i][k], out outputData.animStates[i][k]))
+                                throw new Exception("Can't find animation state " + "\"" + bulletData.animStates[i][k] + "\" in dictionary");
                         }
                     }
                 }
                 else
-                    thisData.animStates = new TextureAnimator.AnimationState[0][];
+                    outputData.animStates = new TextureAnimator.AnimationState[0][];
             }
             catch (Exception e)
             {
                 GameMaster.LogErrorMessage("There was an error loading this bullet data!", e.Message);
             }
 
-            return thisData;
+            return outputData;
         }
         #endregion
 
         #region Player Character
-        public PlayerOrbData ReadOrbData(string file)
+        public PlayerOrbData ReadOrbDataJSON(string file)
         {
-            PlayerOrbData thisData = new PlayerOrbData();
-            int i = 0;
-            int[] indexes = { 0, 0 };
-            float numVal = 0;
-            string[] tempStrings, allLines = File.ReadAllLines(file);
+            PlayerOrbData outputData = new PlayerOrbData();
+
+            string text = File.ReadAllText(file);
+            JSONOrbData orbData = JsonConvert.DeserializeObject<JSONOrbData>(text);
+
+            int i;
 
             try
             {
-                thisData.shader = gameMaster.shaders[GetInputSubstring(allLines, "shader=")];
+                if (!gameMaster.shaders.TryGetValue(orbData.shader.ToLower(), out outputData.shader))
+                    throw new Exception("Could not find shader \"" + orbData.shader.ToLower() + "\" in dictionary.");
 
-                tempStrings = GetInputSubstring(allLines, "activepowerlevels=").Split(",");
-                thisData.activePowerLevels = new bool[tempStrings.Length];
-                for (i = 0; i < tempStrings.Length; i++)
+                outputData.activePowerLevels = orbData.activePowerLevels.ToArray();
+                outputData.unfocusPosition = new Vector2(orbData.unfocusPos.x, orbData.unfocusPos.y);
+                outputData.focusPosition = new Vector2(orbData.focusPos.x, orbData.focusPos.y);
+
+                outputData.framesToMove = orbData.framesToMove;
+                outputData.rotateSpeed = orbData.rotateSpeed;
+
+                outputData.animStates = new TextureAnimator.AnimationState[orbData.animStates.Count];
+                for (i = 0; i < orbData.animStates.Count; i++)
                 {
-                    thisData.activePowerLevels[i] = ParseBool(tempStrings[i]);
+                    if (!gameMaster.playerOrbAnimStates.TryGetValue(orbData.animStates[i].ToLower(), out outputData.animStates[i]))
+                        throw new Exception("Could not find animation \"" + orbData.animStates[i].ToLower() + "\" in dictionary.");
                 }
 
-                thisData.unfocusPosition = GetParseVector2(allLines, "unfocuspos=");
-                thisData.focusPosition = GetParseVector2(allLines, "focusedpos=");
-                thisData.framesToMove = GetParseFloat(allLines, "framestomove=");
-                thisData.rotateDegreesPerSecond = GetParseFloat(allLines, "rotatedegreespersecond=");
-
-                tempStrings = GetInputSubstring(allLines, "animstates=").Split(",");
-                thisData.animStates = new TextureAnimator.AnimationState[tempStrings.Length];
-                for (i = 0; i < tempStrings.Length; i++)
-                {
-                    thisData.animStates[i] = gameMaster.playerOrbAnimStates[tempStrings[i]];
-                }
-
-                thisData.startAnimFrame = GetParseRoundedNum(allLines, "startanimframe=");
-
-                switch (GetInputSubstring(allLines, "leavebehind="))
+                outputData.startAnimFrame = orbData.startAnimFrame;
+                switch (orbData.leaveBehind)
                 {
                     case "focus":
                     case "focused":
                     case "shift":
                     case "shifting":
                     case "holdingshift":
-                        thisData.leaveBehindWhileFocused = true;
+                        outputData.leaveBehindWhileFocused = true;
                         break;
                     case "unfocus":
                     case "unfocused":
@@ -2590,31 +2568,26 @@ namespace DawnmakuEngine
                     case "notshift":
                     case "notshifting":
                     case "notholdingshift":
-                        thisData.leaveBehindWhileUnfocused = true;
+                        outputData.leaveBehindWhileUnfocused = true;
                         break;
                 }
 
-                thisData.followPrevious = GetParseBool(allLines, "followprevious=");
+                outputData.followPrevious = orbData.followPrevious;
+                outputData.followDist = orbData.followDist;
+                outputData.followDistSq = orbData.followDist * orbData.followDist;
 
-                if (thisData.followPrevious)
+                outputData.unfocusedPatterns = new Pattern[orbData.unfocusPatternsByPower.Count];
+                for (i = 0; i < orbData.unfocusPatternsByPower.Count; i++)
                 {
-                    numVal = GetParseFloat(allLines, "followdist=");
-                    thisData.followDist = numVal;
-                    thisData.followDistSq = numVal * numVal;
+                    if (!gameMaster.playerPatterns.TryGetValue(orbData.unfocusPatternsByPower[i].ToLower(), out outputData.unfocusedPatterns[i]))
+                        throw new Exception("Could not find player pattern \"" + orbData.unfocusPatternsByPower[i].ToLower() + "\" in dictionary.");
                 }
 
-                tempStrings = GetInputSubstring(allLines, "unfocuspatternsbypower=").Split(":");
-                thisData.unfocusedPatterns = new Pattern[tempStrings.Length];
-                for (i = 0; i < tempStrings.Length; i++)
+                outputData.focusedPatterns = new Pattern[orbData.focusPatternsByPower.Count];
+                for (i = 0; i < orbData.focusPatternsByPower.Count; i++)
                 {
-                    thisData.unfocusedPatterns[i] = gameMaster.playerPatterns[tempStrings[i]];
-                }
-
-                tempStrings = GetInputSubstring(allLines, "focusedpatternsbypower=").Split(":");
-                thisData.focusedPatterns = new Pattern[tempStrings.Length];
-                for (i = 0; i < tempStrings.Length; i++)
-                {
-                    thisData.focusedPatterns[i] = gameMaster.playerPatterns[tempStrings[i]];
+                    if (!gameMaster.playerPatterns.TryGetValue(orbData.focusPatternsByPower[i].ToLower(), out outputData.focusedPatterns[i]))
+                        throw new Exception("Could not find player pattern \"" + orbData.focusPatternsByPower[i].ToLower() + "\" in dictionary.");
                 }
             }
             catch (Exception e)
@@ -2622,34 +2595,32 @@ namespace DawnmakuEngine
                 GameMaster.LogErrorMessage("There was an error loading this player orb data!", e.Message);
             }
 
-            return thisData;
+            return outputData;
         }
-        public PlayerShotData ReadShotData(string file)
+
+        public PlayerShotData ReadShotDataJSON(string file)
         {
-            PlayerShotData thisData = new PlayerShotData();
-            int i = 0;
-            int[] indexes = { 0, 0 };
-            string[] tempStrings, allLines = File.ReadAllLines(file);
+            PlayerShotData outputData = new PlayerShotData();
+
+            string text = File.ReadAllText(file);
+            JSONShotData shotData = JsonConvert.DeserializeObject<JSONShotData>(text);
+
+            int i;
 
             try
             {
-                tempStrings = GetInputSubstring(allLines, "bombname=").Replace('_', ' ').Split(",");
-                thisData.bombName = new string[tempStrings.Length];
-                for (i = 0; i < tempStrings.Length; i++)
-                {
-                    thisData.bombName[i] = tempStrings[i];
-                }
+                outputData.bombName = shotData.bombName.ToArray();
 
-                thisData.moveSpeed = GetParseFloat(allLines, "movespeed=");
-                thisData.focusModifier = GetParseFloat(allLines, "focusspeedpercent=");
-                thisData.colliderSize = GetParseFloat(allLines, "collidersize=");
-                thisData.colliderOffset = GetParseVector2(allLines, "collideroffset=");
+                outputData.moveSpeed = shotData.moveSpeed;
+                outputData.focusModifier = shotData.focusSpeedPercent;
+                outputData.colliderSize = shotData.colliderSize;
+                outputData.colliderOffset = new Vector2(shotData.colliderOffsetX, shotData.colliderOffsetY);
 
-                tempStrings = GetInputSubstring(allLines, "orbs=").Split(",");
-                thisData.orbData = new PlayerOrbData[tempStrings.Length];
-                for (i = 0; i < tempStrings.Length; i++)
+                outputData.orbData = new PlayerOrbData[shotData.orbs.Count];
+                for (i = 0; i < shotData.orbs.Count; i++)
                 {
-                    thisData.orbData[i] = gameMaster.playerOrbData[tempStrings[i]];
+                    if (!gameMaster.playerOrbData.TryGetValue(shotData.orbs[i].ToLower(), out outputData.orbData[i]))
+                        throw new Exception("Could not find orb data \"" + shotData.orbs[i].ToLower() + "\" in dictionary.");
                 }
             }
             catch (Exception e)
@@ -2657,37 +2628,28 @@ namespace DawnmakuEngine
                 GameMaster.LogErrorMessage("There was an error loading this player shot data!", e.Message);
             }
 
-            return thisData;
+            return outputData;
         }
 
-        public PlayerTypeData ReadTypeData(string file)
+        public PlayerTypeData ReadTypeDataJSON(string file)
         {
-            PlayerTypeData thisData = new PlayerTypeData();
-            int i = 0;
-            int[] indexes = { 0, 0 };
-            string[] tempStrings, allLines = File.ReadAllLines(file);
+            PlayerTypeData outputData = new PlayerTypeData();
+
+            string text = File.ReadAllText(file);
+            JSONShotType typeData = JsonConvert.DeserializeObject<JSONShotType>(text);
+
+            int i;
 
             try
             {
-                tempStrings = GetInputSubstring(allLines, "name=").Replace('_', ' ').Split(",");
-                thisData.name = new string[tempStrings.Length];
-                for (i = 0; i < tempStrings.Length; i++)
-                {
-                    thisData.name[i] = tempStrings[i];
-                }
+                outputData.name = typeData.name.ToArray();
+                outputData.desc = typeData.desc.ToArray();
 
-                tempStrings = GetInputSubstring(allLines, "desc=").Replace('_', ' ').Split(",");
-                thisData.desc = new string[tempStrings.Length];
-                for (i = 0; i < tempStrings.Length; i++)
+                outputData.shotData = new PlayerShotData[typeData.shotData.Count];
+                for (i = 0; i < typeData.shotData.Count; i++)
                 {
-                    thisData.desc[i] = tempStrings[i];
-                }
-
-                tempStrings = GetInputSubstring(allLines, "shotdata=").Split(",");
-                thisData.shotData = new PlayerShotData[tempStrings.Length];
-                for (i = 0; i < tempStrings.Length; i++)
-                {
-                    thisData.shotData[i] = gameMaster.playerShot[tempStrings[i]];
+                    if (!gameMaster.playerShot.TryGetValue(typeData.shotData[i].ToLower(), out outputData.shotData[i]))
+                        throw new Exception("Could not find shot data \"" + typeData.shotData[i].ToLower() + "\" in dictionary.");
                 }
             }
             catch (Exception e)
@@ -2695,71 +2657,77 @@ namespace DawnmakuEngine
                 GameMaster.LogErrorMessage("There was an error loading this player type data!", e.Message);
             }
 
-            return thisData;
+            return outputData;
         }
-        public PlayerCharData ReadPlayerCharData(string file)
+
+        public PlayerCharData ReadPlayerCharDataJSON(string file)
         {
-            PlayerCharData thisData = new PlayerCharData();
-            int i = 0;
-            int[] indexes = { 0, 0 };
-            string[] tempStrings, allLines = File.ReadAllLines(file);
-            AudioData audioVal;
+            PlayerCharData outputData = new PlayerCharData();
+
+            string text = File.ReadAllText(file);
+            JSONCharacter charData = JsonConvert.DeserializeObject<JSONCharacter>(text);
+
+            int i, k;
 
             try
             {
-                thisData.charShader = gameMaster.shaders[GetInputSubstring(allLines, "charactershader=")];
-                thisData.hitboxShader = gameMaster.shaders[GetInputSubstring(allLines, "hitboxshader=")];
-                thisData.focusEffectShader = gameMaster.shaders[GetInputSubstring(allLines, "focuseffectshader=")];
+                if (!gameMaster.shaders.TryGetValue(charData.characterShader.ToLower(), out outputData.charShader))
+                    throw new Exception("Could not find shader \"" + charData.characterShader.ToLower() + "\" in dictionary.");
+                if (!gameMaster.shaders.TryGetValue(charData.hitboxShader.ToLower(), out outputData.hitboxShader))
+                    throw new Exception("Could not find shader \"" + charData.hitboxShader.ToLower() + "\" in dictionary.");
+                if (!gameMaster.shaders.TryGetValue(charData.focusEffectShader.ToLower(), out outputData.focusEffectShader))
+                    throw new Exception("Could not find shader \"" + charData.focusEffectShader.ToLower() + "\" in dictionary.");
 
-                thisData.name = GetInputSubstring(allLines, "name=").Replace('_', ' ');
-                thisData.jpName = GetInputSubstring(allLines, "jpname=").Replace('_', ' ');
+                outputData.name = charData.name.ToArray();
 
-                thisData.moveSpeed = GetParseFloat(allLines, "movespeed=");
-                thisData.focusModifier = GetParseFloat(allLines, "focusspeedpercent=");
-                thisData.colliderSize = GetParseFloat(allLines, "collidersize=") / 2;
-                thisData.colliderOffset = GetParseVector2(allLines, "collideroffset=");
+                outputData.moveSpeed = charData.moveSpeed;
+                outputData.focusModifier = charData.focusSpeedPercent;
+                outputData.colliderSize = charData.colliderSize;
+                outputData.colliderOffset = new Vector2(charData.colliderOffsetX, charData.colliderOffsetY);
 
-                if (gameMaster.sfx.TryGetValue(GetInputSubstring(allLines, "hitsound="), out audioVal))
-                    thisData.hitSound = audioVal;
+                if(!gameMaster.sfx.TryGetValue(charData.hitSound.ToLower(), out outputData.hitSound))
+                    throw new Exception("Could not find sound \"" + charData.hitSound.ToLower() + "\" in dictionary.");
+                if (!gameMaster.sfx.TryGetValue(charData.focusSound.ToLower(), out outputData.focusSound))
+                    throw new Exception("Could not find sound \"" + charData.focusSound.ToLower() + "\" in dictionary.");
+                if (!gameMaster.sfx.TryGetValue(charData.grazeSound.ToLower(), out outputData.grazeSound))
+                    throw new Exception("Could not find sound \"" + charData.grazeSound.ToLower() + "\" in dictionary.");
 
-                if (gameMaster.sfx.TryGetValue(GetInputSubstring(allLines, "focussound="), out audioVal))
-                    thisData.focusSound = audioVal;
+                if (!gameMaster.playerEffectAnimStates.TryGetValue(charData.hitboxAnim.ToLower(), out outputData.hitboxAnim))
+                    throw new Exception("Could not find animation \"" + charData.hitboxAnim.ToLower() + "\" in dictionary.");
+                if (!gameMaster.playerEffectAnimStates.TryGetValue(charData.focusEffectAnim.ToLower(), out outputData.focusEffectAnim))
+                    throw new Exception("Could not find animation \"" + charData.focusEffectAnim.ToLower() + "\" in dictionary.");
 
-                if (gameMaster.sfx.TryGetValue(GetInputSubstring(allLines, "grazesound="), out audioVal))
-                    thisData.grazeSound = audioVal;
+                outputData.hitboxInsetAmount = charData.hitboxPixelInset;
+                outputData.focusEffectRotSpeed = charData.focusEffectRotSpeed;
 
-                tempStrings = GetInputSubstring(allLines, "shottypes=").Split(",");
-                thisData.types = new PlayerTypeData[tempStrings.Length];
-                for (i = 0; i < tempStrings.Length; i++)
+                outputData.animStates = new TextureAnimator.AnimationState[charData.animStates.Count];
+                for (i = 0; i < charData.animStates.Count; i++)
                 {
-                    thisData.types[i] = gameMaster.playerTypes[tempStrings[i]];
-                    for (int k = 0; k < thisData.types[i].shotData.Length; k++)
+                    if (!gameMaster.playerAnimStates.TryGetValue(charData.animStates[i].ToLower(), out outputData.animStates[i]))
+                        throw new Exception("Could not find animation \"" + charData.animStates[i].ToLower() + "\" in dictionary.");
+                }
+
+                outputData.types = new PlayerTypeData[charData.shotTypes.Count];
+                for (i = 0; i < charData.shotTypes.Count; i++)
+                {
+                    if (!gameMaster.playerTypes.TryGetValue(charData.shotTypes[i].ToLower(), out outputData.types[i]))
+                        throw new Exception("Could not find shot type \"" + charData.shotTypes[i].ToLower() + "\" in dictionary.");
+
+                    for (k = 0; k < outputData.types[i].shotData.Length; k++)
                     {
-                        if (thisData.types[i].shotData[k].moveSpeed == -1)
-                            thisData.types[i].shotData[k].moveSpeed = thisData.moveSpeed;
-                        if (thisData.types[i].shotData[k].focusModifier == -1)
-                            thisData.types[i].shotData[k].focusModifier = thisData.focusModifier;
+                        if (outputData.types[i].shotData[k].moveSpeed == -1)
+                            outputData.types[i].shotData[k].moveSpeed = outputData.moveSpeed;
+                        if (outputData.types[i].shotData[k].focusModifier == -1)
+                            outputData.types[i].shotData[k].focusModifier = outputData.focusModifier;
                     }
                 }
-
-                tempStrings = GetInputSubstring(allLines, "animstates=").Split(",");
-                thisData.animStates = new TextureAnimator.AnimationState[tempStrings.Length];
-                for (i = 0; i < tempStrings.Length; i++)
-                {
-                    thisData.animStates[i] = gameMaster.playerAnimStates[tempStrings[i]];
-                }
-
-                thisData.hitboxAnim = gameMaster.playerEffectAnimStates[GetInputSubstring(allLines, "hitboxanim=")];
-                thisData.hitboxInsetAmount = GetParseFloat(allLines, "hitboxpixelinset=") * 2;
-                thisData.focusEffectAnim = gameMaster.playerEffectAnimStates[GetInputSubstring(allLines, "focuseffectanim=")];
-                thisData.focusEffectRotSpeed = GetParseFloat(allLines, "focuseffectrotspeed=");
             }
             catch (Exception e)
             {
                 GameMaster.LogErrorMessage("There was an error loading this player character data!", e.Message);
             }
 
-            return thisData;
+            return outputData;
         }
         #endregion
 

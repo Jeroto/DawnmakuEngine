@@ -1,0 +1,20 @@
+{
+    "bombName": [
+        "Spirit sign \"Fantasy Seal\"",
+        "霊符「夢想封印」"
+    ],
+
+    "moveSpeed": 2.5,
+    "focusSpeedPercent": 25,
+    "colliderSize": -1,
+    "colliderOffsetX": 0,
+    "colliderOffsetY": 0,
+
+    "orbs":
+    [
+        "ReimuAOrb5",
+        "ReimuAOrb6",
+        "ReimuAOrb7",
+        "ReimuAOrb8"
+    ]
+}

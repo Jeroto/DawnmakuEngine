@@ -1,0 +1,26 @@
+{
+    "characterShader": "spriteShader",
+    "name": ["Reimu", "博麗霊夢"],
+    "moveSpeed": 3,
+    "focusSpeedPercent": 65,
+    "colliderSize": 5,
+    "colliderOffsetX": -2,
+    "colliderOffsetY": 0,
+    "hitSound": "playerdeath",
+    "focusSound": "focus",
+    "grazeSound": "graze",
+    "shotTypes": [
+        "ReimuA"
+    ],
+    "animStates": [
+        "ReimuIdle",
+        "ReimuLeft",
+        "ReimuRight"
+    ],
+    "hitboxAnim": "playerHitbox",
+    "hitboxPixelInset": 8,
+    "hitboxShader": "spriteShader",
+    "focusEffectAnim": "focusFX",
+    "focusEffectRotSpeed": 60,
+    "focusEffectShader": "spriteShader"
+}

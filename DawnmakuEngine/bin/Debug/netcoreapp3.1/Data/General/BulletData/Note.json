@@ -1,0 +1,65 @@
+{
+    "shader": "spriteshader",
+    "isanimated": true,
+    "spinspeed": 0,
+    "shouldturn": true,
+    "spritecolorcount": 44,
+    "randomizesprite": false,
+    "colliders": [
+        {
+            "sizex": 9,
+            "sizey": 9,
+            "offsetx": 1,
+            "offsety": -11
+        }
+    ],
+    "animstates": [
+        ["whitenote"],
+        ["rednote"],
+        ["blacknote"],
+        ["tealnote"],
+        ["bluenote"],
+        ["pinknote"],
+        ["orangenote"],
+        ["yellownote"],
+        ["purplenote"],
+
+        ["whitenoteinverse"],
+        ["rednoteinverse"],
+        ["blacknoteinverse"],
+        ["greennoteinverse"],
+        ["tealnoteinverse"],
+        ["bluenoteinverse"],
+        ["pinknoteinverse"],
+        ["orangenoteinverse"],
+        ["yellownoteinverse"],
+        ["purplenoteinverse"],
+
+        ["whitenoteinvert"],
+        ["rednoteinvert"],
+        ["blacknoteinvert"],
+        ["greennoteinvert"],
+        ["tealnoteinvert"],
+        ["bluenoteinvert"],
+        ["pinknoteinvert"],
+        ["orangenoteinvert"],
+        ["yellownoteinvert"],
+        ["purplenoteinvert"],
+
+        ["whitenoteinvinv"],
+        ["rednoteinvinv"],
+        ["blacknoteinvinv"],
+        ["greennoteinvinv"],
+        ["tealnoteinvinv"],
+        ["bluenoteinvinv"],
+        ["pinknoteinvinv"],
+        ["orangenoteinvinv"],
+        ["yellownoteinvinv"],
+        ["purplenoteinvinv"],
+
+        ["flamenote"],
+        ["flamenoteinvert"],
+        ["specialnote"],
+        ["specialnoteinvert"]
+    ]
+}

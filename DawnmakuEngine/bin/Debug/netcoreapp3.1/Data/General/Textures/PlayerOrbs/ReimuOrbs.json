@@ -1,0 +1,20 @@
+[
+    {
+        "name":"ReimuA",
+        "sprites":[
+                [0,0,16,16]
+        ]
+    },
+    {
+        "name":"ReimuB",
+        "sprites":[
+                [0,16,16,32]
+        ]
+    },
+    {
+        "name":"ReimuC",
+        "sprites":[
+                [0,32,16,48]
+        ]
+    }
+]

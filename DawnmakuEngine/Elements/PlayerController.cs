@@ -32,7 +32,7 @@ namespace DawnmakuEngine.Elements
         protected float hitboxScale, hitboxInvisScale;
         protected float timeSinceFocusChange;
         protected const byte HITBOX_ANIM_TIME = 15, FOCUS_EFFECT_ANIM_TIME = 30;
-        protected const byte HITBOX_ALPHA = 255, FOCUS_EFFECT_ALPHA = 150;
+        protected const float HITBOX_ALPHA = 1, FOCUS_EFFECT_ALPHA = 0.6f;
         Pattern.PatternVariables[] patternVariables;
 
         MeshRenderer hitbox, focusEffect;
@@ -116,14 +116,14 @@ namespace DawnmakuEngine.Elements
             if (InputScript.Focus)
             {
                 hitbox.modelScale = DawnMath.Lerp(hitboxInvisScale, hitboxScale, timeSinceFocusChange / HITBOX_ANIM_TIME);
-                hitbox.colorA = (byte)DawnMath.Lerp(0, HITBOX_ALPHA, timeSinceFocusChange / HITBOX_ANIM_TIME);
-                focusEffect.colorA = (byte)DawnMath.Lerp(0, FOCUS_EFFECT_ALPHA, timeSinceFocusChange / FOCUS_EFFECT_ANIM_TIME);
+                hitbox.colorA = DawnMath.Lerp(0, HITBOX_ALPHA, timeSinceFocusChange / HITBOX_ANIM_TIME);
+                focusEffect.colorA = DawnMath.Lerp(0, FOCUS_EFFECT_ALPHA, timeSinceFocusChange / FOCUS_EFFECT_ANIM_TIME);
             }
             else
             {
                 hitbox.modelScale = DawnMath.Lerp(hitboxScale, hitboxInvisScale, timeSinceFocusChange / HITBOX_ANIM_TIME);
-                hitbox.colorA = (byte)DawnMath.Lerp(HITBOX_ALPHA, 0, timeSinceFocusChange / HITBOX_ANIM_TIME);
-                focusEffect.colorA = (byte)DawnMath.Lerp(FOCUS_EFFECT_ALPHA, 0, timeSinceFocusChange / FOCUS_EFFECT_ANIM_TIME);
+                hitbox.colorA = DawnMath.Lerp(HITBOX_ALPHA, 0, timeSinceFocusChange / HITBOX_ANIM_TIME);
+                focusEffect.colorA = DawnMath.Lerp(FOCUS_EFFECT_ALPHA, 0, timeSinceFocusChange / FOCUS_EFFECT_ANIM_TIME);
             }
 
             DrawAndCollectItems();
@@ -396,7 +396,7 @@ namespace DawnmakuEngine.Elements
                         orbAnim.UpdateStateIndex = 0;
                         orbAnim.FrameIndex = 0;
                         spawnedOrbs[i].GetElement<MeshRenderer>().shader = orbData[i].shader;
-                        spawnedOrbs[i].GetElement<RotateElement>().RotSpeedDeg = orbData[i].rotateDegreesPerSecond;
+                        spawnedOrbs[i].GetElement<RotateElement>().RotSpeedDeg = orbData[i].rotateSpeed;
                     }
                     else
                     {
@@ -409,7 +409,7 @@ namespace DawnmakuEngine.Elements
                         orbAnim = new TextureAnimator(orbData[i].animStates, orbRenderers[i]);
                         orbAnim.FrameIndex = orbData[i].startAnimFrame;
                         spawnedOrbs[i].AddElement(orbAnim);
-                        spawnedOrbs[i].AddElement(new RotateElement(orbData[i].rotateDegreesPerSecond, true, true));
+                        spawnedOrbs[i].AddElement(new RotateElement(orbData[i].rotateSpeed, true, true));
                     }
                 }
             }
@@ -422,7 +422,7 @@ namespace DawnmakuEngine.Elements
                     orbAnim.UpdateStateIndex = 0;
                     orbAnim.FrameIndex = 0;
                     spawnedOrbs[i].GetElement<MeshRenderer>().shader = orbData[i].shader;
-                    spawnedOrbs[i].GetElement<RotateElement>().RotSpeedDeg = orbData[i].rotateDegreesPerSecond;
+                    spawnedOrbs[i].GetElement<RotateElement>().RotSpeedDeg = orbData[i].rotateSpeed;
                 }
             }
 

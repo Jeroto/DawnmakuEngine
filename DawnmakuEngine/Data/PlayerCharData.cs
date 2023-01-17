@@ -9,8 +9,7 @@ namespace DawnmakuEngine.Data
     public class PlayerCharData
     {
         public Shader charShader, hitboxShader, focusEffectShader;
-        public string name;
-        public string jpName;
+        public string[] name;
         public float moveSpeed;
         public float focusModifier;
         public float colliderSize;

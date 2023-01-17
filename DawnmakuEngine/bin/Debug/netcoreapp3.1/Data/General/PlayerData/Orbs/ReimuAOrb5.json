@@ -1,0 +1,54 @@
+{
+    "shader":"spriteshader",
+    "activePowerLevels": [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+    ],
+    "unfocusPos": {
+        "x": -25,
+        "y": 0
+    },
+    "focusPos": {
+        "x": -10,
+        "y": 10
+    },
+    "framesToMove": 10,
+    "rotateSpeed": 180,
+    "animStates": ["ReimuB"],
+    "startAnimFrame": 0,
+    "leaveBehind": "never",
+    "followPrevious": false,
+    "followDist": 0,
+
+    "unfocusPatternsByPower": [
+        "ReimuBPatternUnfocus1",
+        "ReimuBPatternUnfocus1",
+        "ReimuBPatternUnfocus1",
+        "ReimuBPatternUnfocus1",
+        "ReimuBPatternUnfocus1",
+        "ReimuBPatternUnfocus1",
+        "ReimuBPatternUnfocus1",
+        "ReimuBPatternUnfocus1",
+        "ReimuBPatternUnfocus1",
+        "ReimuBPatternUnfocus1"
+    ],
+    "focusPatternsByPower": [
+        "ReimuBPatternFocus1",
+        "ReimuBPatternFocus1",
+        "ReimuBPatternFocus1",
+        "ReimuBPatternFocus1",
+        "ReimuBPatternFocus1",
+        "ReimuBPatternFocus1",
+        "ReimuBPatternFocus1",
+        "ReimuBPatternFocus1",
+        "ReimuBPatternFocus1",
+        "ReimuBPatternFocus1"
+    ]
+}

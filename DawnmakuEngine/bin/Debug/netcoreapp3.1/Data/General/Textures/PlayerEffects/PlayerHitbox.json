@@ -1,0 +1,8 @@
+[
+    {
+        "name":"PlayerHitbox",
+        "sprites":[
+                [0,0,32,32]
+        ]
+    }
+]

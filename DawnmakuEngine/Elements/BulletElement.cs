@@ -383,7 +383,10 @@ namespace DawnmakuEngine.Elements
             if (!ShouldSpin(bulletStages[stageIndex].spriteType))
                 EntityAttachedTo.GetElement<RotateElement>().Disable();
             else
+            {
+                EntityAttachedTo.GetElement<RotateElement>().RotSpeedDeg = GetSpinSpeed(bulletStages[stageIndex].spriteType);
                 EntityAttachedTo.GetElement<RotateElement>().Enable();
+            }
 
             if (bulletStages[stageIndex].hasEffect)
                 SpawnEffect();
@@ -600,7 +603,11 @@ namespace DawnmakuEngine.Elements
 
         public static bool ShouldSpin (string type)
         {
-            return GameMaster.gameMaster.bulletData[type].shouldSpin;
+            return GetSpinSpeed(type) > 0;
+        }
+        public static float GetSpinSpeed(string type)
+        {
+            return GameMaster.gameMaster.bulletData[type].spinSpeed;
         }
 
         public static bool ShouldTurn (string type)

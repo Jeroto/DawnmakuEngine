@@ -1,9 +1,0 @@
-shader=spriteshader;
-isanimated=false;
-shouldspin=false;
-shouldturn=true;
-collidersize=4, 4;
-collideroffset=1,1;
-spriteColorCount=44;
-randomizeSprite=true;
-animStates=;

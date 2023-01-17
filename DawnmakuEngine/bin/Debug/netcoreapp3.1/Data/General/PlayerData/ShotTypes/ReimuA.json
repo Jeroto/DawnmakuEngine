@@ -1,0 +1,16 @@
+{
+    "name": [
+        "Reimu A",
+        "霊夢Ａ"
+    ],
+    "desc": [
+        "Reimu's first shot type.",
+        "霊夢の第一ショットタイプ。"
+    ],
+    "shotData": [
+        "ReimuShot1",
+        "ReimuShot2",
+        "ReimuShot3",
+        "ReimuShot4"
+    ]
+}

@@ -1,0 +1,65 @@
+{
+    "shader": "spriteshader",
+    "isanimated": true,
+    "spinspeed": 0,
+    "shouldturn": true,
+    "spritecolorcount": 44,
+    "randomizesprite": false,
+    "colliders": [
+        {
+            "sizex": 10,
+            "sizey": 10,
+            "offsetx": 0,
+            "offsety": 5
+        }
+    ],
+    "animstates": [
+        ["whitefire"],
+        ["redfire"],
+        ["blackfire"],
+        ["tealfire"],
+        ["bluefire"],
+        ["pinkfire"],
+        ["orangefire"],
+        ["yellowfire"],
+        ["purplefire"],
+
+        ["whitefireinverse"],
+        ["redfireinverse"],
+        ["blackfireinverse"],
+        ["greenfireinverse"],
+        ["tealfireinverse"],
+        ["bluefireinverse"],
+        ["pinkfireinverse"],
+        ["orangefireinverse"],
+        ["yellowfireinverse"],
+        ["purplefireinverse"],
+
+        ["whitefireinvert"],
+        ["redfireinvert"],
+        ["blackfireinvert"],
+        ["greenfireinvert"],
+        ["tealfireinvert"],
+        ["bluefireinvert"],
+        ["pinkfireinvert"],
+        ["orangefireinvert"],
+        ["yellowfireinvert"],
+        ["purplefireinvert"],
+
+        ["whitefireinvinv"],
+        ["redfireinvinv"],
+        ["blackfireinvinv"],
+        ["greenfireinvinv"],
+        ["tealfireinvinv"],
+        ["bluefireinvinv"],
+        ["pinkfireinvinv"],
+        ["orangefireinvinv"],
+        ["yellowfireinvinv"],
+        ["purplefireinvinv"],
+
+        ["flamefire"],
+        ["flamefireinvert"],
+        ["specialfire"],
+        ["specialfireinvert"]
+    ]
+}
