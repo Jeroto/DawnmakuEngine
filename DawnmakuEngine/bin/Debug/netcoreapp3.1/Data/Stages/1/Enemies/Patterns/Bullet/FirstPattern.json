@@ -1,0 +1,109 @@
+{
+    "burstCount": 4,
+    "bulletsInBurst": 7,
+    "overallDegrees": 60,
+    "degreeOffset": 0,
+    "randomDegreeOffset": 0,
+    "aimed": true,
+    "initialDelay": 10,
+    "burstDelay": [
+        5,
+        20
+    ],
+    "perBulletDelay": [
+        1
+    ],
+    "spawnSounds": [
+        "shoot1"
+    ],
+    "damage": [
+        10
+    ],
+    "offsets": [
+        {
+            "x": 0,
+            "y": 0
+        }
+    ],
+    "turnOffsets": [
+        false
+    ],
+    "bulletStages": [
+        {
+            "bulletType": "roundOutline",
+            "bulletColor": "white",
+            "color": {
+                "r":255,
+                "g":255,
+                "b":255,
+                "a":100
+            },
+            "framesToChangeTint": 0,
+            "renderScale": 1,
+
+            "angle": 0,
+            "startingSpeed": 100,
+            "endingSpeed": 50,
+            "framesToChangeSpeed": 60,
+            "rotate": true,
+            "reAim": false,
+            "keepOldAngle": true,
+            "modifyAngle": false,
+            "affectedByTimescale": true,
+
+            "framesToLast": 60,
+            "turnAtStart": true,
+            "initialMoveDelay": 0,
+            "turnAfterDelay": true,
+
+            "stageSound": "NULL",
+            "hasEffect": false,
+            "effectColor":"",
+            "effectSize": {
+                "x": 0.1,
+                "y": 2
+            },
+            "effectOpacity": {
+                "start": 1,
+                "end": 0
+            }
+        },
+        {
+            "bulletType": "roundOutline",
+            "bulletColor": "red",
+            "color": {
+                "r":255,
+                "g":255,
+                "b":255,
+                "a":100
+            },
+
+            "angle": 0,
+            "startingSpeed": 50,
+            "endingSpeed": 500,
+            "framesToChangeSpeed": 180,
+            "rotate": true,
+            "reAim": false,
+            "keepOldAngle": true,
+            "modifyAngle": false,
+            "affectedByTimescale": true,
+
+            "framesToLast": 180,
+            "turnAtStart": true,
+            "initialMoveDelay": 0,
+            "turnAfterDelay": true,
+
+            "stageSound": "stageChange1",
+            "hasEffect": false,
+            "effectColor":"",
+            "effectSize": {
+                "x": 0.1,
+                "y": 2
+            },
+            "effectOpacity": {
+                "start": 1,
+                "end": 0
+            }
+        }
+    ]
+}

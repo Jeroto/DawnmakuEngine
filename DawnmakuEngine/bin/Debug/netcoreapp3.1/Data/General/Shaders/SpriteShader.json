@@ -1,0 +1,5 @@
+{
+    "vert": "Shader.vert",
+    "frag": "TransparentShader.frag",
+    "constants": [ ]
+}

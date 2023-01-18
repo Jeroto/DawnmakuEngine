@@ -1,0 +1,305 @@
+{
+    "burstCount": 5,
+    "bulletsInBurst": 6,
+    "overallDegrees": 45,
+    "degreeOffset": 0,
+    "randomDegreeOffset": 0,
+    "aimed": false,
+    "initialDelay": 10,
+    "burstDelay": [
+        15
+    ],
+    "perBulletDelay": [
+        5
+    ],
+    "spawnSounds": [
+        "shootsoft"
+    ],
+    "damage": [
+        10
+    ],
+    "offsets": [
+        {
+            "x": 0,
+            "y": 0
+        }
+    ],
+    "turnOffsets": [
+        false
+    ],
+    "bulletStages": [
+        {
+            "bulletType": "charm",
+            "bulletColor": "white",
+            "color": {
+                "r":255,
+                "g":255,
+                "b":255,
+                "a":100
+            },
+            "framesToChangeTint": 0,
+            "renderScale": 1,
+
+            "angle": 0,
+            "startingSpeed": 300,
+            "endingSpeed": 0,
+            "framesToChangeSpeed": 30,
+            "rotate": true,
+            "reAim": false,
+            "keepOldAngle": true,
+            "modifyAngle": false,
+            "affectedByTimescale": true,
+
+            "framesToLast": 30,
+            "turnAtStart": true,
+            "initialMoveDelay": 0,
+            "turnAfterDelay": true,
+
+            "stageSound": "NULL",
+            "hasEffect": false,
+            "effectColor":"",
+            "effectSize": {
+                "x": 0.1,
+                "y": 2
+            },
+            "effectOpacity": {
+                "start": 1,
+                "end": 0
+            }
+        },
+        {
+            "bulletType": "round",
+            "bulletColor": "white",
+            "color": {
+                "r":255,
+                "g":255,
+                "b":255,
+                "a":100
+            },
+            "framesToChangeTint": 0,
+            "renderScale": 1,
+
+            "angle": 0,
+            "startingSpeed": 0,
+            "endingSpeed": 0,
+            "framesToChangeSpeed": 0,
+            "rotate": true,
+            "reAim": false,
+            "keepOldAngle": true,
+            "modifyAngle": false,
+            "affectedByTimescale": true,
+
+            "framesToLast": 5,
+            "turnAtStart": true,
+            "initialMoveDelay": 0,
+            "turnAfterDelay": true,
+
+            "stageSound": "NULL",
+            "hasEffect": false,
+            "effectColor":"",
+            "effectSize": {
+                "x": 0.1,
+                "y": 2
+            },
+            "effectOpacity": {
+                "start": 1,
+                "end": 0
+            }
+        },
+        {
+            "bulletType": "round",
+            "bulletColor": "red",
+            "color": {
+                "r":255,
+                "g":255,
+                "b":255,
+                "a":100
+            },
+            "framesToChangeTint": 0,
+            "renderScale": 1,
+
+            "angle": 0,
+            "startingSpeed": 0,
+            "endingSpeed": 0,
+            "framesToChangeSpeed": 0,
+            "rotate": true,
+            "reAim": false,
+            "keepOldAngle": true,
+            "modifyAngle": false,
+            "affectedByTimescale": true,
+
+            "framesToLast": 5,
+            "turnAtStart": true,
+            "initialMoveDelay": 0,
+            "turnAfterDelay": true,
+
+            "stageSound": "NULL",
+            "hasEffect": false,
+            "effectColor":"",
+            "effectSize": {
+                "x": 0.1,
+                "y": 2
+            },
+            "effectOpacity": {
+                "start": 1,
+                "end": 0
+            }
+        },
+        {
+            "bulletType": "charm",
+            "bulletColor": "red",
+            "color": {
+                "r":255,
+                "g":255,
+                "b":255,
+                "a":100
+            },
+            "framesToChangeTint": 0,
+            "renderScale": 1,
+
+            "angle": 0,
+            "startingSpeed": 200,
+            "endingSpeed": 0,
+            "framesToChangeSpeed": 30,
+            "rotate": true,
+            "reAim": true,
+            "keepOldAngle": false,
+            "modifyAngle": false,
+            "affectedByTimescale": true,
+
+            "framesToLast": 30,
+            "turnAtStart": true,
+            "initialMoveDelay": 0,
+            "turnAfterDelay": true,
+
+            "stageSound": "stagechange3",
+            "hasEffect": false,
+            "effectColor":"",
+            "effectSize": {
+                "x": 0.1,
+                "y": 2
+            },
+            "effectOpacity": {
+                "start": 1,
+                "end": 0
+            }
+        },
+        {
+            "bulletType": "round",
+            "bulletColor": "red",
+            "color": {
+                "r":255,
+                "g":255,
+                "b":255,
+                "a":100
+            },
+            "framesToChangeTint": 0,
+            "renderScale": 1,
+
+            "angle": 0,
+            "startingSpeed": 0,
+            "endingSpeed": 0,
+            "framesToChangeSpeed": 0,
+            "rotate": true,
+            "reAim": false,
+            "keepOldAngle": true,
+            "modifyAngle": false,
+            "affectedByTimescale": true,
+
+            "framesToLast": 5,
+            "turnAtStart": true,
+            "initialMoveDelay": 0,
+            "turnAfterDelay": true,
+
+            "stageSound": "NULL",
+            "hasEffect": false,
+            "effectColor":"",
+            "effectSize": {
+                "x": 0.1,
+                "y": 2
+            },
+            "effectOpacity": {
+                "start": 1,
+                "end": 0
+            }
+        },
+        {
+            "bulletType": "round",
+            "bulletColor": "pink",
+            "color": {
+                "r":255,
+                "g":255,
+                "b":255,
+                "a":100
+            },
+            "framesToChangeTint": 0,
+            "renderScale": 1,
+
+            "angle": 0,
+            "startingSpeed": 0,
+            "endingSpeed": 0,
+            "framesToChangeSpeed": 0,
+            "rotate": true,
+            "reAim": false,
+            "keepOldAngle": true,
+            "modifyAngle": false,
+            "affectedByTimescale": true,
+
+            "framesToLast": 5,
+            "turnAtStart": true,
+            "initialMoveDelay": 0,
+            "turnAfterDelay": true,
+
+            "stageSound": "NULL",
+            "hasEffect": false,
+            "effectColor":"",
+            "effectSize": {
+                "x": 0.1,
+                "y": 2
+            },
+            "effectOpacity": {
+                "start": 1,
+                "end": 0
+            }
+        },
+        {
+            "bulletType": "charm",
+            "bulletColor": "pink",
+            "color": {
+                "r":255,
+                "g":255,
+                "b":255,
+                "a":100
+            },
+            "framesToChangeTint": 0,
+            "renderScale": 1,
+
+            "angle": 0,
+            "startingSpeed": 100,
+            "endingSpeed": 300,
+            "framesToChangeSpeed": 120,
+            "rotate": true,
+            "reAim": true,
+            "keepOldAngle": false,
+            "modifyAngle": false,
+            "affectedByTimescale": true,
+
+            "framesToLast": 120,
+            "turnAtStart": true,
+            "initialMoveDelay": 0,
+            "turnAfterDelay": true,
+
+            "stageSound": "stagechange2",
+            "hasEffect": false,
+            "effectColor":"",
+            "effectSize": {
+                "x": 0.1,
+                "y": 2
+            },
+            "effectOpacity": {
+                "start": 1,
+                "end": 0
+            }
+        }
+    ]
+}

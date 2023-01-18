@@ -216,15 +216,15 @@ namespace DawnmakuEngine
                 if(input.IsKeyDown(Keys.B))
                 {
                     BulletElement.BulletStage[] stage = new BulletElement.BulletStage[] { new BulletElement.BulletStage() };
-                    stage[0].spriteType = gameMaster.bulletTypes[BulletElement.Random(0, gameMaster.bulletTypes.Count)];
-                    stage[0].bulletColor = BulletElement.Random(0, gameMaster.bulletSprites[stage[0].spriteType].sprites.Count - 1);
+                    stage[0].bulletType = gameMaster.bulletTypes[BulletElement.Random(0, gameMaster.bulletTypes.Count)];
+                    stage[0].bulletColor = BulletElement.Random(0, gameMaster.bulletSprites[stage[0].bulletType].sprites.Count - 1);
                     stage[0].movementDirection = DawnMath.RandomCircle();
                     stage[0].startingSpeed = 20;
                     stage[0].endingSpeed = 10;
                     stage[0].framesToChangeSpeed = 60;
-                    stage[0].rotate = BulletElement.ShouldTurn(stage[0].spriteType);
+                    stage[0].rotate = BulletElement.ShouldTurn(stage[0].bulletType);
                     BulletElement.SpawnBullet(stage, gameMaster.playerEntity.WorldPosition + new Vector3(stage[0].movementDirection * 20),
-                        BulletElement.ShouldSpin(stage[0].spriteType));
+                        BulletElement.ShouldSpin(stage[0].bulletType));
                 }
                 /*if(input.IsKeyDown(Key.I))
                 {

@@ -1,0 +1,16 @@
+{
+    "vert": "Shader.vert",
+    "frag": "LitShader.frag",
+    "constants": [
+        {
+            "name": "specularStrength",
+            "type": "float",
+            "value": "0.5"
+        },
+        {
+            "name": "shininess",
+            "type": "int",
+            "value": "32"
+        }
+    ]
+}

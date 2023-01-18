@@ -599,6 +599,11 @@ namespace DawnmakuEngine
         /// </summary>
         public static Vector2 FindDirectionToObject(Vector2 startingPosition, Entity otherObject)
         {
+            if (otherObject == null)
+            {
+                startingPosition.NormalizeFast();
+                return startingPosition;
+            }
             return (otherObject.WorldPosition.Xy - startingPosition).Normalized();
         }
         /// <summary>

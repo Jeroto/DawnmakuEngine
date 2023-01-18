@@ -8,8 +8,8 @@ namespace DawnmakuEngine.Data.JSONFormats
     {
         public string shader;
         public List<bool> activePowerLevels = new List<bool>();
-        public Position unfocusPos;
-        public Position focusPos;
+        public JSONVec2 unfocusPos;
+        public JSONVec2 focusPos;
 
         public int framesToMove;
         public float rotateSpeed;
@@ -21,10 +21,5 @@ namespace DawnmakuEngine.Data.JSONFormats
 
         public List<string> unfocusPatternsByPower = new List<string>();
         public List<string> focusPatternsByPower = new List<string>();
-
-        public class Position
-        {
-            public float x, y;
-        }
     }
 }

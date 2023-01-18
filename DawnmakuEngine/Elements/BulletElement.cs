@@ -50,9 +50,8 @@ namespace DawnmakuEngine.Elements
             //Change Condition
             public float framesToLast = 60;
             //Bullet Type
-            public string spriteType = "round";
+            public string bulletType = "round";
             public int bulletColor = 0;
-            public bool animatedSprite;
             public float renderScale = 1;
             public byte r = 255, g = 255, b = 255, a = 255;
             public float framesToChangeTint = 0;
@@ -73,6 +72,7 @@ namespace DawnmakuEngine.Elements
 
             //Movement
             public Vector2 movementDirection = DawnMath.vec2Up;
+            public float angle;
             public float startingSpeed = 200, endingSpeed = 100, framesToChangeSpeed = 60;
             public bool rotate, reAim, keepOldAngle, modifyAngle;
             //Stage Change
@@ -93,9 +93,8 @@ namespace DawnmakuEngine.Elements
             {
                 BulletStage copy = new BulletStage();
                 copy.framesToLast = framesToLast;
-                copy.spriteType = spriteType;
+                copy.bulletType = bulletType;
                 copy.bulletColor = bulletColor;
-                copy.animatedSprite = animatedSprite;
 
                 copy.movementDirection = movementDirection;
                 copy.startingSpeed = startingSpeed;
@@ -163,7 +162,7 @@ namespace DawnmakuEngine.Elements
                 entityAttachedTo.LocalRotationRad = new Vector3(0, 0, DawnMath.FindAngleRad(bulletStages[stageIndex].movementDirection) - ((EntityAttachedTo.Parent != null) ?
                     EntityAttachedTo.Parent.WorldRotation.Z + EntityAttachedTo.WorldRotation.Z : EntityAttachedTo.WorldRotation.Z));
 
-            maxBoundsExit = gameMaster.bulletData[bulletStages[stageIndex].spriteType].boundsExitDist;
+            maxBoundsExit = gameMaster.bulletData[bulletStages[stageIndex].bulletType].boundsExitDist;
 
             meshRenderer = EntityAttachedTo.GetElement<MeshRenderer>();
             spriteAnimator = EntityAttachedTo.GetElement<TextureAnimator>();
@@ -172,7 +171,7 @@ namespace DawnmakuEngine.Elements
             startColor = new Vector4(bulletStages[0].r, bulletStages[0].g, bulletStages[0].b, bulletStages[0].a);
 
             UpdateSprite();
-            UpdateColliders(bulletStages[0].spriteType);
+            UpdateColliders(bulletStages[0].bulletType);
 
             meshRenderer.ColorByte = new Vector4(startColor.X, startColor.Y, startColor.Z, 0);
             renderScale *= spawnEffectStartScale;
@@ -352,8 +351,9 @@ namespace DawnmakuEngine.Elements
             if (bulletStages[stageIndex].keepOldAngle)
             {
                 if (bulletStages[stageIndex].modifyAngle)
-                    bulletStages[stageIndex].movementDirection = DawnMath.CalculateCircleDeg(DawnMath.FindAngleRad(bulletStages[stageIndex - 1].movementDirection) +
-                        DawnMath.FindAngleRad(bulletStages[stageIndex].movementDirection));
+                    /*bulletStages[stageIndex].movementDirection = DawnMath.CalculateCircleDeg(DawnMath.FindAngleRad(bulletStages[stageIndex - 1].movementDirection) +
+                        DawnMath.FindAngleRad(bulletStages[stageIndex].movementDirection));*/
+                    bulletStages[stageIndex].movementDirection = DawnMath.CalculateCircleDeg(bulletStages[stageIndex - 1].angle + bulletStages[stageIndex].angle);
                 else
                     bulletStages[stageIndex].movementDirection = bulletStages[stageIndex - 1].movementDirection;
             }
@@ -380,11 +380,11 @@ namespace DawnmakuEngine.Elements
                 entityAttachedTo.LocalRotationRad = new Vector3(0, 0, DawnMath.FindAngleRad(bulletStages[stageIndex].movementDirection) - ((EntityAttachedTo.Parent != null) ?
                     EntityAttachedTo.Parent.WorldRotation.Z + EntityAttachedTo.WorldRotation.Z : EntityAttachedTo.WorldRotation.Z));
 
-            if (!ShouldSpin(bulletStages[stageIndex].spriteType))
+            if (!ShouldSpin(bulletStages[stageIndex].bulletType))
                 EntityAttachedTo.GetElement<RotateElement>().Disable();
             else
             {
-                EntityAttachedTo.GetElement<RotateElement>().RotSpeedDeg = GetSpinSpeed(bulletStages[stageIndex].spriteType);
+                EntityAttachedTo.GetElement<RotateElement>().RotSpeedDeg = GetSpinSpeed(bulletStages[stageIndex].bulletType);
                 EntityAttachedTo.GetElement<RotateElement>().Enable();
             }
 
@@ -392,9 +392,9 @@ namespace DawnmakuEngine.Elements
                 SpawnEffect();
 
             startColor = meshRenderer.ColorByte;
-            meshRenderer.shader = gameMaster.bulletData[bulletStages[stageIndex].spriteType].shader;
+            meshRenderer.shader = gameMaster.bulletData[bulletStages[stageIndex].bulletType].shader;
 
-            maxBoundsExit = gameMaster.bulletData[bulletStages[stageIndex].spriteType].boundsExitDist;
+            maxBoundsExit = gameMaster.bulletData[bulletStages[stageIndex].bulletType].boundsExitDist;
 
             timePassed = 0;
 
@@ -412,8 +412,8 @@ namespace DawnmakuEngine.Elements
             }
 
             UpdateSprite();
-            if (bulletStages[stageIndex - 1].spriteType != bulletStages[stageIndex].spriteType)
-                UpdateColliders(bulletStages[stageIndex].spriteType);
+            if (bulletStages[stageIndex - 1].bulletType != bulletStages[stageIndex].bulletType)
+                UpdateColliders(bulletStages[stageIndex].bulletType);
         }
 
         //Destroy detection
@@ -534,7 +534,7 @@ namespace DawnmakuEngine.Elements
         /// </summary>
         public void UpdateSprite()
         {
-            spriteAnimator.animationStates = GetBulletAnim(bulletStages[stageIndex].spriteType, bulletStages[stageIndex].bulletColor);
+            spriteAnimator.animationStates = GetBulletAnim(bulletStages[stageIndex].bulletType, bulletStages[stageIndex].bulletColor);
             spriteAnimator.UpdateAnim(false);
         }
 
@@ -624,20 +624,20 @@ namespace DawnmakuEngine.Elements
         public static Entity SpawnBullet(BulletStage[] stages, Vector3 position, bool shouldSpin = false, ushort damage = 1, int stage = 0, bool player = false)
         {
             int i;
-            Entity newBullet = new Entity(stages[0].bulletColor.ToString() + " "+ stages[0].spriteType.ToString());
+            Entity newBullet = new Entity(stages[0].bulletColor.ToString() + " "+ stages[0].bulletType.ToString());
             newBullet.LocalPosition = position;
             if (GameMaster.window.KeyboardState.IsKeyDown(OpenTK.Windowing.GraphicsLibraryFramework.Keys.LeftControl))
                 newBullet.LocalScale = Vector3.One * 2;
             MeshRenderer renderer = new MeshRenderer();
-            renderer.tex = GameMaster.gameMaster.bulletSprites[stages[0].spriteType].sprites[stages[0].bulletColor].tex;
-            renderer.shader = GameMaster.gameMaster.bulletData[stages[0].spriteType].shader;
+            renderer.tex = GameMaster.gameMaster.bulletSprites[stages[0].bulletType].sprites[stages[0].bulletColor].tex;
+            renderer.shader = GameMaster.gameMaster.bulletData[stages[0].bulletType].shader;
             renderer.mesh = Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles);
             renderer.mesh.SetUp(OpenTK.Graphics.ES30.BufferUsageHint.DynamicDraw);
             renderer.LayerName = "bullets";
             renderer.resizeSprite = true;
 
             newBullet.AddElement(renderer);
-            newBullet.AddElement(new TextureAnimator(GetBulletAnim(stages[stage].spriteType, stages[stage].bulletColor), renderer));
+            newBullet.AddElement(new TextureAnimator(GetBulletAnim(stages[stage].bulletType, stages[stage].bulletColor), renderer));
 
             newBullet.AddElement(new RotateElement(180, true, true));
             if(!shouldSpin)

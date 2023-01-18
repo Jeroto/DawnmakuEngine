@@ -137,10 +137,11 @@ namespace DawnmakuEngine.Data
                         currentStages[s] = bulletStages[s].instances[bulletVars.instanceIndexes[s]].CopyValues();
                     }
 
+                    currentStages[0].angle = currentAngle;
                     currentStages[0].movementDirection = DawnMath.CalculateCircleDeg(currentAngle);
 
 
-                    BulletElement.SpawnBullet(currentStages, new Vector3(position + offset), BulletElement.ShouldSpin(currentStages[0].spriteType), 
+                    BulletElement.SpawnBullet(currentStages, new Vector3(position + offset), BulletElement.ShouldSpin(currentStages[0].bulletType), 
                         damage[bulletVars.damageIndex], 0, callerIsPlayer);
 
 

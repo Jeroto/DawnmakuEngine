@@ -580,13 +580,13 @@ namespace DawnmakuEngine
         #region Shaders
         public void ShaderLoader()
         {
-            string[] files = Directory.GetFiles(shaderDir, "*.dwnshader");
+            string[] files = Directory.GetFiles(shaderDir, "*.json");
 
             GameMaster.LogPositiveNotice("\nShaders:");
             for (int i = 0; i < files.Length; i++)
             {
                 GameMaster.Log(GetFileNameOnly(files[i]));
-                gameMaster.shaders.Add(GetFileNameOnly(files[i]), ReadShaderData(files[i]));
+                gameMaster.shaders.Add(GetFileNameOnly(files[i]), ReadShaderDataJSON(files[i]));
             }
         }
         #endregion
@@ -845,21 +845,24 @@ namespace DawnmakuEngine
         }
         public void PlayerPatternLoader()
         {
-            string[] files = Directory.GetFiles(playerPatternDir, "*.dwnpattern");
+            string[] files = Directory.GetFiles(playerPatternDir + "/bullet", "*.json");
 
-            GameMaster.LogPositiveNotice("\nPlayer Patterns:");
+
+            GameMaster.LogPositiveNotice("\nPlayer Patterns(bullet):");
             for (int i = 0; i < files.Length; i++)
             {
                 GameMaster.Log(GetFileNameOnly(files[i]));
-                if (!File.ReadAllText(files[i]).Contains("patternbase=", StringComparison.OrdinalIgnoreCase))
-                    gameMaster.playerPatterns.Add(GetFileNameOnly(files[i]), ReadPatternData(files[i], gameMaster.playerPatterns));
+                gameMaster.playerPatterns.Add(GetFileNameOnly(files[i]), ReadPatternDataJSON(files[i]));
             }
+
+            /*files = Directory.GetFiles(playerPatternDir + "/laser", "*.json");
+
+            GameMaster.LogPositiveNotice("\nPlayer Patterns(laser):");
             for (int i = 0; i < files.Length; i++)
             {
                 GameMaster.Log(GetFileNameOnly(files[i]));
-                if (File.ReadAllText(files[i]).Contains("patternbase=", StringComparison.OrdinalIgnoreCase))
-                    gameMaster.playerPatterns.Add(GetFileNameOnly(files[i]), ReadPatternData(files[i], gameMaster.playerPatterns));
-            }
+                gameMaster.playerPatterns.Add(GetFileNameOnly(files[i]), ReadPatternDataJSON(files[i]));
+            }*/
         }
         #endregion
 
@@ -958,21 +961,23 @@ namespace DawnmakuEngine
         #region Enemies
         public void EnemyPatternLoader()
         {
-            string[] files = Directory.GetFiles(enemyPatternDir, "*.dwnpattern");
+            string[] files = Directory.GetFiles(enemyPatternDir + "/bullet", "*.json");
 
-            GameMaster.LogPositiveNotice("\nEnemy Patterns:");
+            GameMaster.LogPositiveNotice("\nEnemy Patterns(bullet):");
             for (int i = 0; i < files.Length; i++)
             {
                 GameMaster.Log(GetFileNameOnly(files[i]));
-                if (!File.ReadAllText(files[i]).Contains("patternbase=", StringComparison.OrdinalIgnoreCase))
-                    gameMaster.enemyPatterns.Add(GetFileNameOnly(files[i]), ReadPatternData(files[i], gameMaster.enemyPatterns));
+                gameMaster.enemyPatterns.Add(GetFileNameOnly(files[i]), ReadPatternDataJSON(files[i]));
             }
+
+            /*files = Directory.GetFiles(enemyPatternDir + "/laser", "*.json");
+
+            GameMaster.LogPositiveNotice("\nEnemy Patterns(laser):");
             for (int i = 0; i < files.Length; i++)
             {
                 GameMaster.Log(GetFileNameOnly(files[i]));
-                if (File.ReadAllText(files[i]).Contains("patternbase=", StringComparison.OrdinalIgnoreCase))
-                    gameMaster.enemyPatterns.Add(GetFileNameOnly(files[i]), ReadPatternData(files[i], gameMaster.enemyPatterns));
-            }
+                gameMaster.enemyPatterns.Add(GetFileNameOnly(files[i]), ReadPatternDataJSON(files[i]));
+            }*/
         }
         public void EnemyMovementLoader()
         {
@@ -1787,66 +1792,150 @@ namespace DawnmakuEngine
         #region File Readers
 
         #region Shaders
-        public Shader ReadShaderData(string file)
+        public Shader ReadShaderDataJSON(string file)
         {
-            string[] allLines = File.ReadAllLines(file), constant;
-            string vert, frag;
+            Shader outputShader;
 
-            Shader final;
+            string text = File.ReadAllText(file);
+            JSONShaderData shaderData = JsonConvert.DeserializeObject<JSONShaderData>(text);
 
-            vert = shaderDir + "\\" + GetInputSubstring(allLines, "vert=");
-            frag = shaderDir + "\\" + GetInputSubstring(allLines, "frag=");
+            outputShader = new Shader(shaderDir + "/" + shaderData.vert, shaderDir + "/" + shaderData.frag);
+            string simplifiedText;
+            string[] splitText;
+            float[] floatValues;
 
-            final = new Shader(vert, frag);
+            float floatVal = 0;
+            int intVal = 0;
 
-            allLines = SimplifyText(GetInputSubstring(allLines, "constants=", 0, false, "EndOfFile"), false).Split(':', StringSplitOptions.RemoveEmptyEntries);
-            for (int i = 0; i < allLines.Length; i++)
+            int i, k;
+
+            try
             {
-                constant = allLines[i].Split('/', StringSplitOptions.RemoveEmptyEntries);
-                if (constant.Length < 2)
+                for (i = 0; i < shaderData.constants.Count; i++)
                 {
-                    GameMaster.LogWarning("Please specify all constants' types on .dwnshader file.");
-                    break;
-                }
-                switch (SimplifyText(constant[1]))
-                {
-                    case "float":
-                    case "single":
-                        final.SetFloat(GetInputSubstring(new int[] { 0, constant[0].IndexOf('=') }, constant[0]), GetParseFloat(constant[0], "="));
-                        break;
-                    case "int":
-                    case "integer":
-                        final.SetInt(GetInputSubstring(new int[] { 0, constant[0].IndexOf('=') }, constant[0]), GetParseRoundedNum(constant[0], "="));
-                        break;
-                    case "vec2":
-                    case "vector2":
-                        final.SetVector2(GetInputSubstring(new int[] { 0, constant[0].IndexOf('=') }, constant[0]), GetParseVector2(constant[0], "="));
-                        break;
-                    case "vec3":
-                    case "vector3":
-                        final.SetVector3(GetInputSubstring(new int[] { 0, constant[0].IndexOf('=') }, constant[0]), GetParseVector3(constant[0], "="));
-                        break;
-                    case "vec4":
-                    case "vector4":
-                        final.SetVector4(GetInputSubstring(new int[] { 0, constant[0].IndexOf('=') }, constant[0]), GetParseVector4(constant[0], "="));
-                        break;
-                    case "mat3":
-                    case "mat3x3":
-                    case "matrix3":
-                    case "matrix3x3":
-                        final.SetMatrix3(GetInputSubstring(new int[] { 0, constant[0].IndexOf('=') }, constant[0]), GetParseMat3(constant[0], "="));
-                        break;
-                    case "mat4":
-                    case "mat4x4":
-                    case "matrix4":
-                    case "matrix4x4":
-                        final.SetMatrix4(GetInputSubstring(new int[] { 0, constant[0].IndexOf('=') }, constant[0]), GetParseMat4(constant[0], "="));
-                        break;
-                }
+                    switch (shaderData.constants[i].type.ToLower())
+                    {
+                        case "float":
+                        case "single":
+                            if (float.TryParse(shaderData.constants[i].value, out floatVal))
+                                outputShader.SetFloat(shaderData.constants[i].name, floatVal);
+                            break;
+                        case "int":
+                        case "integer":
+                            if (int.TryParse(shaderData.constants[i].value, out intVal))
+                                outputShader.SetInt(shaderData.constants[i].name, intVal);
+                            break;
+                        case "vec2":
+                        case "vector2":
+                            simplifiedText = SimplifyText(shaderData.constants[i].value, true);
+                            splitText = simplifiedText.Split(',');
+                            floatValues = new float[splitText.Length];
 
+                            if(floatValues.Length < 2)
+                                throw new Exception("Not enough values for a Vector 2 for " + shaderData.constants[i].name + " in " + GetFileNameOnly(file));
+
+
+                            for (k = 0; k < splitText.Length; k++)
+                            {
+                                if (!float.TryParse(splitText[k], out floatValues[k]))
+                                    throw new Exception("Could not parse constant value " + k + " of " + shaderData.constants[i].name + " in " + GetFileNameOnly(file));
+                            }
+
+                            outputShader.SetVector2(shaderData.constants[i].name, new Vector2(floatValues[0], floatValues[1]));
+                            break;
+                        case "vec3":
+                        case "vector3":
+                            simplifiedText = SimplifyText(shaderData.constants[i].value, true);
+                            splitText = simplifiedText.Split(',');
+                            floatValues = new float[splitText.Length];
+
+                            if (floatValues.Length < 3)
+                                throw new Exception("Not enough values for a Vector 3 for " + shaderData.constants[i].name + " in " + GetFileNameOnly(file));
+
+
+                            for (k = 0; k < splitText.Length; k++)
+                            {
+                                if (!float.TryParse(splitText[k], out floatValues[k]))
+                                    throw new Exception("Could not parse constant value " + k + " of " + shaderData.constants[i].name + " in " + GetFileNameOnly(file));
+                            }
+
+                            outputShader.SetVector3(shaderData.constants[i].name, new Vector3(floatValues[0], floatValues[1], floatValues[2]));
+                            break;
+                        case "vec4":
+                        case "vector4":
+                            simplifiedText = SimplifyText(shaderData.constants[i].value, true);
+                            splitText = simplifiedText.Split(',');
+                            floatValues = new float[splitText.Length];
+
+                            if (floatValues.Length < 4)
+                                throw new Exception("Not enough values for a Vector 3 for " + shaderData.constants[i].name + " in " + GetFileNameOnly(file));
+
+
+                            for (k = 0; k < splitText.Length; k++)
+                            {
+                                if (!float.TryParse(splitText[k], out floatValues[k]))
+                                    throw new Exception("Could not parse constant value " + k + " of " + shaderData.constants[i].name + " in " + GetFileNameOnly(file));
+                            }
+
+                            outputShader.SetVector4(shaderData.constants[i].name, new Vector4(floatValues[0], floatValues[1], floatValues[2], floatValues[3]));
+                            break;
+                        case "mat3":
+                        case "mat3x3":
+                        case "matrix3":
+                        case "matrix3x3":
+                            simplifiedText = SimplifyText(shaderData.constants[i].value, true);
+                            splitText = simplifiedText.Split(',');
+                            floatValues = new float[splitText.Length];
+
+                            if (floatValues.Length < 9)
+                                throw new Exception("Not enough values for a 3x3 Matrix for " + shaderData.constants[i].name + " in " + GetFileNameOnly(file));
+
+
+                            for (k = 0; k < splitText.Length; k++)
+                            {
+                                if (!float.TryParse(splitText[k], out floatValues[k]))
+                                    throw new Exception("Could not parse constant value " + k + " of " + shaderData.constants[i].name + " in " + GetFileNameOnly(file));
+                            }
+
+                            outputShader.SetMatrix3(shaderData.constants[i].name, 
+                                new Matrix3(floatValues[0], floatValues[1], floatValues[2], 
+                                            floatValues[3], floatValues[4], floatValues[5],
+                                            floatValues[6], floatValues[7], floatValues[8]));
+                            break;
+                        case "mat4":
+                        case "mat4x4":
+                        case "matrix4":
+                        case "matrix4x4":
+
+                            simplifiedText = SimplifyText(shaderData.constants[i].value, true);
+                            splitText = simplifiedText.Split(',');
+                            floatValues = new float[splitText.Length];
+
+                            if (floatValues.Length < 16)
+                                throw new Exception("Not enough values for a 4x4 Matrix for " + shaderData.constants[i].name + " in " + GetFileNameOnly(file));
+
+
+                            for (k = 0; k < splitText.Length; k++)
+                            {
+                                if (!float.TryParse(splitText[k], out floatValues[k]))
+                                    throw new Exception("Could not parse constant value " + k + " of " + shaderData.constants[i].name + " in " + GetFileNameOnly(file));
+                            }
+
+                            outputShader.SetMatrix4(shaderData.constants[i].name,
+                                new Matrix4(floatValues[0],  floatValues[1],  floatValues[2],  floatValues[3],
+                                            floatValues[4],  floatValues[5],  floatValues[6],  floatValues[7],
+                                            floatValues[8],  floatValues[9],  floatValues[10], floatValues[11],
+                                            floatValues[12], floatValues[13], floatValues[14], floatValues[15]));
+                            break;
+                    }
+                }
+            }
+            catch(Exception e)
+            {
+                GameMaster.LogErrorMessage("There was an error loading this shader!", e.Message);
             }
 
-            return final;
+            return outputShader;
         }
         #endregion
 
@@ -2814,365 +2903,91 @@ namespace DawnmakuEngine
             return thisData;
         }
 
-        public Pattern ReadPatternData(string file, Dictionary<string, Pattern> patternDic)
+        public Pattern ReadPatternDataJSON(string file)
         {
-            Pattern finalPattern = new Pattern();
-            int i = 0;
-            int[] indexes;
-            float numVal = 0;
-            int intVal = 0;
-            bool boolVal = false;
-            string stringVal = "";
-            AudioData audioVal;
-            int patternType = 0;
-            string[] tempStrings, subTempStrings, allLines = File.ReadAllLines(file);
-            string patternBase = null,
-                data;
+            PatternBullets outputData = new PatternBullets();
+
+            string text = File.ReadAllText(file);
+            JSONBulletPattern patternData = JsonConvert.DeserializeObject<JSONBulletPattern>(text);
+
+            int i, k;
+            AudioData audio = null;
+            BulletElement.BulletStage stage;
+
+            string colorString;
 
             try
             {
-                data = GetData(allLines, "patternbase=");
-                if (data.Contains("patternbase="))
+                outputData.burstCount = patternData.burstCount;
+                outputData.bulletsInBurst = patternData.bulletsInBurst;
+                outputData.overallDegrees = patternData.overallDegrees;
+                outputData.degreeOffset = patternData.degreeOffset;
+                outputData.randomDegreeOffset = patternData.randomDegreeOffset;
+                outputData.aimed = patternData.aimed;
+                outputData.initialDelay = patternData.initialDelay;
+
+                outputData.burstDelay = patternData.burstDelay;
+                outputData.perBulletDelay = patternData.perBulletDelay;
+
+                for (i = 0; i < patternData.spawnSounds.Count; i++)
                 {
-                    patternBase = GetInputSubstring(data, "patternbase=");
-                    finalPattern = patternDic[patternBase].CopyPattern();
+                    if(gameMaster.sfx.TryGetValue(patternData.spawnSounds[i].ToLower(), out audio))
+                        outputData.spawnSounds.Add(audio);
                 }
 
-                data = GetData(allLines, "patterntype=");
-                indexes = FindIndexes(data, "patterntype=");
-                switch (GetInputSubstring(indexes, data))
+                outputData.damage = patternData.damage;
+
+                for (i = 0; i < patternData.offsets.Count; i++)
+                    outputData.offsets.Add(new Vector2(patternData.offsets[i].x, patternData.offsets[i].y));
+
+                outputData.turnOffsets = patternData.turnOffsets;
+
+                for (i = 0; i < patternData.bulletStages.Count; i++)
                 {
-                    case "bullet":
-                    case "bullets":
-                    case "bul":
-                    case "b":
-                        patternType = 0;
-                        break;
-                    case "curvylaser":
-                    case "curvelaser":
-                    case "curvy":
-                    case "curve":
-                    case "cur":
-                    case "c":
-                    case "laser":
-                    case "las":
-                    case "l":
-                        patternType = 1;
-                        break;
-                    case "playerbeam":
-                    case "beam":
-                    case "be":
-                        patternType = 3;
-                        break;
-                    default:
-                        patternType = 999;
-                        GameMaster.LogWarning("Pattern type " + GetInputSubstring(indexes, data) + "not recognized.");
-                        break;
-                }
+                    stage = new BulletElement.BulletStage();
+                    stage.bulletType = patternData.bulletStages[i].bulletType.ToLower();
 
-                data = GetData(allLines, "burstcount=");
-                indexes = FindIndexes(data, "burstcount=");
-                if (TryParseRoundedNum(indexes, data, out intVal))
-                    finalPattern.burstCount = intVal;
-
-                data = GetData(allLines, "bulletsinburst=");
-                indexes = FindIndexes(data, "bulletsinburst=");
-                if (TryParseRoundedNum(indexes, data, out intVal))
-                    finalPattern.bulletsInBurst = intVal;
-
-                data = GetData(allLines, "overalldegrees=");
-                indexes = FindIndexes(data, "overalldegrees=");
-                if (TryParseFloat(indexes, data, out numVal))
-                    finalPattern.overallDegrees = numVal;
-
-                data = GetData(allLines, "degreeoffset=");
-                indexes = FindIndexes(data, "degreeoffset=");
-                if (TryParseFloat(indexes, data, out numVal))
-                    finalPattern.degreeOffset = numVal;
-
-                data = GetData(allLines, "randomdegreeoffset=");
-                indexes = FindIndexes(data, "randomdegreeoffset=");
-                if (TryParseFloat(indexes, data, out numVal))
-                    finalPattern.randomDegreeOffset = numVal;
-
-                data = GetData(allLines, "aimed=");
-                indexes = FindIndexes(data, "aimed=");
-                if (TryParseBool(indexes, data, out boolVal))
-                    finalPattern.aimed = boolVal;
+                    colorString = patternData.bulletStages[i].bulletColor;
+                    colorString = colorString.Substring(0, 1).ToUpper() + colorString.Substring(1).ToLower();
+                    stage.bulletColor = (int)Enum.Parse<BulletElement.BulletColor>(colorString);
+                    stage.Color = new Vector4(patternData.bulletStages[i].color.r,
+                                              patternData.bulletStages[i].color.g, 
+                                              patternData.bulletStages[i].color.b,
+                                              patternData.bulletStages[i].color.a);
+                    stage.framesToChangeTint = patternData.bulletStages[i].framesTochangeTint;
+                    stage.renderScale = patternData.bulletStages[i].renderScale;
 
 
-                data = GetData(allLines, "burstdelay=");
-                indexes = FindIndexes(data, "burstdelay=");
-                if (indexes[0] != data.Length - 1 || indexes[1] != data.Length)
-                {
-                    tempStrings = GetInputSubstring(indexes, data).Split(',', StringSplitOptions.RemoveEmptyEntries);
-                    finalPattern.burstDelay = new List<float>();
-                    for (i = 0; i < tempStrings.Length; i++)
-                        finalPattern.burstDelay.Add(ParseFloat(tempStrings[i]));
-                }
+                    stage.angle = patternData.bulletStages[i].angle;
+                    stage.startingSpeed = patternData.bulletStages[i].startingSpeed;
+                    stage.endingSpeed = patternData.bulletStages[i].endingSpeed;
+                    stage.framesToChangeSpeed = patternData.bulletStages[i].framesToChangeSpeed;
+                    stage.rotate = patternData.bulletStages[i].rotate;
+                    stage.reAim = patternData.bulletStages[i].reAim;
+                    stage.keepOldAngle = patternData.bulletStages[i].keepOldAngle;
+                    stage.modifyAngle = patternData.bulletStages[i].modifyAngle;
+                    stage.affectedByTimescale = patternData.bulletStages[i].affectedByTimescale;
 
-                data = GetData(allLines, "initialdelay=");
-                indexes = FindIndexes(data, "initialdelay=");
-                if (TryParseFloat(indexes, data, out numVal))
-                    finalPattern.initialDelay = numVal;
+                    stage.framesToLast = patternData.bulletStages[i].framesToLast;
+                    stage.turnAtStart = patternData.bulletStages[i].turnAtStart;
+                    stage.initialMoveDelay = patternData.bulletStages[i].initialMoveDelay;
+                    stage.turnAfterDelay = patternData.bulletStages[i].turnAfterDelay;
 
-                data = GetData(allLines, "perbulletdelay=");
-                indexes = FindIndexes(data, "perbulletdelay=");
-                if (indexes[0] != data.Length - 1 || indexes[1] != data.Length)
-                {
-                    tempStrings = GetInputSubstring(indexes, data).Split(',', StringSplitOptions.RemoveEmptyEntries);
-                    finalPattern.perBulletDelay = new List<float>();
-                    for (i = 0; i < tempStrings.Length; i++)
-                        finalPattern.perBulletDelay.Add(ParseFloat(tempStrings[i]));
-                }
+                    if (patternData.bulletStages[i].stageSound.ToLower() != "null")
+                        gameMaster.sfx.TryGetValue(patternData.bulletStages[i].stageSound.ToLower(), out stage.stageSound);
 
-                data = GetData(allLines, "spawnsounds=");
-                indexes = FindIndexes(data, "spawnsounds=");
-                if (indexes[0] != data.Length - 1 || indexes[1] != data.Length)
-                {
-                    tempStrings = GetInputSubstring(indexes, data).Split(',', StringSplitOptions.RemoveEmptyEntries);
-                    finalPattern.spawnSounds = new List<AudioData>();
-                    for (i = 0; i < tempStrings.Length; i++)
-                        if(gameMaster.sfx.TryGetValue(tempStrings[i], out audioVal))
-                            finalPattern.spawnSounds.Add(audioVal);
-                }
+                    stage.hasEffect = patternData.bulletStages[i].hasEffect;
+                    if(stage.hasEffect)
+                    {
+                        colorString = patternData.bulletStages[i].effectColor;
+                        colorString = colorString.Substring(0, 1).ToUpper() + colorString.Substring(1).ToLower();
+                        stage.effectColor = Enum.Parse<BulletElement.BulletColor>(colorString);
 
-                data = GetData(allLines, "damage=");
-                indexes = FindIndexes(data, "damage=");
-                if (indexes[0] != data.Length - 1 || indexes[1] != data.Length)
-                {
-                    tempStrings = GetInputSubstring(indexes, data).Split(',', StringSplitOptions.RemoveEmptyEntries);
-                    finalPattern.damage = new List<ushort>();
-                    for (i = 0; i < tempStrings.Length; i++)
-                        finalPattern.damage.Add((ushort)Math.Clamp(ParseRoundedNum(tempStrings[i]), 0, ushort.MaxValue));
-                }
-
-                data = GetData(allLines, "offsets=");
-                indexes = FindIndexes(data, "offsets=");
-                if (indexes[0] != data.Length - 1 || indexes[1] != data.Length)
-                {
-                    tempStrings = GetInputSubstring(indexes, data).Split(',', StringSplitOptions.RemoveEmptyEntries);
-                    finalPattern.offsets = new List<Vector2>();
-                    for (i = 0; i < tempStrings.Length; i += 2)
-                        finalPattern.offsets.Add(new Vector2(ParseFloat(tempStrings[i]), ParseFloat(tempStrings[i + 1])));
-                }
-
-                data = GetData(allLines, "turnoffsets=");
-                indexes = FindIndexes(data, "turnoffsets=");
-
-                if (indexes[0] != data.Length - 1 || indexes[1] != data.Length)
-                {
-                    tempStrings = GetInputSubstring(indexes, data).Split(',', StringSplitOptions.RemoveEmptyEntries);
-                    finalPattern.turnOffsets = new List<bool>();
-                    for (i = 0; i < tempStrings.Length; i++)
-                        finalPattern.turnOffsets.Add(ParseBool(tempStrings[i]));
-                }
-
-                switch (patternType)
-                {
-                    case 0:
-                        {
-                            PatternBullets thisPattern = new PatternBullets();
-
-                            if (patternBase != null && patternDic[patternBase].GetType() == typeof(PatternBullets))
-                                thisPattern = (PatternBullets)((PatternBullets)patternDic[patternBase]).CopyPattern();
-
-
-                            thisPattern.burstCount = finalPattern.burstCount;
-                            thisPattern.bulletsInBurst = finalPattern.bulletsInBurst;
-                            thisPattern.overallDegrees = finalPattern.overallDegrees;
-                            thisPattern.degreeOffset = finalPattern.degreeOffset;
-                            thisPattern.randomDegreeOffset = finalPattern.randomDegreeOffset;
-                            thisPattern.aimed = finalPattern.aimed;
-                            thisPattern.burstDelay = finalPattern.burstDelay;
-                            thisPattern.initialDelay = finalPattern.initialDelay;
-                            for (i = 0; i < finalPattern.perBulletDelay.Count; i++)
-                                thisPattern.perBulletDelay.Add(finalPattern.perBulletDelay[i]);
-                            for (i = 0; i < finalPattern.spawnSounds.Count; i++)
-                                thisPattern.spawnSounds.Add(finalPattern.spawnSounds[i]);
-                            for (i = 0; i < finalPattern.damage.Count; i++)
-                                thisPattern.damage.Add(finalPattern.damage[i]);
-                            for (i = 0; i < finalPattern.offsets.Count; i++)
-                                thisPattern.offsets.Add(new Vector2(finalPattern.offsets[i].X, finalPattern.offsets[i].Y));
-                            for (i = 0; i < finalPattern.turnOffsets.Count; i++)
-                                thisPattern.turnOffsets.Add(finalPattern.turnOffsets[i]);
-
-
-                            data = GetData(allLines, "bulletstages=", 0, true, "fileend");
-                            indexes = FindIndexes(data, "bulletstages=", 0, "fileend");
-                            if (indexes[0] != data.Length - 1 || indexes[1] != data.Length)
-                            {
-                                tempStrings = GetInputSubstring(indexes[0], data).Split(':', StringSplitOptions.RemoveEmptyEntries);
-                                if (patternBase == null)
-                                    thisPattern.bulletStages = new List<PatternBullets.InstanceList>();
-                                Elements.BulletElement.BulletStage thisInstance;
-                                string[] subSubstrings;
-                                for (int b = 0; b < tempStrings.Length; b++)
-                                {
-                                    if (patternBase == null || thisPattern.bulletStages.Count < b + 1)
-                                        thisPattern.bulletStages.Add(new PatternBullets.InstanceList());
-                                    subTempStrings = tempStrings[b].Split('/', StringSplitOptions.RemoveEmptyEntries);
-                                    thisPattern.bulletStages[b].instances = new List<Elements.BulletElement.BulletStage>();
-                                    for (i = 0; i < Math.Clamp(subTempStrings.Length, 1, int.MaxValue); i++)
-                                    {
-                                        if (b == 0)
-                                            thisPattern.bulletStages[b].instances.Add(new Elements.BulletElement.BulletStage());
-                                        else if (i != 0)
-                                            thisPattern.bulletStages[b].instances.Add(thisPattern.bulletStages[b].instances[i - 1].CopyValues());
-                                        else
-                                            thisPattern.bulletStages[b].instances.Add(thisPattern.bulletStages[b - 1].instances[thisPattern.bulletStages[b - 1].instances.Count - 1].CopyValues());
-                                        thisInstance = thisPattern.bulletStages[b].instances[i];
-
-                                        indexes = FindIndexes(subTempStrings[i], "framestolast=");
-                                        if (TryParseFloat(indexes, subTempStrings[i], out numVal))
-                                            thisInstance.framesToLast = numVal;
-
-                                        indexes = FindIndexes(subTempStrings[i], "bullettype=");
-                                        if (indexes[0] != subTempStrings[i].Length - 1 || indexes[1] != subTempStrings[i].Length)
-                                            thisInstance.spriteType = subTempStrings[i].Substring(indexes[0], indexes[1] - indexes[0]);
-
-                                        indexes = FindIndexes(subTempStrings[i], "bulletcolor=");
-                                        if (TryParseFloat(indexes, subTempStrings[i], out numVal))
-                                            thisInstance.bulletColor = Math.Clamp(Round(numVal), 0, Enum.GetValues(typeof(Elements.BulletElement.BulletColor)).Length - 1);
-                                        else if (indexes[0] != subTempStrings[i].Length - 1 || indexes[1] != subTempStrings[i].Length)
-                                            thisInstance.bulletColor = (int)Enum.Parse<BulletElement.BulletColor>(subTempStrings[i].Substring(indexes[0], indexes[1] - indexes[0]), true);
-
-                                        indexes = FindIndexes(subTempStrings[i], "animatedsprite=");
-                                        if (TryParseBool(indexes, subTempStrings[i], out boolVal))
-                                            thisInstance.animatedSprite = boolVal;
-
-                                        indexes = FindIndexes(subTempStrings[i], "renderscale=");
-                                        if (TryParseFloat(indexes, subTempStrings[i], out numVal))
-                                            thisInstance.renderScale = numVal;
-
-                                        indexes = FindIndexes(subTempStrings[i], "movementdirection=");
-                                        if (indexes[0] != subTempStrings[i].Length - 1 || indexes[1] != subTempStrings[i].Length)
-                                            thisInstance.movementDirection = ParseVector2(indexes, subTempStrings[i]);
-
-                                        indexes = FindIndexes(subTempStrings[i], "startingspeed=");
-                                        if (TryParseFloat(indexes, subTempStrings[i], out numVal))
-                                            thisInstance.startingSpeed = numVal;
-
-                                        indexes = FindIndexes(subTempStrings[i], "endingspeed=");
-                                        if (TryParseFloat(indexes, subTempStrings[i], out numVal))
-                                            thisInstance.endingSpeed = numVal;
-
-                                        indexes = FindIndexes(subTempStrings[i], "framestochangespeed=");
-                                        if (TryParseFloat(indexes, subTempStrings[i], out numVal))
-                                            thisInstance.framesToChangeSpeed = numVal;
-
-                                        indexes = FindIndexes(subTempStrings[i], "colorr=");
-                                        if (TryParseFloat(indexes, subTempStrings[i], out numVal))
-                                            thisInstance.r = (byte)Math.Clamp(numVal, 0, 255);
-                                        indexes = FindIndexes(subTempStrings[i], "colorg=");
-                                        if (TryParseFloat(indexes, subTempStrings[i], out numVal))
-                                            thisInstance.g = (byte)Math.Clamp(numVal, 0, 255);
-                                        indexes = FindIndexes(subTempStrings[i], "colorb=");
-                                        if (TryParseFloat(indexes, subTempStrings[i], out numVal))
-                                            thisInstance.b = (byte)Math.Clamp(numVal, 0, 255);
-                                        indexes = FindIndexes(subTempStrings[i], "colora=");
-                                        if (TryParseFloat(indexes, subTempStrings[i], out numVal))
-                                            thisInstance.a = (byte)Math.Clamp(numVal, 0, 255);
-
-                                        indexes = FindIndexes(subTempStrings[i], "colortint=");
-                                        if (indexes[0] != subTempStrings[i].Length - 1 || indexes[1] != subTempStrings[i].Length)
-                                        {
-                                            subSubstrings = subTempStrings[i].Substring(indexes[0], indexes[1] - indexes[0]).Split(',', StringSplitOptions.RemoveEmptyEntries);
-                                            thisInstance.r = (byte)Math.Clamp(ParseRoundedNum(subSubstrings[0]), 0, 255);
-                                            thisInstance.g = (byte)Math.Clamp(ParseRoundedNum(subSubstrings[1]), 0, 255);
-                                            thisInstance.b = (byte)Math.Clamp(ParseRoundedNum(subSubstrings[2]), 0, 255);
-                                            thisInstance.a = (byte)Math.Clamp(ParseRoundedNum(subSubstrings[3]), 0, 255);
-                                        }
-
-
-                                        indexes = FindIndexes(subTempStrings[i], "framestochangetint=");
-                                        if (TryParseFloat(indexes, subTempStrings[i], out numVal))
-                                            thisInstance.framesToChangeTint = numVal;
-
-                                        indexes = FindIndexes(subTempStrings[i], "rotate=");
-                                        if (TryParseBool(indexes, subTempStrings[i], out boolVal))
-                                            thisInstance.rotate = boolVal;
-
-                                        indexes = FindIndexes(subTempStrings[i], "reaim=");
-                                        if (TryParseBool(indexes, subTempStrings[i], out boolVal))
-                                            thisInstance.reAim = boolVal;
-
-                                        indexes = FindIndexes(subTempStrings[i], "keepoldangle=");
-                                        if (TryParseBool(indexes, subTempStrings[i], out boolVal))
-                                            thisInstance.keepOldAngle = boolVal;
-
-                                        indexes = FindIndexes(subTempStrings[i], "modifyangle=");
-                                        if (TryParseBool(indexes, subTempStrings[i], out boolVal))
-                                            thisInstance.modifyAngle = boolVal;
-
-                                        indexes = FindIndexes(subTempStrings[i], "turnatstart=");
-                                        if (TryParseBool(indexes, subTempStrings[i], out boolVal))
-                                            thisInstance.turnAtStart = boolVal;
-
-                                        indexes = FindIndexes(subTempStrings[i], "initialmovedelay=");
-                                        if (TryParseFloat(indexes, subTempStrings[i], out numVal))
-                                            thisInstance.initialMoveDelay = numVal;
-
-                                        indexes = FindIndexes(subTempStrings[i], "turnafterdelay=");
-                                        if (TryParseBool(indexes, subTempStrings[i], out boolVal))
-                                            thisInstance.turnAfterDelay = boolVal;
-
-                                        indexes = FindIndexes(subTempStrings[i], "stagesound=");
-                                        if (TryGetInputSubstring(indexes, subTempStrings[i], out stringVal))
-                                        {
-                                            if (gameMaster.sfx.TryGetValue(stringVal, out audioVal))
-                                                thisInstance.stageSound = audioVal;
-                                            else
-                                                thisInstance.stageSound = null;
-                                        }
-                                        
-
-                                        indexes = FindIndexes(subTempStrings[i], "haseffect=");
-                                        if (TryParseBool(indexes, subTempStrings[i], out boolVal))
-                                            thisInstance.hasEffect = boolVal;
-
-                                        if (thisInstance.hasEffect)
-                                        {
-
-                                            indexes = FindIndexes(subTempStrings[i], "effectcolor=");
-                                            if (TryParseFloat(indexes, subTempStrings[i], out numVal))
-                                                thisInstance.effectColor = (Elements.BulletElement.BulletColor)Math.Clamp(Round(numVal), 0, Enum.GetValues(typeof(Elements.BulletElement.BulletColor)).Length - 1);
-
-                                            indexes = FindIndexes(subTempStrings[i], "effectduration=");
-                                            if (TryParseFloat(indexes, subTempStrings[i], out numVal))
-                                                thisInstance.effectDuration = numVal;
-
-                                            {
-                                                indexes = FindIndexes(subTempStrings[i], "effectsize=");
-                                                if (indexes[0] != subTempStrings[i].Length - 1 || indexes[1] != subTempStrings[i].Length)
-                                                {
-                                                    subSubstrings = subTempStrings[i].Substring(indexes[0], indexes[1] - indexes[0]).Split(',', StringSplitOptions.RemoveEmptyEntries);
-                                                    thisInstance.effectSize = new Vector2(ParseFloat(subSubstrings[0]), ParseFloat(subSubstrings[1]));
-                                                }
-
-                                                indexes = FindIndexes(subTempStrings[i], "effectopacity=");
-                                                if (indexes[0] != subTempStrings[i].Length - 1 || indexes[1] != subTempStrings[i].Length)
-                                                {
-                                                    subSubstrings = subTempStrings[i].Substring(indexes[0], indexes[1] - indexes[0]).Split(',', StringSplitOptions.RemoveEmptyEntries);
-
-                                                    thisInstance.effectOpacity = new Vector2(ParseFloat(subSubstrings[0]), ParseFloat(subSubstrings[1]));
-                                                }
-                                            }
-
-                                            indexes = FindIndexes(subTempStrings[i], "affectedbytimescale=");
-                                            if (TryParseBool(indexes, subTempStrings[i], out boolVal))
-                                                thisInstance.affectedByTimescale = boolVal;
-
-                                        }
-
-                                    }
-                                }
-                            }
-
-
-                            finalPattern = thisPattern;
-                        }
-                        break;
+                        stage.effectSize = new Vector2(patternData.bulletStages[i].effectSize.x, patternData.bulletStages[i].effectSize.y);
+                        stage.effectOpacity = new Vector2(patternData.bulletStages[i].effectOpacity.start, patternData.bulletStages[i].effectOpacity.end);
+                    }
+                    outputData.bulletStages.Add(new PatternBullets.InstanceList());
+                    outputData.bulletStages[i].instances.Add(stage);
                 }
             }
             catch (Exception e)
@@ -3180,7 +2995,7 @@ namespace DawnmakuEngine
                 GameMaster.LogErrorMessage("There was an error loading this pattern data!", e.Message);
             }
 
-            return finalPattern;
+            return outputData;
         }
         #endregion
 
