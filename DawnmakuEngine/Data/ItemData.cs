@@ -15,7 +15,7 @@ namespace DawnmakuEngine.Data
             magnetDist, magnetDistSqr, drawSpeed, magnetSpeed,
             collectDist, collectDistSqr;
 
-        public bool canBePOC = true,
+        public bool canBeAutoCollected = true,
             autoDraw = false;
     }
 }

@@ -9,7 +9,7 @@ namespace DawnmakuEngine.Data
 {
     public class Bezier
     {
-        public List<Point> points;
+        public List<Point> points = new List<Point>();
         public float scale = 100;
         public bool autoSetPoints;
 
@@ -18,10 +18,10 @@ namespace DawnmakuEngine.Data
         {
             public Vector2 pos;
             public float time;
-            public ushort waitTime;
+            public float waitTime;
             public float size;
 
-            public Point(Vector2 pos_, float time_, ushort waitTime_ = 0, float size_ = 1)
+            public Point(Vector2 pos_, float time_, float waitTime_ = 0, float size_ = 1)
             {
                 pos = pos_;
                 time = time_;

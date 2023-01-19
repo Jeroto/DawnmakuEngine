@@ -1,7 +1,0 @@
-scale=50;
-autosetpoints=false;
-pointslist=
-{pos=0,0; time=0; waitTime=0}:
-{pos=1,1; time=0; waitTime=0}:
-{pos=2,1; time=0; waitTime=0}:
-{pos=15,0; time=240; waitTime=0}

@@ -1,0 +1,26 @@
+{
+    "shader": "spriteshader",
+    "canBeAutoCollectedAtTop": true,
+    "autoDraw": false,
+    "animStates": [
+        "poweritem"
+    ],
+
+    "overrideDefaultValues": false,
+    "randXVelRange": {
+        "min": 0,
+        "max": 0
+    },
+    "randYVelRange": {
+        "min": 0,
+        "max": 0
+    },
+
+    "maxFallSpeed": 0,
+    "gravAccel": 0,
+    "xDecel": 0,
+    "magnetDist": 0,
+    "magnetSpeed": 0,
+    "drawSpeed": 0,
+    "collectDist": 0
+}

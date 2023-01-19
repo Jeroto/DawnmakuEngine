@@ -1,0 +1,241 @@
+{
+    "StageBGM": "Lovely Mound Of Cherry Blossoms",
+    "BossBGM": "Izanagi Object",
+    "ambientLights": [
+        {
+            "colorForm": "rgb",
+            "colorVal": {
+                "r": 10,
+                "g": 10,
+                "b": 10
+            },
+            "intensity": 1,
+            "startTime": 0,
+            "transitionTime": 0
+        },
+        {
+            "colorForm": "rgb",
+            "colorVal": {
+                "r": 50,
+                "g": 50,
+                "b": 100
+            },
+            "intensity": 2,
+            "startTime": 120,
+            "transitionTime": 360
+        }
+    ],
+    "backgroundCamMovement": [
+        {
+            "vel": {
+                "x": 0,
+                "y": 0,
+                "z": 0.5
+            },
+            "randMinPos": {
+                "x": -15,
+                "y": 100,
+                "z": -5
+            },
+            "randMaxPos": {
+                "x": 15,
+                "y": 120,
+                "z": 5
+            },
+            "randMinRot": {
+                "x": -2,
+                "y": -2,
+                "z": -2
+            },
+            "randMaxRot": {
+                "x": 2,
+                "y": 2,
+                "z": 2
+            },
+            "RandomizationDelay": 180,
+            "startTime": 0,
+            "transitionTime": 60
+        },
+        {
+            "vel": {
+                "x": 0,
+                "y": 0,
+                "z": 1
+            },
+            "randMinPos": {
+                "x": -15,
+                "y": 90,
+                "z": -5
+            },
+            "randMaxPos": {
+                "x": 15,
+                "y": 130,
+                "z": 5
+            },
+            "randMinRot": {
+                "x": -2,
+                "y": -2,
+                "z": -2
+            },
+            "randMaxRot": {
+                "x": 2,
+                "y": 2,
+                "z": 2
+            },
+            "RandomizationDelay": 180,
+            "startTime": 180,
+            "transitionTime": 180
+        },
+        {
+            "vel": {
+                "x": 0,
+                "y": 0,
+                "z": 5
+            },
+            "randMinPos": {
+                "x": -30,
+                "y": 120,
+                "z": -2
+            },
+            "randMaxPos": {
+                "x": 30,
+                "y": 180,
+                "z": 2
+            },
+            "randMinRot": {
+                "x": -2,
+                "y": -2,
+                "z": -2
+            },
+            "randMaxRot": {
+                "x": 2,
+                "y": 2,
+                "z": 2
+            },
+            "RandomizationDelay": 60,
+            "startTime": 600,
+            "transitionTime": 600
+        }
+    ],
+    "backgroundSegments": [
+        {
+            "time": 0,
+            "spawnDirection": {
+                "x": 0,
+                "y": 0,
+                "z": -1
+            },
+            "segmentCount": 6,
+            "segments": [
+                "section1"
+            ]
+        },
+        {
+            "time": 600,
+            "spawnDirection": {
+                "x": 0,
+                "y": 0,
+                "z": -1
+            },
+            "segmentCount": 6,
+            "segments": [
+                "section2"
+            ]
+        },
+        {
+            "time": 1200,
+            "spawnDirection": {
+                "x": 0,
+                "y": 0,
+                "z": -1
+            },
+            "segmentCount": 6,
+            "segments": [
+                "section3"
+            ]
+        }
+    ],
+    "enemySpawns": [
+        {
+            "enemy": "blueEnemy1",
+            "time": 60,
+            "pos": {
+                "x": -215,
+                "y": 200
+            },
+            "items": [ "bigPowerItem", "bigPowerItem", "bigPowerItem" ]
+        },
+        {
+            "enemy": "blueEnemy1",
+            "time": 180,
+            "pos": {
+                "x": -215,
+                "y": 250
+            },
+            "items": [ "powerItem", "powerItem", "powerItem" ]
+        },
+        {
+            "enemy": "blueEnemy1",
+            "time": 200,
+            "pos": {
+                "x": -215,
+                "y": 300
+            },
+            "items": [ "pointItem", "powerItem", "pointItem" ]
+        },
+        {
+            "enemy": "blueEnemy1",
+            "time": 220,
+            "pos": {
+                "x": -210,
+                "y": 300
+            },
+            "items": [ "pointItem", "pointItem", "pointItem" ]
+        },
+        {
+            "enemy": "blueEnemy1",
+            "time": 240,
+            "pos": {
+                "x": -210,
+                "y": 250
+            },
+            "items": [ "poweritem", "staritem", "poweritem" ]
+        },
+        {
+            "enemy": "blueEnemy1",
+            "time": 260,
+            "pos": {
+                "x": -210,
+                "y": 200
+            },
+            "items": [ "poweritem", "bigpoweritem", "poweritem" ]
+        },
+        {
+            "enemy": "blueEnemy1",
+            "time": 280,
+            "pos": {
+                "x": -219,
+                "y": 200
+            },
+            "items": [ "poweritem", "pointitem", "poweritem" ]
+        },
+        {
+            "enemy": "blueEnemy1",
+            "time": 300,
+            "pos": {
+                "x": -219,
+                "y": 250
+            },
+            "items": [ "bombitem" ]
+        },
+        {
+            "enemy": "blueEnemy1",
+            "time": 320,
+            "pos": {
+                "x": -219,
+                "y": 300
+            },
+            "items": [ "lifeitem" ]
+        }
+    ]
+}

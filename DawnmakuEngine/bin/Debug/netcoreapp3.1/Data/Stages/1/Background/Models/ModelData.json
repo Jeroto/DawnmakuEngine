@@ -1,0 +1,23 @@
+[
+    {
+        "name": "redMushroom",
+        "shader": "spriteShader",
+        "scale": 1,
+        "model": "redMushroom",
+        "texture": "redMushroom"
+    },
+    {
+        "name": "greenmushroom",
+        "shader": "spriteShader",
+        "scale": 2,
+        "model": "redMushroom",
+        "texture": "greenmushroom"
+    },
+    {
+        "name": "debuggrass",
+        "shader": "spriteShader",
+        "scale": 60,
+        "model": "debuggrass",
+        "texture": "debuggrasstex"
+    }
+]

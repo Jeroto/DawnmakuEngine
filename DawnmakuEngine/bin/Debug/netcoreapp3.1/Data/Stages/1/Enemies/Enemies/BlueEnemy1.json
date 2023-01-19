@@ -1,0 +1,43 @@
+{
+    "shader":"spriteShader",
+    "health": 50,
+    "spawnIFrames": 30,
+    "deathScore": 100,
+    "hurtColliderSize":32,
+    "hurtColliderOffset": {
+        "x":0,
+        "y":1
+    },
+    "playerKillColliderSize": {
+        "x": 10,
+        "y": 10
+    },
+    "playerKillColliderOffset": {
+        "x":0,
+        "y":1
+    },
+    "movementCurve": "debugBezier",
+    "animations": [
+        "blueIdle",
+        "blueIdleFromRight",
+        "blueIdleFromLeft",
+        "blueRight",
+        "blueToRight",
+        "blueLeft",
+        "blueToLeft"
+    ],
+    "patternsByDifficulty": [
+        [
+            "firstPattern"
+        ],
+        [
+            "firstPattern"
+        ],
+        [
+            "firstPattern"
+        ],
+        [
+            "firstpattern"
+        ]
+    ]
+}

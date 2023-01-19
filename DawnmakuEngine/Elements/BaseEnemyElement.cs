@@ -180,9 +180,9 @@ namespace DawnmakuEngine.Elements
             PlayerDamageCollider thisCol;
             float curHitboxSize, hitboxCombined, sin, cos,
                 XCosYSin, XSinYCos;
-            Vector2 position = entityAttachedTo.WorldPosition.Xy + enemyData.colliderOffset,
+            Vector2 position = entityAttachedTo.WorldPosition.Xy + enemyData.hurtColliderOffset,
                 posDif = new Vector2();
-            curHitboxSize = enemyData.colliderSize * entityAttachedTo.WorldScale.X;
+            curHitboxSize = enemyData.hurtColliderSize * entityAttachedTo.WorldScale.X;
             for (int i = 0; i < PlayerDamageCollider.playerDamageColliders.Count; i++)
             {
                 thisCol = PlayerDamageCollider.playerDamageColliders[i];

@@ -1,0 +1,38 @@
+{
+    "scale": 50,
+    "autoSetPoints": false,
+    "pointsList": [
+        {
+            "pos": {
+                "x":0,
+                "y":0
+            },
+            "time": 0,
+            "waitTime": 0
+        },
+        {
+            "pos": {
+                "x":1,
+                "y":1
+            },
+            "time": 0,
+            "waitTime": 0
+        },
+        {
+            "pos": {
+                "x":2,
+                "y":1
+            },
+            "time": 0,
+            "waitTime": 0
+        },
+        {
+            "pos": {
+                "x":15,
+                "y":0
+            },
+            "time": 240,
+            "waitTime": 0
+        }
+    ]
+}

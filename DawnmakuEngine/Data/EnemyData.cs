@@ -11,11 +11,11 @@ namespace DawnmakuEngine.Data
         public Shader shader;
         public string enemyName;
         public int health;
-        public float invTime = 30;
+        public float spawnIFrames = 30;
         public int deathScoreValue;
 
-        public float colliderSize;
-        public Vector2 colliderOffset;
+        public float hurtColliderSize;
+        public Vector2 hurtColliderOffset;
 
         public Vector2 killColliderSize,
             killColliderOffset;

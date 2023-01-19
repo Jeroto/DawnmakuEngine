@@ -38,21 +38,21 @@ namespace DawnmakuEngine.Elements
                 sectionLength.Add(data.secSpawns[0].section[secIndividualIndex].secLength);
             }
             backgroundCam = Entity.FindEntity("BackgroundCamera");
-            camRandomTime = data.camVel[0].randDelay;
+            camRandomTime = data.camMovements[0].randDelay;
             camRandomCur = 0;
-            prevPos = new Vector3(GameMaster.Random(data.camVel[0].randMinPos.X, data.camVel[0].randMaxPos.X),
-                GameMaster.Random(data.camVel[0].randMinPos.Y, data.camVel[0].randMaxPos.Y),
-                GameMaster.Random(data.camVel[0].randMinPos.Z, data.camVel[0].randMaxPos.Z));
-            newPos = new Vector3(GameMaster.Random(data.camVel[0].randMinPos.X, data.camVel[0].randMaxPos.X),
-                GameMaster.Random(data.camVel[0].randMinPos.Y, data.camVel[0].randMaxPos.Y),
-                GameMaster.Random(data.camVel[0].randMinPos.Z, data.camVel[0].randMaxPos.Z));
+            prevPos = new Vector3(GameMaster.Random(data.camMovements[0].randMinPos.X, data.camMovements[0].randMaxPos.X),
+                GameMaster.Random(data.camMovements[0].randMinPos.Y, data.camMovements[0].randMaxPos.Y),
+                GameMaster.Random(data.camMovements[0].randMinPos.Z, data.camMovements[0].randMaxPos.Z));
+            newPos = new Vector3(GameMaster.Random(data.camMovements[0].randMinPos.X, data.camMovements[0].randMaxPos.X),
+                GameMaster.Random(data.camMovements[0].randMinPos.Y, data.camMovements[0].randMaxPos.Y),
+                GameMaster.Random(data.camMovements[0].randMinPos.Z, data.camMovements[0].randMaxPos.Z));
 
-            prevRot = new Vector3(GameMaster.Random(data.camVel[0].randMinRot.X, data.camVel[0].randMaxRot.X),
-                GameMaster.Random(data.camVel[0].randMinRot.Y, data.camVel[0].randMaxRot.Y),
-                GameMaster.Random(data.camVel[0].randMinRot.Z, data.camVel[0].randMaxRot.Z));
-            newRot = new Vector3(GameMaster.Random(data.camVel[0].randMinRot.X, data.camVel[0].randMaxRot.X),
-                GameMaster.Random(data.camVel[0].randMinRot.Y, data.camVel[0].randMaxRot.Y),
-                GameMaster.Random(data.camVel[0].randMinRot.Z, data.camVel[0].randMaxRot.Z));
+            prevRot = new Vector3(GameMaster.Random(data.camMovements[0].randMinRot.X, data.camMovements[0].randMaxRot.X),
+                GameMaster.Random(data.camMovements[0].randMinRot.Y, data.camMovements[0].randMaxRot.Y),
+                GameMaster.Random(data.camMovements[0].randMinRot.Z, data.camMovements[0].randMaxRot.Z));
+            newRot = new Vector3(GameMaster.Random(data.camMovements[0].randMinRot.X, data.camMovements[0].randMaxRot.X),
+                GameMaster.Random(data.camMovements[0].randMinRot.Y, data.camMovements[0].randMaxRot.Y),
+                GameMaster.Random(data.camMovements[0].randMinRot.Z, data.camMovements[0].randMaxRot.Z));
 
             gameMaster.ambientR = data.ambientLights[0].r;
             gameMaster.ambientG = data.ambientLights[0].g;
@@ -88,9 +88,9 @@ namespace DawnmakuEngine.Elements
                 sectionTransition = 0;
                 secIndividualIndex = DawnMath.Repeat(secIndividualIndex, data.secSpawns[sectionSpawnIndex].section.Count - 1);
             }
-            if (camVelIndex < data.camVel.Count - 1 && data.camVel[Math.Clamp(camVelIndex + 1, 0, data.camVel.Count - 1)].time <= backgroundTime)
+            if (camVelIndex < data.camMovements.Count - 1 && data.camMovements[Math.Clamp(camVelIndex + 1, 0, data.camMovements.Count - 1)].time <= backgroundTime)
             {
-                camVelIndex = Math.Clamp(camVelIndex + 1, 0, data.camVel.Count - 1);
+                camVelIndex = Math.Clamp(camVelIndex + 1, 0, data.camMovements.Count - 1);
                 camTransition = 0;
             }
             if (ambientIndex < data.ambientLights.Count - 1 && data.ambientLights[Math.Clamp(ambientIndex + 1, 0, data.ambientLights.Count - 1)].time <= backgroundTime)
@@ -125,25 +125,25 @@ namespace DawnmakuEngine.Elements
         {
             camTransition += gameMaster.timeScale;
             camRandomCur += gameMaster.timeScale;
-            if (data.camVel[camVelIndex].transitionTime > 0)
-                curVel = DawnMath.Lerp(curVel, data.camVel[camVelIndex].vel, camTransition / data.camVel[camVelIndex].transitionTime);
+            if (data.camMovements[camVelIndex].transitionTime > 0)
+                curVel = DawnMath.Lerp(curVel, data.camMovements[camVelIndex].vel, camTransition / data.camMovements[camVelIndex].transitionTime);
             else
-                curVel = data.camVel[camVelIndex].vel;
+                curVel = data.camMovements[camVelIndex].vel;
 
             if(camRandomCur >= camRandomTime)
             {
                 camRandomCur -= camRandomTime;
-                camRandomTime = data.camVel[camVelIndex].randDelay;
+                camRandomTime = data.camMovements[camVelIndex].randDelay;
 
                 prevPos = newPos;
                 prevRot = newRot;
 
-                newPos = new Vector3(GameMaster.Random(data.camVel[camVelIndex].randMinPos.X, data.camVel[camVelIndex].randMaxPos.X),
-                    GameMaster.Random(data.camVel[camVelIndex].randMinPos.Y, data.camVel[camVelIndex].randMaxPos.Y),
-                    GameMaster.Random(data.camVel[camVelIndex].randMinPos.Z, data.camVel[camVelIndex].randMaxPos.Z));
-                newRot = new Vector3(GameMaster.Random(data.camVel[camVelIndex].randMinRot.X, data.camVel[camVelIndex].randMaxRot.X),
-                    GameMaster.Random(data.camVel[camVelIndex].randMinRot.Y, data.camVel[camVelIndex].randMaxRot.Y),
-                    GameMaster.Random(data.camVel[camVelIndex].randMinRot.Z, data.camVel[camVelIndex].randMaxRot.Z));
+                newPos = new Vector3(GameMaster.Random(data.camMovements[camVelIndex].randMinPos.X, data.camMovements[camVelIndex].randMaxPos.X),
+                    GameMaster.Random(data.camMovements[camVelIndex].randMinPos.Y, data.camMovements[camVelIndex].randMaxPos.Y),
+                    GameMaster.Random(data.camMovements[camVelIndex].randMinPos.Z, data.camMovements[camVelIndex].randMaxPos.Z));
+                newRot = new Vector3(GameMaster.Random(data.camMovements[camVelIndex].randMinRot.X, data.camMovements[camVelIndex].randMaxRot.X),
+                    GameMaster.Random(data.camMovements[camVelIndex].randMinRot.Y, data.camMovements[camVelIndex].randMaxRot.Y),
+                    GameMaster.Random(data.camMovements[camVelIndex].randMinRot.Z, data.camMovements[camVelIndex].randMaxRot.Z));
             }
             else
             {

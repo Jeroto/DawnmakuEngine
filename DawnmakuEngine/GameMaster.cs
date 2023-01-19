@@ -185,6 +185,16 @@ namespace DawnmakuEngine
         {
             public bool hasDepth = false;
             public bool hasLight = false;
+
+            public RenderLayer(bool _hasDepth, bool _hasLight) : this()
+            {
+                hasDepth = _hasDepth;
+                hasLight = _hasLight;
+            }
+
+            public RenderLayer()
+            {
+            }
         }
 
 

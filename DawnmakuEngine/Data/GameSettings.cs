@@ -9,11 +9,11 @@ namespace DawnmakuEngine.Data
     class GameSettings
     {
         //Debug Values
-        public bool runInDebugMode = false, logAllFontChars = false, canToggleInvincible = true, logTimers = false;
+        public bool debugMode = false, logAllFontChars = false, canToggleInvincible = true, logTimers = false;
 
         //Misc Values
         public Shader generalTextShader, dialogueTextShader;
-        public bool fullPowerPOC = false, shiftForPOC = false;
+        public bool fullPowerCollection = false, shiftForCollection = false;
         public int maxPower, powerLostOnDeath, powerTotalDroppedOnDeath, maxPowerLevel;
         public int[] powerLevelSplits = null;
         public string[] mainStageFolderNames, exStageFolderNames,
@@ -34,7 +34,7 @@ namespace DawnmakuEngine.Data
         public float itemMaxFallSpeed, itemGravAccel, itemXDecel,
             itemMagnetDist, itemDrawSpeed, itemMagnetSpeed,
             itemCollectDist;
-        public int pocHeight, itemDisableHeight;
+        public int collectionHeight, itemDisableHeight;
         public ushort maxItemCount;
     }
 }

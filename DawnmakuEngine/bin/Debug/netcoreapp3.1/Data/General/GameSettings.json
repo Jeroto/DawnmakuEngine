@@ -1,0 +1,129 @@
+{
+    "debugMode": true,
+    "logAllFontChars": false,
+    "PressIToToggleInvincible": true,
+    "logTimers": false,
+    
+    "maxPower": 400,
+    "powerLostOnDeath": 100,
+    "powerTotalDroppedOnDeath": 20,
+    "powerLevelSplits": [ 100, 200, 300, 400 ],
+
+    "playerBoundsX": {
+        "min": -182,
+        "max": 182
+    },
+    "playerBoundsY": {
+        "min": 10,
+        "max": 433
+    },
+
+    "bulletBoundsX": {
+        "min": -202,
+        "max": 202
+    },
+    "bulletBoundsY": {
+        "min": -10,
+        "max": 453
+    },
+
+    "enemyBoundsX": {
+        "min": -250,
+        "max": 250
+    },
+    "enemyBoundsY": {
+        "min": -50,
+        "max": 500
+    },
+    
+    "grazeDistance": 10,
+    "fullPowerForCollection": false,
+    "shiftAtTopToCollect": true,
+
+    "maxItemCount": 200,
+    "pointOfCollectionHeight": 350,
+
+    "itemDisableHeight": -100,
+    "itemRandXVelRange": {
+        "min": -2,
+        "max": 2
+    },
+    "itemRandYVelRange": {
+        "min": 2,
+        "max": 5
+    },
+    "itemMaxFallSpeed": 3,
+    "itemGravAccel": 0.1,
+    "itemXDecel": 0.01,
+
+    "itemMagnetDist": 32,
+    "itemMagnetSpeed": 4,
+    "itemDrawSpeed": 6,
+    "itemCollectDist": 5,
+
+    "generalTextShader": "textShader",
+    "dialogueTextShader": "textShader",
+
+    "mainStages": [
+        "1"
+    ],
+
+    "exStages": [
+        "EX"
+    ],
+
+    "languages": [ "English", "日本語" ],
+    
+    "renderLayers": [
+        {
+            "name": "background",
+            "hasDepth": true,
+            "hasLighting": true
+        },
+        {
+            "name": "backEffects",
+            "hasDepth": false,
+            "hasLighting": false
+        },
+        {
+            "name": "playerOrbs",
+            "hasDepth": false,
+            "hasLighting": false
+        },
+        {
+            "name": "player",
+            "hasDepth": false,
+            "hasLighting": false
+        },
+        {
+            "name": "items",
+            "hasDepth": false,
+            "hasLighting": false
+        },
+        {
+            "name": "enemies",
+            "hasDepth": false,
+            "hasLighting": false
+        },
+        {
+            "name": "bullets",
+            "hasDepth": false,
+            "hasLighting": false
+        },
+        {
+            "name": "effects",
+            "hasDepth": false,
+            "hasLighting": false
+        },
+        {
+            "name": "gameBorder",
+            "hasDepth": false,
+            "hasLighting": false
+        },
+        {
+            "name": "borderUI",
+            "hasDepth": false,
+            "hasLighting": false
+        }
+    ]
+}

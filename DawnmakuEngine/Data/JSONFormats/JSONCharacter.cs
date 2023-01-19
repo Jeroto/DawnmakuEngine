@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace DawnmakuEngine.Data
+namespace DawnmakuEngine.Data.JSONFormats
 {
     public class JSONCharacter
     {

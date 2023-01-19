@@ -8,10 +8,9 @@ namespace DawnmakuEngine.Data
 {
     public class StageData
     {
-        public AudioData stageTrack, bossTrack;
         public string stageTrackFile, bossTrackFile;
         public List<AmbientLights> ambientLights = new List<AmbientLights>();
-        public List<CamVelocities> camVel = new List<CamVelocities>();
+        public List<CamMovements> camMovements = new List<CamMovements>();
         public List<SectionSpawns> secSpawns = new List<SectionSpawns>();
         public List<EnemySpawn> enemySpawns = new List<EnemySpawn>();
 
@@ -22,7 +21,7 @@ namespace DawnmakuEngine.Data
             public float transitionTime;
 
         }
-        public class CamVelocities
+        public class CamMovements
         {
             public Vector3 vel,
                 randMinPos, randMaxPos,

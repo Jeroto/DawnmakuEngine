@@ -1,0 +1,26 @@
+{
+    "shader": "spriteshader",
+    "canBeAutoCollectedAtTop": true,
+    "autoDraw": false,
+    "animStates": [
+        "lifeitem"
+    ],
+
+    "overrideDefaultValues": true,
+    "randXVelRange": {
+        "min": -2,
+        "max": 2
+    },
+    "randYVelRange": {
+        "min": 2,
+        "max": 5
+    },
+
+    "maxFallSpeed": 2,
+    "gravAccel": 0.1,
+    "xDecel": 0.01,
+    "magnetDist": 32,
+    "magnetSpeed": 2,
+    "drawSpeed": 5.25,
+    "collectDist": 8
+}

@@ -1,0 +1,152 @@
+{
+    "sectionLength": 623.4,
+    "offset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+    },
+
+    "objectSetup":
+    [
+        {
+            "objectOptions": [ "debugGrass" ],
+            "parentIndex": -1,
+            "pos": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            },
+            "rot": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            },
+            "scale": {
+                "x": 2,
+                "y": 1,
+                "z": 1
+            },
+            "elements": []
+        },
+        {
+            "objectOptions": [ "redmushroom", "greenmushroom" ],
+            "parentIndex": -1,
+            "pos": {
+                "x": 300,
+                "y": 10,
+                "z": 15
+            },
+            "rot": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            },
+            "scale": {
+                "x": 6,
+                "y": 7,
+                "z": 6
+            },
+            "elements": []
+        },
+        {
+            "objectOptions": [ "redmushroom", "greenmushroom" ],
+            "parentIndex": -1,
+            "pos": {
+                "x": -300,
+                "y": 10,
+                "z": -40
+            },
+            "rot": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            },
+            "scale": {
+                "x": 6,
+                "y": 7,
+                "z": 6
+            },
+            "elements": []
+        },
+        {
+            "objectOptions": [ "redmushroom", "greenmushroom" ],
+            "parentIndex": -1,
+            "pos": {
+                "x": 275,
+                "y": 5,
+                "z": 250
+            },
+            "rot": {
+                "x": 0,
+                "y": 0,
+                "z": 5
+            },
+            "scale": {
+                "x": 6,
+                "y": 7,
+                "z": 6
+            },
+            "elements": []
+        },
+        {
+            "objectOptions": [ "redmushroom", "greenmushroom" ],
+            "parentIndex": -1,
+            "pos": {
+                "x": 275,
+                "y": 5,
+                "z": 250
+            },
+            "rot": {
+                "x": 0,
+                "y": 0,
+                "z": -5
+            },
+            "scale": {
+                "x": 6,
+                "y": 7,
+                "z": 6
+            },
+            "elements": []
+        },
+        {
+            "objectOptions": [ "redmushroom", "greenmushroom" ],
+            "parentIndex": -1,
+            "pos": {
+                "x": 350,
+                "y": 5,
+                "z": -250
+            },
+            "rot": {
+                "x": 0,
+                "y": 0,
+                "z": -5
+            },
+            "scale": {
+                "x": 6,
+                "y": 7,
+                "z": 6
+            },
+            "elements": []
+        },
+        {
+            "objectOptions": [ "redmushroom", "greenmushroom" ],
+            "parentIndex": -1,
+            "pos": {
+                "x": 350,
+                "y": 5,
+                "z": -250
+            },
+            "rot": {
+                "x": 0,
+                "y": 0,
+                "z": 5
+            },
+            "scale": {
+                "x": 6,
+                "y": 7,
+                "z": 6
+            },
+            "elements": []
+        }
+    ]
+}
