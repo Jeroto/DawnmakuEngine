@@ -14,6 +14,17 @@ namespace DawnmakuEngine.Elements
         public MeshRenderer meshRend;
         public Mesh mesh;
 
+        public Vector4 ColorByte
+        {
+            get { return meshRend.ColorByte; }
+            set { meshRend.ColorByte = value; }
+        }
+        public Vector4 ColorFloat
+        {
+            get { return meshRend.ColorFloat; }
+            set { meshRend.ColorFloat = value; }
+        }
+
         public SpriteSet.Sprite Sprite
         {
             get { return curSprite; }

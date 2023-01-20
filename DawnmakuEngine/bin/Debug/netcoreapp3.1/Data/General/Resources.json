@@ -2,21 +2,29 @@
    {
       "name":"Lives",
       "type":"Int",
-      "value":"3"
+      "value":"3",
+      "min": 0,
+      "max": 9
    },
    {
       "name":"Bombs",
       "type":"Int",
-      "value":"2"
+      "value":"2",
+      "min": 0,
+      "max": 9
    },
    {
       "name":"Magic",
       "type":"Float",
-      "value":"50,0,100"
+      "value":"50",
+      "min": 0,
+      "max": 100
    },
    {
       "name":"UFOs",
       "type":"UFO",
-      "value":"red,green,none"
+      "value":"red,green,none",
+      "min": 0,
+      "max": 3
    }
 ]

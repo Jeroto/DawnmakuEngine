@@ -33,6 +33,8 @@ namespace DawnmakuEngine.Elements
             float clampedValue = MathHelper.Clamp(value, 0, 1);
             float width = maxWidth * clampedValue;
 
+            meshRend.tex = curSprite.tex;
+
             mesh.vertices = new float[4 * 5];
 
             mesh.vertices[0 + 0] = 0;
@@ -66,10 +68,11 @@ namespace DawnmakuEngine.Elements
         {
         }
 
-        public static UIMeter CreateUIMeter(Vector3 position, Vector3 rotation, SpriteSet.Sprite graphic, Vector2 size, Shader shader)
+
+        const string METER_NAME = "uimeter";
+        public static UIMeter Create(Vector3 position, Vector3 rotation, SpriteSet.Sprite graphic, Vector2 size, Shader shader, string name = METER_NAME)
         {
-            const string METER_NAME = "uimeter";
-            Entity newEntity = new Entity(METER_NAME, position, rotation, Vector3.One);
+            Entity newEntity = new Entity(name, position, rotation, Vector3.One);
             MeshRenderer newMeshRend = new MeshRenderer();
 
             UIMeter newMeter = new UIMeter(newMeshRend);
@@ -77,14 +80,10 @@ namespace DawnmakuEngine.Elements
             newEntity.AddElement(newMeter);
             newEntity.AddElement(newMeshRend);
 
-            newMeter.meshRend = newMeshRend;
-            newMeshRend.mesh = newMeter.mesh;
-
-            newMeshRend.tex = graphic.tex;
-            newMeter.curSprite = graphic;
-
             newMeter.maxWidth = size.X;
             newMeter.maxHeight = size.Y;
+
+            newMeter.Sprite = graphic;
 
             newMeshRend.shader = shader;
             newMeshRend.LayerName = "borderui";
@@ -93,9 +92,9 @@ namespace DawnmakuEngine.Elements
         }
 
         public static UIMeter Create(Vector3 position, Vector3 rotation, SpriteSet.Sprite graphic, Vector2 size, Shader shader,
-            ResourceGroup resources, ResourceGroup.CalculationType calcType)
+            ResourceGroup resources, ResourceGroup.CalculationType calcType, string name = METER_NAME)
         {
-            UIMeter newMeter = CreateUIMeter(position, rotation, graphic, size, shader);
+            UIMeter newMeter = Create(position, rotation, graphic, size, shader, name);
             newMeter.resources = resources;
             newMeter.calcType = calcType;
 

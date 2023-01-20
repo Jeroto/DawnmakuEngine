@@ -310,7 +310,6 @@ namespace DawnmakuEngine.Elements
                             uiText ? OpenTK.Graphics.ES30.BufferUsageHint.StaticDraw : OpenTK.Graphics.ES30.BufferUsageHint.DynamicDraw);
                         newRenderer.LayerName = uiText ? "borderuitext" : "effects";
                         newRenderer.shader = currentShader;
-                        //newRenderer.resizeSprite = true;
                         newRenderer.ColorByte = color;
 
                         spriteRend = new SpriteRenderer(newRenderer);
@@ -353,15 +352,10 @@ namespace DawnmakuEngine.Elements
                     fontCharIsIn[i] = (byte)f;
                     curCharSprite = gameMaster.fontGlyphSprites[gameMaster.fontNames[f]].sprites[gameMaster.fontCharList[gameMaster.fontNames[f]].indexes[(ushort)curChar]];
                 }
-                //curCharSprite = gameMaster.playerSprites["reimu"].sprites[0];
 
+                renderers[i].ColorByte = color;
                 renderers[i].Sprite = curCharSprite;
-                /*renderers[i].mesh.SetUVs(curCharSprite.GetUVs());
-                renderers[i].tex = curCharSprite.tex;*/
 
-
-                //renderers[i].modelScale = textSize;
-                renderers[i].meshRend.ColorByte = color;
                 renderers[i].mesh.SetUp(OpenTK.Graphics.ES30.BufferUsageHint.DynamicDraw);
             }
             return fontCharIsIn;

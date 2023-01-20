@@ -13,6 +13,8 @@ namespace DawnmakuEngine.Data.Resources
         public string name;
         public Type resourceType = typeof(BaseResource);
 
+        public float min = 0, max = 999999999;
+
         /// <summary>
         /// Called when initially loading the resource with json. Recieves the direct value string if given, and "NULL" otherwise.
         /// </summary>

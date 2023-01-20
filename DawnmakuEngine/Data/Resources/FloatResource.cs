@@ -7,25 +7,13 @@ namespace DawnmakuEngine.Data.Resources
 {
     public class FloatResource : BaseResource
     {
-        float value;
-
-        float max = 1, min = 0;
+        float value = 0;
 
         public override void InitValue(string stringValue)
         {
-            string[] split = stringValue.Replace(" ", "").Split(',');
-
-            value = float.Parse(split[0]);
-
-            if(split.Length > 2)
-            {
-                min= float.Parse(split[1]);
-                max= float.Parse(split[2]);
-            }
-            else if(split.Length > 1)
-            {
-                max = float.Parse(split[1]);
-            }
+            if (stringValue == "NULL")
+                return;
+            value = float.Parse(stringValue);
         }
 
         public override object GetValue()

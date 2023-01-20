@@ -10,6 +10,9 @@ namespace DawnmakuEngine.Data.Resources
         int[] ufos = new int[3];
         public override void InitValue(string stringValue)
         {
+            if(stringValue == "NULL")
+                return;
+
             string[] colors = stringValue.Split(',');
 
             for (int i = 0; i < colors.Length; i++)
@@ -56,7 +59,7 @@ namespace DawnmakuEngine.Data.Resources
         public override void ModifyValue(params object[] values)
         {
             int index = Convert.ToInt32(values[0]);
-            if(index > 0 && index < ufos.Length)
+            if(index >= 0 && index < ufos.Length)
             {
                 ufos[index] = Convert.ToInt32(values[1]);
             }
@@ -66,6 +69,12 @@ namespace DawnmakuEngine.Data.Resources
         {
             return ufos[0];
         }
+
+        public override int OutputInt()
+        {
+            return ufos[0];
+        }
+
         public override string OutputString()
         {
             return IntToColor(ufos[0]) + ", " + IntToColor(ufos[1]) + ", " + IntToColor(ufos[2]);

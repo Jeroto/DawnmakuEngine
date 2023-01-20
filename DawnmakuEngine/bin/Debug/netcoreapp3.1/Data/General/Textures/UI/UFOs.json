@@ -1,0 +1,26 @@
+[
+    {
+        "name":"EmptyUFO",
+        "sprites":[
+                [0,0,16,16]
+        ]
+    },
+    {
+        "name":"RedUFO",
+        "sprites":[
+                [16,0,32,16]
+        ]
+    },
+    {
+        "name":"GreenUFO",
+        "sprites":[
+                [32,0,48,16]
+        ]
+    },
+    {
+        "name":"BlueUFO",
+        "sprites":[
+                [48,0,64,16]
+        ]
+    }
+]

@@ -507,24 +507,22 @@ namespace DawnmakuEngine
                     throw new Exception("No 'Resources.json' file found.");
                 string fileText = File.ReadAllText(generalDir + "/Resources.json");
                 JsonSerializerSettings settings = new JsonSerializerSettings();
-                Dictionary<string, string>[] resources = JsonConvert.DeserializeObject<Dictionary<string, string>[]>(fileText, settings);
+                JSONResource[] resources = JsonConvert.DeserializeObject<JSONResource[]>(fileText, settings);
                 BaseResource newResource;
                 Type resourceType;
 
                 for (int i = 0; i < resources.Length; i++)
                 {
-                    GameMaster.Log(resources[i]["name"]);
+                    GameMaster.Log(resources[i].name);
 
-                    resourceType = Type.GetType("DawnmakuEngine.Data.Resources." + resources[i]["type"] + "Resource");
+                    resourceType = Type.GetType("DawnmakuEngine.Data.Resources." + resources[i].type + "Resource");
 
-                    newResource = (BaseResource)resourceType.GetConstructor(new Type[] { typeof(string) }).Invoke(new object[] { resources[i]["name"].ToLower() });
+                    newResource = (BaseResource)resourceType.GetConstructor(new Type[] { typeof(string) }).Invoke(new object[] { resources[i].name.ToLower() });
 
-                    if (resources[i].ContainsKey("value"))
-                    {
-                        newResource.InitValue(resources[i]["value"]);
-                    }
-                    else
-                        newResource.InitValue("NULL");
+                    newResource.min = resources[i].min;
+                    newResource.max = resources[i].max;
+
+                    newResource.InitValue(resources[i].value);
                 }
 
             }
@@ -2210,6 +2208,11 @@ namespace DawnmakuEngine
                 string allCharacters = gameMaster.fontCharList[fontName].everyCharInFont;
                 int width = 0, height = 0;
 
+
+                char[] charArray = allCharacters.ToCharArray();
+
+                allCharacters = String.Join(' ', charArray);
+
                 FontFamily family = gameMaster.fonts.Get(fontName);
                 Font font = family.CreateFont(size);
 
@@ -2218,7 +2221,10 @@ namespace DawnmakuEngine
                     KerningMode = KerningMode.None,
                     HorizontalAlignment = HorizontalAlignment.Center,
                     VerticalAlignment = VerticalAlignment.Center,
+                    LineSpacing = 1.5f,
+                    
                 };
+
 
                 FontRectangle[] rects = new FontRectangle[allCharacters.Length];
 
@@ -2226,6 +2232,8 @@ namespace DawnmakuEngine
                 int curWidth = 0, curHeight = 0, charsUnderLimit = 0;
 
                 const int widthLimit = 3500;
+
+                bool firstSpace = true;
 
                 for (i = 0; i < allCharacters.Length; i++)
                 {
@@ -2273,7 +2281,14 @@ namespace DawnmakuEngine
                         GameMaster.LogErrorMessage("There was an error rendering this font for character" + i + ": " + allCharacters[i], e.Message);
                     }
 
-                    sprites.Add(new SpriteSet.Sprite(xDrawn, yDrawn, xDrawn + rects[i].Width, yDrawn + rects[i].Height, height, width, true));
+
+                    if (allCharacters[i] == ' ' && firstSpace)
+                    {
+                        firstSpace = false;
+                        sprites.Add(new SpriteSet.Sprite(xDrawn, yDrawn, xDrawn + rects[i].Width, yDrawn + rects[i].Height, height, width, true));
+                    }
+                    else if (allCharacters[i] != ' ')
+                        sprites.Add(new SpriteSet.Sprite(xDrawn, yDrawn, xDrawn + rects[i].Width, yDrawn + rects[i].Height, height, width, true));
 
                     xDrawn += Ceil(rects[i].Width);
 
