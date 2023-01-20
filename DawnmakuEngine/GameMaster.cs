@@ -169,7 +169,10 @@ namespace DawnmakuEngine
         public Dictionary<string, BackgroundSection> backgroundSections = new Dictionary<string, BackgroundSection>();
 
         //Loaded UI 
-        public Dictionary<string, Texture> UITextures = new Dictionary<string, Texture>();
+        public Dictionary<string, Texture> uiTextures = new Dictionary<string, Texture>();
+        public Dictionary<string, SpriteSet> uiSprites = new Dictionary<string, SpriteSet>();
+
+        //Loaded Fonts
         public List<string> fontNames = new List<string>();
         public FontCollection fonts = new FontCollection();
         public Dictionary<string, FontCharList> fontCharList = new Dictionary<string, FontCharList>();

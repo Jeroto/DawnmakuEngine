@@ -26,6 +26,10 @@ namespace DawnmakuEngine.Data.Resources
         {
             return value;
         }
+        public override string OutputString()
+        {
+            return value.ToString();
+        }
 
         public IntResource(string resourceName) : base(resourceName)
         {

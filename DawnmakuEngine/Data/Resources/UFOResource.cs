@@ -14,21 +14,37 @@ namespace DawnmakuEngine.Data.Resources
 
             for (int i = 0; i < colors.Length; i++)
             {
-                switch(colors[i])
-                {
-                    case "none":
-                        ufos[i] = 0;
-                        break;
-                    case "red":
-                        ufos[i] = 1;
-                        break;
-                    case "green":
-                        ufos[i] = 2;
-                        break;
-                    case "blue":
-                        ufos[i] = 3;
-                        break;
-                }
+                ufos[i] = ColorToInt(colors[i]);
+            }
+        }
+        public int ColorToInt(string col)
+        {
+            switch (col)
+            {
+                default:
+                case "None":
+                    return 0;
+                case "Red":
+                    return 1;
+                case "Green":
+                    return 2;
+                case "Blue":
+                    return 3;
+            }
+        }
+        public string IntToColor(int col)
+        {
+            switch (col) 
+            {
+                default:
+                case 0:
+                    return "None";
+                case 1:
+                    return "Red";
+                case 2:
+                    return "Green";
+                case 3:
+                    return "Blue";
             }
         }
 
@@ -49,6 +65,10 @@ namespace DawnmakuEngine.Data.Resources
         public override float OutputFloat()
         {
             return ufos[0];
+        }
+        public override string OutputString()
+        {
+            return IntToColor(ufos[0]) + ", " + IntToColor(ufos[1]) + ", " + IntToColor(ufos[2]);
         }
 
         public UFOResource(string resourceName) : base(resourceName)

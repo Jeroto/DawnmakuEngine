@@ -66,12 +66,16 @@ namespace DawnmakuEngine.Elements
 
             Entity newSpawn = new Entity("item"+itemList.Count, position);
             MeshRenderer renderer = new MeshRenderer(Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles), "items",
-                OpenTK.Graphics.ES30.BufferUsageHint.DynamicDraw, data.shader, data.animations[0].animFrames[0].sprite.tex, true);
+                OpenTK.Graphics.ES30.BufferUsageHint.DynamicDraw, data.shader, data.animations[0].animFrames[0].sprite.tex);
             newSpawn.AddElement(renderer);
             newItemEle = new ItemElement(data, randomVel);
             newItemEle.drawToPlayer = data.autoDraw;
             newSpawn.AddElement(newItemEle);
-            newSpawn.AddElement(new TextureAnimator(data.animations, renderer));
+
+            SpriteRenderer spriteRend = new SpriteRenderer(renderer);
+            newSpawn.AddElement(spriteRend);
+
+            newSpawn.AddElement(new TextureAnimator(data.animations, spriteRend));
 
             itemList.Add(newItemEle);
             return newSpawn;

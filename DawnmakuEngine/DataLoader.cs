@@ -364,6 +364,8 @@ namespace DawnmakuEngine
         public void LoadUI()
         {
             UITextureLoader();
+            UISpriteLoader();
+
             FontLoader();
             BitmapFontLoader();
         }
@@ -1112,9 +1114,30 @@ namespace DawnmakuEngine
             for (int i = 0; i < files.Length; i++)
             {
                 GameMaster.Log(GetFileNameOnly(files[i]));
-                gameMaster.UITextures.Add(GetFileNameOnly(files[i]), new Texture(files[i], false));
+                gameMaster.uiTextures.Add(GetFileNameOnly(files[i]), new Texture(files[i], false));
             }
         }
+
+        public void UISpriteLoader()
+        {
+            string[] files = Directory.GetFiles(UITexDir, "*.json");
+            KeyValuePair<string, SpriteSet>[] spritePairs;
+
+            GameMaster.LogPositiveNotice("\nUI Sprites:");
+            for (int i = 0; i < files.Length; i++)
+            {
+                GameMaster.Log(GetFileNameOnly(files[i]));
+                spritePairs = ReadSpriteData(files[i], gameMaster.uiTextures[GetFileNameOnly(files[i])]);
+                for (int e = 0; e < spritePairs.Length; e++)
+                {
+                    GameMaster.LogSecondary(spritePairs[e].Key);
+                    gameMaster.uiSprites.Add(spritePairs[e].Key, spritePairs[e].Value);
+                }
+            }
+        }
+        #endregion
+
+        #region Font
         public void FontLoader()
         {
             GameMaster.LogPositiveNotice("\nFonts:");

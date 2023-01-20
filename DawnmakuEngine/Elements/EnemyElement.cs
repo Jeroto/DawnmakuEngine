@@ -45,10 +45,14 @@ namespace DawnmakuEngine.Elements
         {
             Entity newSpawn = new Entity(enemy.enemyName, position);
             MeshRenderer renderer = new MeshRenderer(Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles), "enemies",
-                OpenTK.Graphics.ES30.BufferUsageHint.DynamicDraw, enemy.shader, enemy.animations[0].animFrames[0].sprite.tex, true);
+                OpenTK.Graphics.ES30.BufferUsageHint.DynamicDraw, enemy.shader, enemy.animations[0].animFrames[0].sprite.tex);
             newSpawn.AddElement(renderer);
             newSpawn.AddElement(new EnemyElement(enemy, itemSpawns));
-            newSpawn.AddElement(new TextureAnimator(enemy.animations, renderer));
+
+            SpriteRenderer spriteRend = new SpriteRenderer(renderer);
+            newSpawn.AddElement(spriteRend);
+
+            newSpawn.AddElement(new TextureAnimator(enemy.animations, spriteRend));
 
             return newSpawn;
         }

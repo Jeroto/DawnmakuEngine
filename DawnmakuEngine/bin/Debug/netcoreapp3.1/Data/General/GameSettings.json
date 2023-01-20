@@ -124,6 +124,11 @@
             "name": "borderUI",
             "hasDepth": false,
             "hasLighting": false
+        },
+        {
+            "name": "borderUIText",
+            "hasDepth": false,
+            "hasLighting": false
         }
     ]
 }

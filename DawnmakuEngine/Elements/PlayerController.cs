@@ -402,12 +402,15 @@ namespace DawnmakuEngine.Elements
                     {
                         spawnedOrbs[i] = new Entity("PlayerOrb" + i.ToString(), EntityAttachedTo, Vector3.Zero, Vector3.Zero, Vector3.One);
                         orbRenderers[i] = new MeshRenderer(Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles), "playerorbs",
-                            OpenTK.Graphics.ES30.BufferUsageHint.DynamicDraw, orbData[i].shader, orbData[i].animStates[0].animFrames[0].sprite.tex, true);
+                            OpenTK.Graphics.ES30.BufferUsageHint.DynamicDraw, orbData[i].shader, orbData[i].animStates[0].animFrames[0].sprite.tex);
                         orbRenderers[i].colorA = 0;
                         spawnedOrbs[i].AddElement(orbRenderers[i]);
+
+                        SpriteRenderer spriteRend = new SpriteRenderer(orbRenderers[i]);
                         
-                        orbAnim = new TextureAnimator(orbData[i].animStates, orbRenderers[i]);
+                        orbAnim = new TextureAnimator(orbData[i].animStates, spriteRend);
                         orbAnim.FrameIndex = orbData[i].startAnimFrame;
+                        spawnedOrbs[i].AddElement(spriteRend);
                         spawnedOrbs[i].AddElement(orbAnim);
                         spawnedOrbs[i].AddElement(new RotateElement(orbData[i].rotateSpeed, true, true));
                     }
@@ -498,22 +501,30 @@ namespace DawnmakuEngine.Elements
                 Entity newEntity;
                 newEntity = new Entity("FocusEffect", entityAttachedTo, new Vector3(playerData.colliderOffset));
                 focusEffect = new MeshRenderer(Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles), "effects", OpenTK.Graphics.ES30.BufferUsageHint.DynamicDraw,
-                    playerData.focusEffectShader, playerData.focusEffectAnim.animFrames[0].sprite.tex, true);
+                    playerData.focusEffectShader, playerData.focusEffectAnim.animFrames[0].sprite.tex);
                 focusEffect.ColorByte = new Vector4(255, 255, 255,0);
                 newEntity.AddElement(focusEffect);
-                newEntity.AddElement(new TextureAnimator(new TextureAnimator.AnimationState[] { playerData.focusEffectAnim }, focusEffect));
+
+                SpriteRenderer spriteRend = new SpriteRenderer(focusEffect);
+                newEntity.AddElement(spriteRend);
+
+                newEntity.AddElement(new TextureAnimator(new TextureAnimator.AnimationState[] { playerData.focusEffectAnim }, spriteRend));
                 newEntity.AddElement(new RotateElement(playerData.focusEffectRotSpeed, true, true));
 
                 newEntity = new Entity("Hitbox", entityAttachedTo, new Vector3(playerData.colliderOffset));
                 hitbox = new MeshRenderer(Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles), "effects", OpenTK.Graphics.ES30.BufferUsageHint.DynamicDraw,
-                    playerData.hitboxShader, playerData.hitboxAnim.animFrames[0].sprite.tex, true);
+                    playerData.hitboxShader, playerData.hitboxAnim.animFrames[0].sprite.tex);
                 hitbox.ColorByte = new Vector4(255, 255, 255, 0);
                 hitboxScale = (playerData.colliderSize * 2) / (((hitbox.tex.Height) * 
                     (playerData.hitboxAnim.animFrames[0].sprite.right - playerData.hitboxAnim.animFrames[0].sprite.left)) - playerData.hitboxInsetAmount);
                 hitboxInvisScale = hitboxScale * 1.5f;
                 hitbox.modelScale = hitboxInvisScale;
+
+                spriteRend = new SpriteRenderer(hitbox);
+                newEntity.AddElement(spriteRend);
+
                 newEntity.AddElement(hitbox);
-                newEntity.AddElement(new TextureAnimator(new TextureAnimator.AnimationState[] { playerData.hitboxAnim }, hitbox));
+                newEntity.AddElement(new TextureAnimator(new TextureAnimator.AnimationState[] { playerData.hitboxAnim }, spriteRend));
             }
         }
 
@@ -525,7 +536,6 @@ namespace DawnmakuEngine.Elements
             playerRenderer.mesh = Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles);
             playerRenderer.mesh.SetUp(OpenTK.Graphics.ES30.BufferUsageHint.DynamicDraw);
             playerRenderer.LayerName = "player";
-            playerRenderer.resizeSprite = true;
             //playerRenderer.shader.SetInt("texture0", 0);
             //playerRenderer.shader.SetInt("texture1", 1);
 
@@ -537,7 +547,11 @@ namespace DawnmakuEngine.Elements
 
             newPlayer.AddElement(playerRenderer);
             newPlayer.AddElement(playerControl);
-            newPlayer.AddElement(new TextureAnimator(newPlayer.GetElement<MeshRenderer>()));
+
+            SpriteRenderer spriteRend = new SpriteRenderer(playerRenderer);
+            newPlayer.AddElement(spriteRend);
+
+            newPlayer.AddElement(new TextureAnimator(spriteRend));
 
             GameMaster.gameMaster.playerEntity = newPlayer;
             return newPlayer;

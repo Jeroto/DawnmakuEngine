@@ -19,7 +19,6 @@ namespace DawnmakuEngine.Data.Resources
         /// <param name="stringValue">Either the string imported from JSON or "NULL" if no value was given.</param>
         public virtual void InitValue(string stringValue)
         {
-
         }
 
         /// <summary>
@@ -28,7 +27,6 @@ namespace DawnmakuEngine.Data.Resources
         /// <param name="values">The list of values. Within the function, each entry needs to be converted to the type you want to use.</param>
         public virtual void ModifyValue(params object[] values)
         {
-
         }
 
         /// <summary>
@@ -47,6 +45,29 @@ namespace DawnmakuEngine.Data.Resources
         public virtual float OutputFloat()
         {
             return 0;
+        }
+
+        /// <summary>
+        /// Used for UI. Outputs the value modified into an int. Usually used as an index of some sort.
+        /// </summary>
+        /// <returns></returns>
+        public virtual int OutputInt()
+        {
+            return 0;
+        }
+
+        /// <summary>
+        /// Used mainly for UI. Outputs the value modified into a readable string.
+        /// </summary>
+        /// <returns></returns>
+        public virtual string OutputString()
+        {
+            return "";
+        }
+
+        public override string ToString()
+        {
+            return name + ": " + resourceType.ToString() + ", " + OutputString();
         }
 
         public BaseResource(string resourceName) 

@@ -1,0 +1,32 @@
+[
+    {
+        "name":"EmptyLifeHeart",
+        "sprites":[
+                [0,0,16,16]
+        ]
+    },
+    {
+        "name":"OneThirdsLifeHeart",
+        "sprites":[
+                [16,0,32,16]
+        ]
+    },
+    {
+        "name":"HalfLifeHeart",
+        "sprites":[
+                [32,0,48,16]
+        ]
+    },
+    {
+        "name":"TwoThirdsLifeHeart",
+        "sprites":[
+                [48,0,64,16]
+        ]
+    },
+    {
+        "name":"FullLifeHeart",
+        "sprites":[
+                [64,0,80,16]
+        ]
+    }
+]

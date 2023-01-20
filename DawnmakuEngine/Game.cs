@@ -42,21 +42,7 @@ namespace DawnmakuEngine
 
             GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
-
-
-            BaseResource resource = new FloatResource("Float");
-
-            Console.WriteLine("\n\n");
-
-            Console.WriteLine(Convert.ChangeType(resource.GetValue(), resource.resourceType));
-            resource.ModifyValue(1);
-            Console.WriteLine(Convert.ChangeType(resource.GetValue(), resource.resourceType));
-            resource.ModifyValue(100);
-            Console.WriteLine(Convert.ChangeType(resource.GetValue(), resource.resourceType));
-            resource.ModifyValue(-11);
-            Console.WriteLine(Convert.ChangeType(resource.GetValue(), resource.resourceType));
-
-            Console.WriteLine("\n\n");
+            
 
             /*vertexBufferObject = GL.GenBuffer();
             elementBufferObject = GL.GenBuffer();
@@ -92,21 +78,17 @@ namespace DawnmakuEngine
             Entity text = new Entity("FPSCounter", new Vector3(.5f, -.5f, 0), Vector3.Zero, Vector3.One);
 
             Entity gameBorder = new Entity("GameBorder", new Vector3(96.5f,225.5f, 0));
-            gameBorder.AddElement(new MeshRenderer(Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles), "gameborder", BufferUsageHint.StaticDraw, true));
+            gameBorder.AddElement(new MeshRenderer(Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles), "gameborder", BufferUsageHint.StaticDraw));
             gameBorder.GetElement<MeshRenderer>().shader = GameMaster.gameMaster.shaders["spriteshader"];
             TextureAnimator.AnimationState newState = new TextureAnimator.AnimationState();
             newState.animFrames = new TextureAnimator.AnimationFrame[1] { new TextureAnimator.AnimationFrame() };
             newState.animFrames[0].frameDuration = 8;
-            newState.animFrames[0].sprite = new SpriteSet.Sprite(0, 0, 1, 1, GameMaster.gameMaster.UITextures["gameborder"], false);
+            newState.animFrames[0].sprite = new SpriteSet.Sprite(0, 0, 1, 1, GameMaster.gameMaster.uiTextures["gameborder"], false);
             newState.autoTransition = -1;
-            gameBorder.AddElement(new TextureAnimator(new TextureAnimator.AnimationState[1] { newState }, gameBorder.GetElement<MeshRenderer>()));
+
+            gameBorder.AddElement(new SpriteRenderer(gameBorder.GetElement<MeshRenderer>()));
+            gameBorder.AddElement(new TextureAnimator(new TextureAnimator.AnimationState[1] { newState }, gameBorder.GetElement<SpriteRenderer>()));
             
-            /*TextRenderer textRend = new TextRenderer();
-            textRend.SetDrawingColor(255, 0, 0, 255);
-            textRend.textToWrite = "FPS:";
-            textRend.font = new QuickFont.QFont("Fonts/WitchingHour.ttf", 72, new QuickFont.Configuration.QFontBuilderConfiguration());
-            textRend.SetUp();
-            text.AddElement(textRend);*/
 
             Entity debugCam = new Entity("BackgroundCamera", new Vector3(0, 25, 100)), debugCam2 = new Entity("Camera", new Vector3(96.5f,225.5f,3));
             debugCam.AddElement(new CameraElement(true));
@@ -119,15 +101,6 @@ namespace DawnmakuEngine
             Entity stageController = new Entity("StageControl");
             stageController.AddElement(new StageElement(loader.stageData));
 
-            /*BulletElement.BulletStage[] stages = new BulletElement.BulletStage[1];
-            stages[0] = new BulletElement.BulletStage();
-            stages[0].spriteType = "round";
-            stages[0].bulletColor = 5;
-            stages[0].movementDirection = new Vector2(0, -1);
-            stages[0].endingSpeed = 25;
-
-            BulletElement.SpawnBullet(stages, new Vector3(0, GameMaster.gameMaster.playerBoundsY.Y, 0));*/
-            
             
             GL.Enable(EnableCap.Blend);
             GL.BlendFunc(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha);
@@ -135,61 +108,25 @@ namespace DawnmakuEngine
             GL.BlendEquation(BlendEquationMode.FuncAdd);
             GL.DepthFunc(DepthFunction.Less);
 
-            /*Entity debugText = new Entity("DebugText", new Vector3(300, 450, 0));
-            TextRenderer textRenderer = new TextRenderer();
-            debugText.AddElement(textRenderer);
-            textRenderer.uiText = true;
-            textRenderer.WriteFontFamilyName = "Arial";
-            //textRenderer.WriteFontFamilyName = "Witching Hour";
-            textRenderer.currentShader = GameMaster.gameMaster.shaders["textshader"];
-            textRenderer.TextSize = 50;
-            textRenderer.Text = "Normal";*/
-            /*MeshRenderer textMesh = new MeshRenderer(Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles), "borderui", BufferUsageHint.StaticDraw, 
-                GameMaster.gameMaster.generalTextShader, null, true);
-            textMesh.colorR = 150;
-            textMesh.colorG = 150;
-            debugText.AddElement(textMesh);*/
 
-            Entity debugText = new Entity("ScoreLabel", new Vector3(320, 400, 0));
-            TextRenderer textRenderer = new TextRenderer();
-            debugText.AddElement(textRenderer);
-            textRenderer.uiText = true;
-            textRenderer.WriteFontFamilyName = "Arial";
-            //textRenderer.WriteFontFamilyName = "Witching Hour";
-            textRenderer.currentShader = GameMaster.gameMaster.shaders["spriteshader"];
-            textRenderer.Color = new Vector4(255, 255, 255, 255);
-            textRenderer.TextSize = 35;
-            textRenderer.Kerning = false;
-            textRenderer.HoriAlign = SixLabors.Fonts.HorizontalAlignment.Right;
-            textRenderer.Text = "Score";
-            /*textMesh = new MeshRenderer(Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles), "borderui", BufferUsageHint.StaticDraw,
-                GameMaster.gameMaster.generalTextShader, null, true);
-            textMesh.colorR = 150;
-            textMesh.colorG = 150;
-            debugText.AddElement(textMesh);*/
+            TextRenderer.Create(new Vector3(320, 400, 0), Vector3.Zero, true, "Arial", GameMaster.gameMaster.shaders["spriteshader"],
+                            new Vector4(255, 255, 255, 255), 35, SixLabors.Fonts.HorizontalAlignment.Right, SixLabors.Fonts.VerticalAlignment.Center, "Score", 16, "ScoreLabel");
 
-            debugText = new Entity("ScoreVal", new Vector3(320, 350, 0));
-            textRenderer = new TextRenderer();
-            debugText.AddElement(textRenderer);
-            textRenderer.uiText = true;
-            textRenderer.WriteFontFamilyName = "Arial";
-            //textRenderer.WriteFontFamilyName = "Witching Hour";
-            textRenderer.currentShader = GameMaster.gameMaster.shaders["spriteshader"];
-            textRenderer.Color = new Vector4(255, 255, 255, 255);
-            textRenderer.TextSize = 35;
-            textRenderer.MonospaceWidth = 16;
-            textRenderer.HoriAlign = SixLabors.Fonts.HorizontalAlignment.Center;
-            textRenderer.Text = "000000000";
-            /*textMesh = new MeshRenderer(Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles), "borderui", BufferUsageHint.StaticDraw,
-                GameMaster.gameMaster.generalTextShader, null, true);
-            debugText.AddElement(textMesh);*/
+            TextRenderer.Create(new Vector3(320, 350, 0), Vector3.Zero, true, "Arial", GameMaster.gameMaster.shaders["spriteshader"],
+                            new Vector4(255, 255, 255, 255), 35, SixLabors.Fonts.HorizontalAlignment.Center, SixLabors.Fonts.VerticalAlignment.Center, "000000000", 16, "ScoreVal");
 
-            /*GL.Enable(EnableCap.StencilTest);
-            GL.StencilFunc(StencilFunction.Equal, GameMaster.gameMaster.spriteShader.Handle, 0xFF);
-            GL.StencilOp(StencilOp.Keep, StencilOp.Keep, StencilOp.Replace);
-            GL.StencilMask(0xFF);*/
+            ResourceGroup meterResources = new ResourceGroup(new List<BaseResource>() { GameMaster.gameMaster.resources["magic"] });
+            UIMeter.Create(new Vector3(280, 250, 0), Vector3.Zero, GameMaster.gameMaster.uiSprites["powermeter"].sprites[0],
+                                new Vector2(120, 24), GameMaster.gameMaster.shaders["spriteshader"], meterResources, ResourceGroup.CalculationType.Add);
 
-            GameMaster.gameMaster.fontImages["Arial"].SaveAsPng("D:/Damio/source/repos/DawnmakuEngine/DawnmakuEngine/bin/Debug/netcoreapp3.1/Data/General/Fonts/arial.png");
+            TextRenderer.Create(new Vector3(285, 262, 0), Vector3.Zero, true, "Arial", GameMaster.gameMaster.shaders["spriteshader"],
+                            new Vector4(173, 13, 40, 255), 35, SixLabors.Fonts.HorizontalAlignment.Right, SixLabors.Fonts.VerticalAlignment.Bottom, "Magic", 16, "meterlabel");
+
+            ResourceValueText.Create(new Vector3(350, 262, 0), Vector3.Zero, "Arial", GameMaster.gameMaster.shaders["spriteshader"],
+                    new Vector4(255, 170, 170, 255), 25, SixLabors.Fonts.HorizontalAlignment.Center, SixLabors.Fonts.VerticalAlignment.Center, 15,
+                    GameMaster.gameMaster.resources["magic"], 6, "metervalue");
+
+            //GameMaster.gameMaster.fontImages["Arial"].SaveAsPng("D:/Damio/source/repos/DawnmakuEngine/DawnmakuEngine/bin/Debug/netcoreapp3.1/Data/General/Fonts/arial.png");
         }
 
 
@@ -236,11 +173,13 @@ namespace DawnmakuEngine
                 uint prevScore = gameMaster.score;
                 if (input.IsKeyDown(Keys.W))
                 {
-                    gameMaster.score++;
+                    gameMaster.resources["magic"].ModifyValue(1);
+                    //gameMaster.score++;
                 }
                 if (input.IsKeyDown(Keys.S))
                 {
-                    gameMaster.score--;
+                    //gameMaster.score--;
+                    gameMaster.resources["magic"].ModifyValue(-1);
                 }
 
                 if(gameMaster.score != prevScore)

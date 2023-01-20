@@ -9,16 +9,15 @@ using OpenTK.Mathematics;
 namespace DawnmakuEngine.Elements
 {
     /// <summary>
-    /// Used to animate images on the MeshRenderer
-    /// Object MUST include MeshRenderer
+    /// Used to animate sprites.
+    /// Object MUST include SpriteRenderer.
     /// </summary>
     public class TextureAnimator : Element //Object MUST include MeshRenderer
     {
-        public MeshRenderer refRenderer;
+        public SpriteRenderer refRenderer;
         protected int frameIndex = 0, stateIndex = 0, updateStateIndex = 0;
         protected float animFramesRemaining;
         protected bool initialized;
-        //public bool resizePlane;
 
         public new Entity EntityAttachedTo
         {
@@ -28,7 +27,7 @@ namespace DawnmakuEngine.Elements
                 RemoveEntitySubscriptions();
                 entityAttachedTo = value;
                 AddEntitySubscriptions();
-                refRenderer = entityAttachedTo.GetElement<MeshRenderer>();
+                refRenderer = entityAttachedTo.GetElement<SpriteRenderer>();
 
                 if (refRenderer == null)
                     Disable();
@@ -119,7 +118,7 @@ namespace DawnmakuEngine.Elements
             initialized = true;
             if (refRenderer == null)
             {
-                refRenderer = entityAttachedTo.GetElement<MeshRenderer>();
+                refRenderer = entityAttachedTo.GetElement<SpriteRenderer>();
                 if (refRenderer == null)
                 {
                     Disable();
@@ -152,71 +151,9 @@ namespace DawnmakuEngine.Elements
                 }
             }
 
-            refRenderer.tex = animationStates[StateIndex].animFrames[FrameIndex].sprite.tex;
+            refRenderer.Sprite = animationStates[StateIndex].animFrames[FrameIndex].sprite;
 
-            //if (resizePlane)
-            //{
-            //    if(refRenderer.mesh.triangleData != null)
-            //    {
-            //        for (int i = 0; i < refRenderer.mesh.vertices.Length; i+=5)
-            //        {
-            //            refRenderer.mesh.vertices[i] = refRenderer.tex.Width / 2 *
-            //                Math.Abs(animationStates[StateIndex].animFrames[FrameIndex].sprite.right - animationStates[StateIndex].animFrames[FrameIndex].sprite.left)
-            //                * (i / 5 == 0 || i / 5 == 3 ? -1 : 1);
-            //            refRenderer.mesh.vertices[i + 1] = refRenderer.tex.Height / 2 *
-            //                Math.Abs(animationStates[StateIndex].animFrames[FrameIndex].sprite.bottom - animationStates[StateIndex].animFrames[FrameIndex].sprite.top)
-            //                * (i / 5 == 2 || i / 5 == 3 ? -1 : 1);
-            //            refRenderer.mesh.vertices[i + 2] = 0;
-            //        }
-            //    }
-            //    else
-            //    {
-            //        for (int i = 0; i < refRenderer.mesh.vertices.Length; i += 5)
-            //        {
-            //            refRenderer.mesh.vertices[i] = refRenderer.tex.Width / 2 *
-            //                Math.Abs(animationStates[StateIndex].animFrames[FrameIndex].sprite.right - animationStates[StateIndex].animFrames[FrameIndex].sprite.left)
-            //                * (i / 5 == 0 || i / 5 == 3 || i / 5 == 5 ? -1 : 1);
-            //            refRenderer.mesh.vertices[i + 1] = refRenderer.tex.Height / 2 *
-            //                Math.Abs(animationStates[StateIndex].animFrames[FrameIndex].sprite.bottom - animationStates[StateIndex].animFrames[FrameIndex].sprite.top)
-            //                * (i / 5 == 2 || i / 5 == 4 || i / 5 == 5 ? -1 : 1);
-            //            refRenderer.mesh.vertices[i + 2] = 0;
-            //            /*Console.Write(refRenderer.mesh.vertices[i] + "," + refRenderer.mesh.vertices[i + 1] + ","
-            //                + refRenderer.mesh.vertices[i + 2] + ",");*/
-            //        }
-            //    }
-            //}
-            //Console.Write("\n");
-
-            if (animationStates[StateIndex].animFrames[FrameIndex].sprite != null)
-            {
-                if (refRenderer.mesh.triangleData != null)
-                {
-                    /*refRenderer.mesh.SetUV(0, new Vector2(animationStates[StateIndex].animFrames[FrameIndex].sprite.left, animationStates[StateIndex].animFrames[FrameIndex].sprite.top));
-                    refRenderer.mesh.SetUV(1, new Vector2(animationStates[StateIndex].animFrames[FrameIndex].sprite.right, animationStates[StateIndex].animFrames[FrameIndex].sprite.top));
-                    refRenderer.mesh.SetUV(2, new Vector2(animationStates[StateIndex].animFrames[FrameIndex].sprite.right, animationStates[StateIndex].animFrames[FrameIndex].sprite.bottom));
-                    refRenderer.mesh.SetUV(3, new Vector2(animationStates[StateIndex].animFrames[FrameIndex].sprite.left, animationStates[StateIndex].animFrames[FrameIndex].sprite.bottom));*/
-                    refRenderer.mesh.SetUVs(animationStates[StateIndex].animFrames[FrameIndex].sprite.GetUVs());
-                }
-                else
-                {
-                    for (int i = 0; (i / 2) * 5 < refRenderer.mesh.vertices.Length; i += 2)
-                    {
-                        if (i / 5 == 0 || i / 5 == 3 || i / 5 == 5)
-                            refRenderer.mesh.vertices[(i / 2) * 5 + 3] = animationStates[StateIndex].animFrames[FrameIndex].sprite.left;
-                        else
-                            refRenderer.mesh.vertices[(i / 2) * 5 + 3] = animationStates[StateIndex].animFrames[FrameIndex].sprite.right;
-
-                        if (i / 5 == 2 || i / 5 == 4 || i / 5 == 5)
-                            refRenderer.mesh.vertices[(i / 2) * 5 + 4] = animationStates[StateIndex].animFrames[FrameIndex].sprite.bottom;
-                        else
-                            refRenderer.mesh.vertices[(i / 2) * 5 + 4] = animationStates[StateIndex].animFrames[FrameIndex].sprite.top;
-                    }
-                }
-            }
-            else
-                GameMaster.LogWarning("There is no sprite");
             animFramesRemaining += animationStates[StateIndex].animFrames[FrameIndex].frameDuration;
-            refRenderer.mesh.SetUp(BufferUsageHint.DynamicDraw);
         }
 
         void UpdateState()
@@ -225,22 +162,6 @@ namespace DawnmakuEngine.Elements
             frameIndex = 0;
             UpdateAnim(false);
         }
-
-        /*public static AnimationFrame[] CreateAnimFrames(int count, Texture image, float[] durations, float[] rects)
-        {
-            AnimationFrame[] tempFrames = new AnimationFrame[count];
-            for (int i = 0; i < count; i++)
-            {
-                tempFrames[i] = new AnimationFrame();
-                tempFrames[i].tex = image;
-                tempFrames[i].frameDuration = durations[OpenTK.MathHelper.Clamp(i, 0, durations.Length - 1)];
-                tempFrames[i].textureRects = new float[12] { rects[i * 12], rects[i * 12 + 1], rects[i * 12 + 2],
-                    rects[i * 12 + 3],rects[i * 12 + 4],rects[i * 12 + 5],
-                    rects[i * 12 + 6],rects[i * 12 + 7],rects[i * 12 + 8],
-                    rects[i * 12 + 9],rects[i * 12 + 10],rects[i * 12 + 11]};
-            }
-            return tempFrames;
-        }*/
 
         public static AnimationFrame[] CreateAnimFrames(int count, float[] durations, SpriteSet.Sprite[] sprites)
         {
@@ -276,25 +197,13 @@ namespace DawnmakuEngine.Elements
         {
             animationStates = animStates_;
         }
-        /*public TextureAnimator(AnimationState[] animStates_, bool resizePlane_) : this(animStates_)
-        {
-            resizePlane = resizePlane_;
-        }*/
-        public TextureAnimator(MeshRenderer renderer) : this()
+        public TextureAnimator(SpriteRenderer renderer) : this()
         {
             refRenderer = renderer;
         }
-        /*public TextureAnimator(MeshRenderer renderer, bool resizePlane_) : this(renderer)
-        {
-            resizePlane = resizePlane_;
-        }*/
-        public TextureAnimator(AnimationState[] animStates_, MeshRenderer renderer) : this(animStates_)
+        public TextureAnimator(AnimationState[] animStates_, SpriteRenderer renderer) : this(animStates_)
         {
             refRenderer = renderer;
         }
-        /*public TextureAnimator(AnimationState[] animStates_, MeshRenderer renderer, bool resizePlane_) : this(animStates_, renderer)
-        {
-            resizePlane = resizePlane_;
-        }*/
     }
 }

@@ -626,18 +626,20 @@ namespace DawnmakuEngine.Elements
             int i;
             Entity newBullet = new Entity(stages[0].bulletColor.ToString() + " "+ stages[0].bulletType.ToString());
             newBullet.LocalPosition = position;
-            if (GameMaster.window.KeyboardState.IsKeyDown(OpenTK.Windowing.GraphicsLibraryFramework.Keys.LeftControl))
-                newBullet.LocalScale = Vector3.One * 2;
+
             MeshRenderer renderer = new MeshRenderer();
             renderer.tex = GameMaster.gameMaster.bulletSprites[stages[0].bulletType].sprites[stages[0].bulletColor].tex;
             renderer.shader = GameMaster.gameMaster.bulletData[stages[0].bulletType].shader;
             renderer.mesh = Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles);
             renderer.mesh.SetUp(OpenTK.Graphics.ES30.BufferUsageHint.DynamicDraw);
             renderer.LayerName = "bullets";
-            renderer.resizeSprite = true;
 
             newBullet.AddElement(renderer);
-            newBullet.AddElement(new TextureAnimator(GetBulletAnim(stages[stage].bulletType, stages[stage].bulletColor), renderer));
+
+            SpriteRenderer spriteRend = new SpriteRenderer(renderer);
+            newBullet.AddElement(spriteRend);
+
+            newBullet.AddElement(new TextureAnimator(GetBulletAnim(stages[stage].bulletType, stages[stage].bulletColor), spriteRend));
 
             newBullet.AddElement(new RotateElement(180, true, true));
             if(!shouldSpin)

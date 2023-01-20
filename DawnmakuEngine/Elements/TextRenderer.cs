@@ -15,7 +15,7 @@ using OpenTK.Mathematics;
 
 namespace DawnmakuEngine.Elements
 {
-    class TextRenderer : Element
+    public class TextRenderer : Element
     {
         public Shader currentShader;
         GameMaster gameMaster = GameMaster.gameMaster;
@@ -36,7 +36,7 @@ namespace DawnmakuEngine.Elements
         Texture textTex;
         Image<Rgba32> textImage;
         List<Entity> charObjects = new List<Entity>();
-        List<MeshRenderer> renderers = new List<MeshRenderer>();
+        List<SpriteRenderer> renderers = new List<SpriteRenderer>();
 
         /// <summary>
         /// Forces text to have this width between characters. Only takes effect when not 0.
@@ -301,20 +301,24 @@ namespace DawnmakuEngine.Elements
                 {
                     Entity newCharObj;
                     MeshRenderer newRenderer;
+                    SpriteRenderer spriteRend;
                     for (i = 0; i < charDif; i++)
                     {
                         newCharObj = new Entity("CharObj" + charObjects.Count, entityAttachedTo);
 
                         newRenderer = new MeshRenderer(Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles), 
                             uiText ? OpenTK.Graphics.ES30.BufferUsageHint.StaticDraw : OpenTK.Graphics.ES30.BufferUsageHint.DynamicDraw);
-                        newRenderer.LayerName = uiText ? "borderui" : "effects";
+                        newRenderer.LayerName = uiText ? "borderuitext" : "effects";
                         newRenderer.shader = currentShader;
-                        newRenderer.resizeSprite = true;
+                        //newRenderer.resizeSprite = true;
                         newRenderer.ColorByte = color;
 
+                        spriteRend = new SpriteRenderer(newRenderer);
+
+                        newCharObj.AddElement(spriteRend);
                         newCharObj.AddElement(newRenderer);
 
-                        renderers.Add(newRenderer);
+                        renderers.Add(spriteRend);
                         charObjects.Add(newCharObj);
                     }
                 }
@@ -350,12 +354,14 @@ namespace DawnmakuEngine.Elements
                     curCharSprite = gameMaster.fontGlyphSprites[gameMaster.fontNames[f]].sprites[gameMaster.fontCharList[gameMaster.fontNames[f]].indexes[(ushort)curChar]];
                 }
                 //curCharSprite = gameMaster.playerSprites["reimu"].sprites[0];
-                renderers[i].mesh.SetUVs(curCharSprite.GetUVs());
-                renderers[i].tex = curCharSprite.tex;
+
+                renderers[i].Sprite = curCharSprite;
+                /*renderers[i].mesh.SetUVs(curCharSprite.GetUVs());
+                renderers[i].tex = curCharSprite.tex;*/
 
 
                 //renderers[i].modelScale = textSize;
-                renderers[i].ColorByte = color;
+                renderers[i].meshRend.ColorByte = color;
                 renderers[i].mesh.SetUp(OpenTK.Graphics.ES30.BufferUsageHint.DynamicDraw);
             }
             return fontCharIsIn;
@@ -525,6 +531,39 @@ namespace DawnmakuEngine.Elements
         public TextRenderer() : base(false, false, true)
         {
 
+        }
+
+
+
+        const string TEXT_REND_NAME = "textrend";
+        public static TextRenderer Create(Vector3 position, Vector3 rotation, bool uiText, string font, Shader shader, string name = TEXT_REND_NAME)
+        {
+            Entity newEntity = new Entity(name, position, rotation, Vector3.One);
+
+            TextRenderer newRend = new TextRenderer();
+            newEntity.AddElement(newRend);
+
+            newRend.uiText = uiText;
+            newRend.WriteFontFamilyName = font;
+            newRend.currentShader = shader;
+
+            return newRend;
+        }
+
+        public static TextRenderer Create(Vector3 position, Vector3 rotation, bool uiText, string font, Shader shader,
+            Vector4 color, float textSize, HorizontalAlignment horiAlign, VerticalAlignment vertAlign, string text, float monospaceWidth, string name = TEXT_REND_NAME)
+        {
+            TextRenderer newRend = Create(position, rotation, uiText, font, shader, name);
+
+            newRend.Color = color;
+            newRend.TextSize = textSize;
+            newRend.MonospaceWidth = monospaceWidth;
+            newRend.HoriAlign = horiAlign;
+            newRend.VertAlign = vertAlign;
+
+            newRend.Text = text;
+
+            return newRend;
         }
     }
 }
