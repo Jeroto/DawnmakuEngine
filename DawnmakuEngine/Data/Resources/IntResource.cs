@@ -24,14 +24,21 @@ namespace DawnmakuEngine.Data.Resources
 
         public override void ModifyValue(params object[] values)
         {
-            value += Convert.ToInt32(values[0]);
+            try
+            {
+                value += Convert.ToInt32(values[0]);
 
-            value = MathHelper.Clamp(value, (int)min, (int)max);
+                value = MathHelper.Clamp(value, (int)min, (int)max);
+            }
+            catch (Exception e)
+            {
+                GameMaster.LogErrorMessage("There was an error modifying an int resource!", e.Message);
+            }
         }
 
         public override float OutputFloat()
         {
-            return value;
+            return (value - min) / (max - min);
         }
 
         public override int OutputInt()

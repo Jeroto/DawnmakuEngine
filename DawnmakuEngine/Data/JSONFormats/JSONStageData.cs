@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OpenTK.Mathematics;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -26,11 +27,11 @@ namespace DawnmakuEngine.Data.JSONFormats
 
         public class CamMovements
         {
-            public JSONVec3 vel;
-            public JSONVec3 randMinPos;
-            public JSONVec3 randMaxPos;
-            public JSONVec3 randMinRot;
-            public JSONVec3 randMaxRot;
+            public Vector3 vel;
+            public Vector3 randMinPos;
+            public Vector3 randMaxPos;
+            public Vector3 randMinRot;
+            public Vector3 randMaxRot;
 
             public uint randomizationDelay;
             public uint startTime;
@@ -40,7 +41,7 @@ namespace DawnmakuEngine.Data.JSONFormats
         public class BackgroundSegment
         {
             public uint time;
-            public JSONVec3 spawnDirection;
+            public Vector3 spawnDirection;
             public byte segmentCount;
             public List<string> segments = new List<string>();
         }
@@ -49,7 +50,7 @@ namespace DawnmakuEngine.Data.JSONFormats
         {
             public string enemy;
             public uint time;
-            public JSONVec2 pos;
+            public Vector2 pos;
             public List<string> items = new List<string>();
         }
     }

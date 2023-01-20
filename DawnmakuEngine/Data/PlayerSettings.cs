@@ -4,7 +4,7 @@ using System.Text;
 
 namespace DawnmakuEngine.Data
 {
-    public class Settings
+    public class PlayerSettings
     {
         public int windowSizeIndex = 0;
         public int frameCap = 60;

@@ -4,8 +4,9 @@ using System.Text;
 
 namespace DawnmakuEngine.Data.JSONFormats
 {
-    public class JSONVec4
+    public class JSONObjectAndCount
     {
-        public float x, y, z, w;
+        public string name;
+        public int count;
     }
 }

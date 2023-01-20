@@ -38,39 +38,19 @@ namespace DawnmakuEngine
             Context.SwapBuffers();
 
             loader.InitializeGame();
+
+            ResizeViewport(Size);
+
             loader.InitializeStage();
+
+            Context.SwapBuffers();
+            GL.ClearColor(0f, 0f, 0f, 1.0f);
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
+
+            GL.Enable(EnableCap.ScissorTest);
 
             GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
-            
-
-            /*vertexBufferObject = GL.GenBuffer();
-            elementBufferObject = GL.GenBuffer();
-            vertexArrayObject = GL.GenVertexArray();
-
-            GL.BindVertexArray(vertexArrayObject);
-
-            GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBufferObject);
-            GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.DynamicDraw);
-
-            GL.BindBuffer(BufferTarget.ElementArrayBuffer, elementBufferObject);
-            GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(uint), indices, BufferUsageHint.DynamicDraw);*/
-
-            /*shader = new Shader("Shaders/Shader.vert", "Shaders/TransparentShader.frag");
-
-            texture1 = new Texture("Wood.jpg", false);
-            texture2 = new Texture("PlsRember.png", false);
-            shader.SetInt("texture0", 0);
-            shader.SetInt("texture1", 1);*/
-
-
-            /*int positionLocation = shader.GetAttribLocation("aPosition");
-            GL.VertexAttribPointer(positionLocation, 3, VertexAttribPointerType.Float, false, 5 * sizeof(float), 0);
-            GL.EnableVertexAttribArray(positionLocation);
-            int texCoordLocation = shader.GetAttribLocation("aTexCoord");
-            GL.EnableVertexAttribArray(texCoordLocation);
-            GL.VertexAttribPointer(texCoordLocation, 2, VertexAttribPointerType.Float, false, 5 * sizeof(float), 3 * sizeof(float));*/
-
 
             GameMaster.gameMaster.curCharName = "reimu";
             PlayerController.SpawnPlayer();
@@ -112,16 +92,16 @@ namespace DawnmakuEngine
             TextRenderer.Create(new Vector3(320, 350, 0), Vector3.Zero, true, "Arial", GameMaster.gameMaster.shaders["spriteshader"],
                             new Vector4(255, 255, 255, 255), 35, SixLabors.Fonts.HorizontalAlignment.Center, SixLabors.Fonts.VerticalAlignment.Center, "000000000", 16, "ScoreVal");
 
-            ResourceGroup meterResources = new ResourceGroup(new List<BaseResource>() { GameMaster.gameMaster.resources["magic"] });
+            ResourceGroup meterResources = new ResourceGroup(new List<BaseResource>() { GameMaster.gameMaster.resources["power"] });
             UIMeter.Create(new Vector3(280, 250, 0), Vector3.Zero, GameMaster.gameMaster.uiSprites["powermeter"].sprites[0],
                                 new Vector2(120, 24), GameMaster.gameMaster.shaders["spriteshader"], meterResources, ResourceGroup.CalculationType.Add);
 
             TextRenderer.Create(new Vector3(285, 262, 0), Vector3.Zero, true, "Arial", GameMaster.gameMaster.shaders["spriteshader"],
-                            new Vector4(173, 13, 40, 255), 35, SixLabors.Fonts.HorizontalAlignment.Right, SixLabors.Fonts.VerticalAlignment.Bottom, "Magic", 16, "meterlabel");
+                            new Vector4(173, 13, 40, 255), 35, SixLabors.Fonts.HorizontalAlignment.Right, SixLabors.Fonts.VerticalAlignment.Bottom, "Power", 16, "meterlabel");
 
             ResourceValueText.Create(new Vector3(350, 262, 0), Vector3.Zero, "Arial", GameMaster.gameMaster.shaders["spriteshader"],
                     new Vector4(255, 170, 170, 255), 25, SixLabors.Fonts.HorizontalAlignment.Center, SixLabors.Fonts.VerticalAlignment.Center, 15,
-                    GameMaster.gameMaster.resources["magic"], 6, "metervalue");
+                    GameMaster.gameMaster.resources["power"], 6, "metervalue");
 
 
             TextRenderer.Create(new Vector3(205, 300, 0), Vector3.Zero, true, "Arial", GameMaster.gameMaster.shaders["spriteshader"],
@@ -194,155 +174,13 @@ namespace DawnmakuEngine
                     //Exit();
                 }
 
-                if (input.IsKeyDown(Keys.F))
-                    UpdateFrequency = 240;
-                if (input.IsKeyDown(Keys.L))
-                    UpdateFrequency = 60;
-
-                if(input.IsKeyDown(Keys.B))
+                if(input.IsKeyDown(Keys.LeftAlt) && input.IsKeyPressed(Keys.Enter))
                 {
-                    BulletElement.BulletStage[] stage = new BulletElement.BulletStage[] { new BulletElement.BulletStage() };
-                    stage[0].bulletType = gameMaster.bulletTypes[BulletElement.Random(0, gameMaster.bulletTypes.Count)];
-                    stage[0].bulletColor = BulletElement.Random(0, gameMaster.bulletSprites[stage[0].bulletType].sprites.Count - 1);
-                    stage[0].movementDirection = DawnMath.RandomCircle();
-                    stage[0].startingSpeed = 20;
-                    stage[0].endingSpeed = 10;
-                    stage[0].framesToChangeSpeed = 60;
-                    stage[0].rotate = BulletElement.ShouldTurn(stage[0].bulletType);
-                    BulletElement.SpawnBullet(stage, gameMaster.playerEntity.WorldPosition + new Vector3(stage[0].movementDirection * 20),
-                        BulletElement.ShouldSpin(stage[0].bulletType));
-                }
-                /*if(input.IsKeyDown(Key.I))
-                {
-                    ItemElement.SpawnItem(gameMaster.itemData[gameMaster.itemTypes[ItemElement.Random(0, gameMaster.itemData.Count)]],
-                        gameMaster.playerEntity.WorldPosition + new Vector3(0, 16, 0));
-                }*/
-
-
-                uint prevScore = gameMaster.score;
-                if (input.IsKeyDown(Keys.W))
-                {
-                    gameMaster.resources["magic"].ModifyValue(1);
-                    //gameMaster.score++;
-                }
-                if (input.IsKeyDown(Keys.S))
-                {
-                    //gameMaster.score--;
-                    gameMaster.resources["magic"].ModifyValue(-1);
+                    GameMaster.playerSettings.fullscreen = !GameMaster.playerSettings.fullscreen;
+                    FullScreen(GameMaster.playerSettings.fullscreen);
                 }
 
-                if(input.IsKeyPressed(Keys.W))
-                {
-                    gameMaster.resources["lives"].ModifyValue(1);
-                }
-                if (input.IsKeyPressed(Keys.S))
-                {
-                    gameMaster.resources["lives"].ModifyValue(-1);
-                }
-
-
-                if (input.IsKeyPressed(Keys.D1))
-                {
-                    gameMaster.resources["ufos"].ModifyValue(0,0);
-                }
-                if (input.IsKeyPressed(Keys.D2))
-                {
-                    gameMaster.resources["ufos"].ModifyValue(0, 1);
-                }
-                if (input.IsKeyPressed(Keys.D3))
-                {
-                    gameMaster.resources["ufos"].ModifyValue(0, 2);
-                }
-                if (input.IsKeyPressed(Keys.D4))
-                {
-                    gameMaster.resources["ufos"].ModifyValue(0, 3);
-                }
-
-
-
-                if (gameMaster.score != prevScore)
-                    Entity.FindEntity("ScoreVal").GetElement<TextRenderer>().Text = gameMaster.score.ToString("000000000");
-
-
-                if(InputScript.bombDown)
-                    gameMaster.audioManager.PlaySound(gameMaster.sfx["playerdeath"], AudioController.AudioCategory.Player);
-                else if(InputScript.bombUp)
-                    gameMaster.audioManager.PlaySound(gameMaster.sfx["playerdeath"], AudioController.AudioCategory.Player, 0.5f);
-
-
-                if (input.IsKeyDown(Keys.H))
-                {
-                    gameMaster.timeScaleUpdate = 0.5f;
-                }
-                else if(input.IsKeyDown(Keys.R))
-                {
-                    gameMaster.timeScaleUpdate = 1f;
-                }
-
-                if(input.IsKeyPressed(Keys.Space))
-                {
-                    switch(Entity.FindEntity("ScoreLabel").GetElement<TextRenderer>().HoriAlign)
-                    {
-                        case SixLabors.Fonts.HorizontalAlignment.Left:
-                            Entity.FindEntity("ScoreLabel").GetElement<TextRenderer>().HoriAlign = SixLabors.Fonts.HorizontalAlignment.Center;
-                            Entity.FindEntity("ScoreLabel").GetElement<TextRenderer>().UpdateText();
-                            break;
-                        case SixLabors.Fonts.HorizontalAlignment.Center:
-                            Entity.FindEntity("ScoreLabel").GetElement<TextRenderer>().HoriAlign = SixLabors.Fonts.HorizontalAlignment.Right;
-                            Entity.FindEntity("ScoreLabel").GetElement<TextRenderer>().UpdateText();
-                            break;
-                        case SixLabors.Fonts.HorizontalAlignment.Right:
-                            Entity.FindEntity("ScoreLabel").GetElement<TextRenderer>().HoriAlign = SixLabors.Fonts.HorizontalAlignment.Left;
-                            Entity.FindEntity("ScoreLabel").GetElement<TextRenderer>().UpdateText();
-                            break;
-                    }
-                }
-
-                if (input.IsKeyPressed(Keys.K))
-                {
-                    Entity.FindEntity("ScoreLabel").GetElement<TextRenderer>().Kerning = !Entity.FindEntity("ScoreLabel").GetElement<TextRenderer>().Kerning;
-                    if (Entity.FindEntity("ScoreLabel").GetElement<TextRenderer>().Kerning)
-                        Entity.FindEntity("ScoreLabel").GetElement<TextRenderer>().Text = "Kerning: On";
-                    else
-                        Entity.FindEntity("ScoreLabel").GetElement<TextRenderer>().Text = "Kerning: Off";
-                }
-
-                if (InputScript.specialDown)
-                {
-                    if (InputScript.Focus)
-                        gameMaster.currentPowerLevel--;
-                    else
-                        gameMaster.currentPowerLevel++;
-                }
-
-                if (input.IsKeyDown(Keys.Equal))
-                {
-                    TextRenderer textRend = Entity.FindEntity("ScoreLabel").GetElement<TextRenderer>();
-                    Vector4 color = textRend.Color;
-                    if (input.IsKeyDown(Keys.R))
-                        color.X += 2;
-                    if (input.IsKeyDown(Keys.G))
-                        color.Y += 2;
-                    if (input.IsKeyDown(Keys.B))
-                        color.Z += 2;
-                    if (input.IsKeyDown(Keys.A))
-                        color.W += 2;
-                    textRend.Color = color;
-                }
-                else if (input.IsKeyDown(Keys.Minus))
-                {
-                    TextRenderer textRend = Entity.FindEntity("ScoreLabel").GetElement<TextRenderer>();
-                    Vector4 color = textRend.Color;
-                    if (input.IsKeyDown(Keys.R))
-                        color.X -= 2;
-                    if (input.IsKeyDown(Keys.G))
-                        color.Y -= 2;
-                    if (input.IsKeyDown(Keys.B))
-                        color.Z -= 2;
-                    if (input.IsKeyDown(Keys.A))
-                        color.W -= 2;
-                    textRend.Color = color;
-                }
+                DebugKeys(input);
 
                 InputScript.GetInput();
             }
@@ -368,6 +206,166 @@ namespace DawnmakuEngine
                 Entity.allEntities[0].Rotate(new Vector3(0, 0, -0.02f));*/
 
             base.OnUpdateFrame(e);
+        }
+
+        protected void DebugKeys(KeyboardState input)
+        {
+            GameMaster gameMaster = GameMaster.gameMaster;
+
+            if (input.IsKeyDown(Keys.F))
+                UpdateFrequency = 240;
+            if (input.IsKeyDown(Keys.L))
+                UpdateFrequency = 60;
+
+            if (input.IsKeyDown(Keys.B))
+            {
+                BulletElement.BulletStage[] stage = new BulletElement.BulletStage[] { new BulletElement.BulletStage() };
+                stage[0].bulletType = gameMaster.bulletTypes[BulletElement.Random(0, gameMaster.bulletTypes.Count)];
+                stage[0].bulletColor = BulletElement.Random(0, gameMaster.bulletSprites[stage[0].bulletType].sprites.Count - 1);
+                stage[0].movementDirection = DawnMath.RandomCircle();
+                stage[0].startingSpeed = 20;
+                stage[0].endingSpeed = 10;
+                stage[0].framesToChangeSpeed = 60;
+                stage[0].rotate = BulletElement.ShouldTurn(stage[0].bulletType);
+                BulletElement.SpawnBullet(stage, gameMaster.playerEntity.WorldPosition + new Vector3(stage[0].movementDirection * 20),
+                    BulletElement.ShouldSpin(stage[0].bulletType));
+            }
+            if(input.IsKeyDown(Keys.I))
+            {
+                ItemElement.SpawnItem(gameMaster.itemData["poweritem"],
+                    gameMaster.playerEntity.WorldPosition + new Vector3(0, 100, 0));
+            }
+            if (input.IsKeyDown(Keys.Apostrophe))
+            {
+                ItemElement.SpawnItem(gameMaster.itemData["lifeitem"],
+                    gameMaster.playerEntity.WorldPosition + new Vector3(0, 100, 0));
+            }
+
+
+            uint prevScore = gameMaster.score;
+            if (input.IsKeyDown(Keys.W))
+            {
+                gameMaster.resources["power"].ModifyValue(1);
+                //gameMaster.score++;
+            }
+            if (input.IsKeyDown(Keys.S))
+            {
+                //gameMaster.score--;
+                gameMaster.resources["power"].ModifyValue(-1);
+            }
+
+            if (input.IsKeyPressed(Keys.W))
+            {
+                gameMaster.resources["lives"].ModifyValue(1);
+            }
+            if (input.IsKeyPressed(Keys.S))
+            {
+                gameMaster.resources["lives"].ModifyValue(-1);
+            }
+
+
+            if (input.IsKeyPressed(Keys.D1))
+            {
+                gameMaster.resources["ufos"].ModifyValue(0, 0);
+            }
+            if (input.IsKeyPressed(Keys.D2))
+            {
+                gameMaster.resources["ufos"].ModifyValue(0, 1);
+            }
+            if (input.IsKeyPressed(Keys.D3))
+            {
+                gameMaster.resources["ufos"].ModifyValue(0, 2);
+            }
+            if (input.IsKeyPressed(Keys.D4))
+            {
+                gameMaster.resources["ufos"].ModifyValue(0, 3);
+            }
+
+
+
+            if (gameMaster.score != prevScore)
+                Entity.FindEntity("ScoreVal").GetElement<TextRenderer>().Text = gameMaster.score.ToString("000000000");
+
+
+            if (InputScript.bombDown)
+                gameMaster.audioManager.PlaySound(gameMaster.sfx["playerdeath"], AudioController.AudioCategory.Player);
+            else if (InputScript.bombUp)
+                gameMaster.audioManager.PlaySound(gameMaster.sfx["playerdeath"], AudioController.AudioCategory.Player, 0.5f);
+
+
+            if (input.IsKeyDown(Keys.H))
+            {
+                gameMaster.timeScaleUpdate = 0.5f;
+            }
+            else if (input.IsKeyDown(Keys.R))
+            {
+                gameMaster.timeScaleUpdate = 1f;
+            }
+
+            if (input.IsKeyPressed(Keys.Space))
+            {
+                switch (Entity.FindEntity("ScoreLabel").GetElement<TextRenderer>().HoriAlign)
+                {
+                    case SixLabors.Fonts.HorizontalAlignment.Left:
+                        Entity.FindEntity("ScoreLabel").GetElement<TextRenderer>().HoriAlign = SixLabors.Fonts.HorizontalAlignment.Center;
+                        Entity.FindEntity("ScoreLabel").GetElement<TextRenderer>().UpdateText();
+                        break;
+                    case SixLabors.Fonts.HorizontalAlignment.Center:
+                        Entity.FindEntity("ScoreLabel").GetElement<TextRenderer>().HoriAlign = SixLabors.Fonts.HorizontalAlignment.Right;
+                        Entity.FindEntity("ScoreLabel").GetElement<TextRenderer>().UpdateText();
+                        break;
+                    case SixLabors.Fonts.HorizontalAlignment.Right:
+                        Entity.FindEntity("ScoreLabel").GetElement<TextRenderer>().HoriAlign = SixLabors.Fonts.HorizontalAlignment.Left;
+                        Entity.FindEntity("ScoreLabel").GetElement<TextRenderer>().UpdateText();
+                        break;
+                }
+            }
+
+            if (input.IsKeyPressed(Keys.K))
+            {
+                Entity.FindEntity("ScoreLabel").GetElement<TextRenderer>().Kerning = !Entity.FindEntity("ScoreLabel").GetElement<TextRenderer>().Kerning;
+                if (Entity.FindEntity("ScoreLabel").GetElement<TextRenderer>().Kerning)
+                    Entity.FindEntity("ScoreLabel").GetElement<TextRenderer>().Text = "Kerning: On";
+                else
+                    Entity.FindEntity("ScoreLabel").GetElement<TextRenderer>().Text = "Kerning: Off";
+            }
+
+            if (InputScript.specialDown)
+            {
+                if (InputScript.Focus)
+                    gameMaster.currentPowerLevel--;
+                else
+                    gameMaster.currentPowerLevel++;
+            }
+
+            if (input.IsKeyDown(Keys.Equal))
+            {
+                TextRenderer textRend = Entity.FindEntity("ScoreLabel").GetElement<TextRenderer>();
+                Vector4 color = textRend.Color;
+                if (input.IsKeyDown(Keys.R))
+                    color.X += 2;
+                if (input.IsKeyDown(Keys.G))
+                    color.Y += 2;
+                if (input.IsKeyDown(Keys.B))
+                    color.Z += 2;
+                if (input.IsKeyDown(Keys.A))
+                    color.W += 2;
+                textRend.Color = color;
+            }
+            else if (input.IsKeyDown(Keys.Minus))
+            {
+                TextRenderer textRend = Entity.FindEntity("ScoreLabel").GetElement<TextRenderer>();
+                Vector4 color = textRend.Color;
+                if (input.IsKeyDown(Keys.R))
+                    color.X -= 2;
+                if (input.IsKeyDown(Keys.G))
+                    color.Y -= 2;
+                if (input.IsKeyDown(Keys.B))
+                    color.Z -= 2;
+                if (input.IsKeyDown(Keys.A))
+                    color.W -= 2;
+                textRend.Color = color;
+            }
         }
 
         protected override void OnRenderFrame(FrameEventArgs e)
@@ -455,17 +453,43 @@ namespace DawnmakuEngine
             else
                 GL.Disable(EnableCap.DepthTest);
         }
-
-        /*protected override void OnResize(ResizeEventArgs e)
+        
+        public void FullScreen(bool fullscreen)
         {
-            if (Size.Y / (float)Size.X < 960 / 1280f)
-                Size = new Vector2i(Size.X, DawnMath.Round(Size.X * (960 / 1280f)));
-            else if (Size.X / (float)Size.Y < 1280f / 960)
-                Size = new Vector2i(DawnMath.Round(Size.Y * (1280f / 960)), Size.Y);
+            if(fullscreen)
+                WindowState = WindowState.Fullscreen;
+            else
+                WindowState = WindowState.Normal;
+        }
 
-            GL.Viewport(0, 0, Size.X, Size.Y);
+        protected override void OnResize(ResizeEventArgs e)
+        {
             base.OnResize(e);
-        }*/
+
+            ResizeViewport(e.Size);
+        }
+
+        protected void ResizeViewport(Vector2 size)
+        {
+            Vector2 aspectRatio = GameMaster.gameMaster.aspectRatio;
+
+            //Set ratio to smaller between X and Y
+            float ratioX = size.X / aspectRatio.X;
+            float ratioY = size.Y / aspectRatio.Y;
+            float ratio = ratioX < ratioY ? ratioX : ratioY;
+
+            //Calculate the viewport width and height
+            int viewWidth = (int)(aspectRatio.X * ratio);
+            int viewHeight = (int)(aspectRatio.Y * ratio);
+
+            //Calculate the viewport offset to keep it centered
+            int viewX = (int)((size.X - aspectRatio.X * ratio) / 2);
+            int viewY = (int)((size.Y - aspectRatio.Y * ratio) / 2);
+
+            //Set viewport position + size and GL Scissor position + size
+            GL.Scissor(viewX, viewY, viewWidth, viewHeight);
+            GL.Viewport(viewX, viewY, viewWidth, viewHeight);
+        }
 
         protected override void OnUnload()
         {

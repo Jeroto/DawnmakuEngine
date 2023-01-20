@@ -29,7 +29,10 @@ namespace DawnmakuEngine.Data.Resources
         /// <param name="values">The list of values. Within the function, each entry needs to be converted to the type you want to use.</param>
         public virtual void ModifyValue(params object[] values)
         {
+
         }
+
+        
 
         /// <summary>
         /// Returns an 'object' containing the value, which will need to be converted to the intended type. Check for the value being null to avoid errors.

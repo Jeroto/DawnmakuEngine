@@ -14,11 +14,11 @@
       "max": 9
    },
    {
-      "name":"Magic",
-      "type":"Float",
-      "value":"50",
+      "name":"Power",
+      "type":"Int",
+      "value":"0",
       "min": 0,
-      "max": 100
+      "max": 400
    },
    {
       "name":"UFOs",

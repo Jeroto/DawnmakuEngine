@@ -5,6 +5,7 @@ using System.IO;
 using System.Text;
 using System.Transactions;
 using DawnmakuEngine.Data;
+using DawnmakuEngine.Data.Resources;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Input;
@@ -109,8 +110,8 @@ namespace DawnmakuEngine.Elements
                 Math.Clamp(entityAttachedTo.LocalPosition.Y, gameMaster.playerBoundsY.X, gameMaster.playerBoundsY.Y), 0);
 
             gameMaster.pointOfCollection = entityAttachedTo.WorldPosition.Y >= gameMaster.pocHeight && 
-                (!gameMaster.fullPowerPOC || (gameMaster.fullPowerPOC && gameMaster.currentPowerLevel == gameMaster.maxPowerLevel)) &&
-                (!gameMaster.shiftForPOC || (gameMaster.shiftForPOC && InputScript.Focus));
+                (!gameMaster.fullPowerForCollection || (gameMaster.fullPowerForCollection && gameMaster.currentPowerLevel == gameMaster.maxPowerLevel)) &&
+                (!gameMaster.shiftForCollection || (gameMaster.shiftForCollection && InputScript.Focus));
 
             timeSinceFocusChange += gameMaster.timeScale;
             if (InputScript.Focus)
@@ -128,6 +129,13 @@ namespace DawnmakuEngine.Elements
 
             DrawAndCollectItems();
             BulletCollisions();
+
+            gameMaster.currentPowerLevel = 0;
+            for (int i = 0; i < gameMaster.powerLevelSplits.Length; i++)
+            {
+                if ((int)gameMaster.resources["power"].GetValue() >= gameMaster.powerLevelSplits[i])
+                    gameMaster.currentPowerLevel = i;
+            }
 
             if (movementVelocity.X > 0)
                 anim.UpdateStateIndex = 1;
@@ -173,7 +181,7 @@ namespace DawnmakuEngine.Elements
             for (int i = 0; i < itemCount; i++)
             {
                 currentItem = ItemElement.itemList[i];
-                if (!currentItem.IsEnabled)
+                if (!currentItem.IsEnabled || currentItem.disableCollectTime > 0)
                     continue;
                 itemPos = currentItem.EntityAttachedTo.WorldPosition.Xy;
                 dist = Vector2.DistanceSquared(playerPos, itemPos);
@@ -268,16 +276,45 @@ namespace DawnmakuEngine.Elements
             gameMaster.audioManager.PlaySound(playerData.grazeSound, AudioController.AudioCategory.Misc, gameMaster.SfxVol);
         }
 
-        long collisionCounter;
         public void Damage(BulletElement bullet)
         {
             //GameMaster.LogNegativeNotice("Collision " + collisionCounter.ToString("000000"));
             gameMaster.audioManager.PlaySound(playerData.hitSound, AudioController.AudioCategory.Player, gameMaster.SfxVol);
 
-            collisionCounter++;
             if(bullet != null)
             {
                 bullet.destroy = true;
+            }
+
+            Death();
+        }
+
+        public void Death()
+        {
+            BaseResource resource;
+            int i;
+            for (i = 0; i < gameMaster.resourcesModifiedOnDeath.Count; i++)
+            {
+                if (!gameMaster.resources.TryGetValue(gameMaster.resourcesModifiedOnDeath[i].name, out resource))
+                    continue;
+                resource.ModifyValue(gameMaster.resourcesModifiedOnDeath[i].values);
+            }
+
+            try
+            {
+                Entity itemEntity;
+                ItemElement itemElement;
+                for (i = 0; i < gameMaster.itemsDroppedOnDeath.Count; i++)
+                {
+                    itemEntity = ItemElement.SpawnItem(gameMaster.itemData[gameMaster.itemsDroppedOnDeath[i]], entityAttachedTo.WorldPosition, 0.5f);
+                    itemElement = itemEntity.GetElement<ItemElement>();
+                    itemElement.velocity.Y += gameMaster.itemRandYRange.Y;
+                    itemElement.halfItemFallSpeed = true;
+                }
+            }
+            catch (Exception e)
+            {
+                GameMaster.LogErrorMessage("There was an error spawning items for the player death!", e.Message);
             }
         }
 

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using OpenTK.Mathematics;
 using System.Data;
+using DawnmakuEngine.Data.Resources;
 
 namespace DawnmakuEngine.Elements
 {
@@ -17,16 +18,29 @@ namespace DawnmakuEngine.Elements
         public bool drawToPlayer, magnetToPlayer;
         GameMaster gameMaster = GameMaster.gameMaster;
 
+        public bool halfItemFallSpeed = false;
+        public float disableCollectTime = 0;
+
         public override void OnUpdate()
         {
-            if (gameMaster.pointOfCollection)
-                drawToPlayer = true;
-            
-            if(!drawToPlayer && !magnetToPlayer)
+            if (disableCollectTime <= 0)
+            {
+                if (gameMaster.pointOfCollection)
+                    drawToPlayer = true;
+            }
+            else
+                disableCollectTime -= gameMaster.frameTime * gameMaster.timeScale;
+
+            if (!drawToPlayer && !magnetToPlayer)
             {
                 velocity.X = Math.Clamp(Math.Abs(velocity.X) - itemData.xDecel * gameMaster.timeScale, 0, Math.Abs(velocity.X)) * Math.Sign(velocity.X);
-                velocity.Y = Math.Clamp(velocity.Y - itemData.gravAccel * gameMaster.timeScale, -itemData.maxFallSpeed, velocity.Y);
+
+                float maxFallSpeed = -itemData.maxFallSpeed;
+                if (halfItemFallSpeed)
+                    maxFallSpeed /= 2;
+                velocity.Y = Math.Clamp(velocity.Y - itemData.gravAccel * gameMaster.timeScale, maxFallSpeed, velocity.Y);
             }
+
             entityAttachedTo.LocalPosition += new Vector3(velocity * gameMaster.timeScale);
 
             if (entityAttachedTo.WorldPosition.Y <= gameMaster.itemDisableHeight)
@@ -37,6 +51,13 @@ namespace DawnmakuEngine.Elements
 
         public void Collect()
         {
+            BaseResource resource;
+            for (int i = 0; i < itemData.resourcesModifiedOnPickup.Count; i++)
+            {
+                if (!gameMaster.resources.TryGetValue(itemData.resourcesModifiedOnPickup[i].name, out resource))
+                    continue;
+                resource.ModifyValue(itemData.resourcesModifiedOnPickup[i].values);
+            }
 
             entityAttachedTo.Disable();
         }
@@ -52,17 +73,17 @@ namespace DawnmakuEngine.Elements
 
 
 
-        public static Entity SpawnItem(ItemData data, Vector3 position)
+        public static Entity SpawnItem(ItemData data, Vector3 position, float disableCollectTime = 0)
         {
             Vector2 randomVel = new Vector2(Random(data.randXRange), Random(data.randYRange));
             ItemElement newItemEle;
 
             for (int i = 0; i < itemList.Count; i++)
                 if (!itemList[i].entityAttachedTo.enabled)
-                    return ResetItem(i, data, position, randomVel);
+                    return ResetItem(i, data, position, randomVel, disableCollectTime);
 
             if (itemList.Count >= GameMaster.gameMaster.maxItemCount)
-                return ResetItem(0, data, position, randomVel);
+                return ResetItem(0, data, position, randomVel, disableCollectTime);
 
             Entity newSpawn = new Entity("item"+itemList.Count, position);
             MeshRenderer renderer = new MeshRenderer(Mesh.CreatePrimitiveMesh(Mesh.Primitives.SqrPlaneWTriangles), "items",
@@ -81,7 +102,7 @@ namespace DawnmakuEngine.Elements
             return newSpawn;
         }
 
-        public static Entity ResetItem(int index, ItemData data, Vector3 position, Vector2 vel)
+        public static Entity ResetItem(int index, ItemData data, Vector3 position, Vector2 vel, float disableCollectTime = 0)
         {
             Entity newSpawn = itemList[index].entityAttachedTo;
             if (!newSpawn.enabled)
@@ -96,6 +117,9 @@ namespace DawnmakuEngine.Elements
             itemList[index].itemData = data;
             itemList[index].velocity = vel;
             itemList[index].drawToPlayer = data.autoDraw;
+            itemList[index].magnetToPlayer = false;
+            itemList[index].disableCollectTime = disableCollectTime;
+            itemList[index].halfItemFallSpeed = false;
 
             TextureAnimator animator = newSpawn.GetElement<TextureAnimator>();
             animator.animationStates = data.animations;

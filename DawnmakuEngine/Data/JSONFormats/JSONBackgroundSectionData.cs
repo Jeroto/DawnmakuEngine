@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OpenTK.Mathematics;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -7,7 +8,7 @@ namespace DawnmakuEngine.Data.JSONFormats
     public class JSONBackgroundSectionData
     {
         public float sectionLength;
-        public JSONVec3 offset;
+        public Vector3 offset;
 
         public List<ObjectSetup> objectSetup = new List<ObjectSetup>();
 
@@ -15,9 +16,9 @@ namespace DawnmakuEngine.Data.JSONFormats
         {
             public List<string> objectOptions = new List<string>();
             public int parentIndex;
-            public JSONVec3 pos;
-            public JSONVec3 rot;
-            public JSONVec3 scale;
+            public Vector3 pos;
+            public Vector3 rot;
+            public Vector3 scale;
 
             public List<ElementSetup> elements = new List<ElementSetup>();
         }

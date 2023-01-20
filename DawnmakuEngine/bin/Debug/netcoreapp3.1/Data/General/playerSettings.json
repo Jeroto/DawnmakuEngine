@@ -1,0 +1,14 @@
+{
+  "windowSizeIndex": 0,
+  "frameCap": 60,
+  "fullscreen": false,
+  "masterVolume": 0.1,
+  "bgmVolume": 1.0,
+  "sfxVolume": 0.25,
+  "bulletSpawnVolume": 0.02,
+  "bulletStageVolume": 0.1,
+  "playerShootVolume": 0.75,
+  "playerBulletVolume": 0.2,
+  "playerDeathVolume": 1.0,
+  "enemyDeathVolume": 0.5
+}

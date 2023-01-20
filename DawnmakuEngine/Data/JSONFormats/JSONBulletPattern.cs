@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using OpenTK.Mathematics;
 
 namespace DawnmakuEngine.Data.JSONFormats
 {
@@ -32,7 +33,7 @@ namespace DawnmakuEngine.Data.JSONFormats
             public string stageSound = "NULL";
             public bool hasEffect = false;
             public string effectColor;
-            public JSONVec2 effectSize;
+            public Vector2 effectSize;
             public StartEnd effectOpacity;
         }
     }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OpenTK.Mathematics;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -12,10 +13,10 @@ namespace DawnmakuEngine.Data.JSONFormats
         public int deathScore;
 
         public float hurtColliderSize;
-        public JSONVec2 hurtColliderOffset;
+        public Vector2 hurtColliderOffset;
 
-        public JSONVec2 playerKillcolliderSize;
-        public JSONVec2 playerKillColliderOffset;
+        public Vector2 playerKillcolliderSize;
+        public Vector2 playerKillColliderOffset;
 
         public string movementCurve;
         public List<string> animations = new List<string>();

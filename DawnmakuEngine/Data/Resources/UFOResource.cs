@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
+using OpenTK.Mathematics;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -58,10 +59,17 @@ namespace DawnmakuEngine.Data.Resources
 
         public override void ModifyValue(params object[] values)
         {
-            int index = Convert.ToInt32(values[0]);
-            if(index >= 0 && index < ufos.Length)
+            try
             {
-                ufos[index] = Convert.ToInt32(values[1]);
+                int index = Convert.ToInt32(values[0]);
+                if (index >= 0 && index < ufos.Length)
+                {
+                    ufos[index] = Convert.ToInt32(values[1]);
+                }
+            }
+            catch (Exception e)
+            {
+                GameMaster.LogErrorMessage("There was an error modifying a UFO resource!", e.Message);
             }
         }
 

@@ -22,5 +22,17 @@
     "magnetDist": 32,
     "magnetSpeed": 2.5,
     "drawSpeed": 5.5,
-    "collectDist": 8
+    "collectDist": 8,
+
+    "resourcesModifiedOnPickup": [
+        {
+            "name": "power",
+            "values":[
+                {
+                    "valueType": "int",
+                    "value": "20"
+                }
+            ]
+        }
+    ]
 }

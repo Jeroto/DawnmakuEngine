@@ -17,5 +17,8 @@ namespace DawnmakuEngine.Data
 
         public bool canBeAutoCollected = true,
             autoDraw = false;
+
+
+        public List<ResourceModification> resourcesModifiedOnPickup = new List<ResourceModification>();
     }
 }

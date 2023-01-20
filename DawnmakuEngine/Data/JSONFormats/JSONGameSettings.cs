@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OpenTK.Mathematics;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -10,6 +11,11 @@ namespace DawnmakuEngine.Data.JSONFormats
         public bool logAllFontChars = false;
         public bool pressIToToggleInvincible = false;
         public bool logTimers = false;
+
+        public Vector2 aspectRatio;
+
+        public List<JSONResourceModification> resourcesModifiedOnDeath = new List<JSONResourceModification>();
+        public List<JSONObjectAndCount> itemsDroppedOnDeath = new List<JSONObjectAndCount>();
 
         public int maxPower;
         public int powerLostOnDeath;

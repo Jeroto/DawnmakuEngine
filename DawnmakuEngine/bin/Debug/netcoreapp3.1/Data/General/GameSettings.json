@@ -3,6 +3,43 @@
     "logAllFontChars": false,
     "PressIToToggleInvincible": true,
     "logTimers": false,
+
+    "aspectRatio": {
+        "x": 4,
+        "y": 3
+    },
+
+    "resourcesModifiedOnDeath": [
+        {
+            "name": "lives",
+            "values": [
+                {
+                    "valueType": "int",
+                    "value": "-1"
+                }
+            ]
+        },
+        {
+            "name": "power",
+            "values": [
+                {
+                    "valueType": "int",
+                    "value": "-30"
+                }
+            ]
+        }
+    ],
+
+    "itemsDroppedOnDeath": [
+        {
+            "name": "poweritem",
+            "count": 5
+        },
+        {
+            "name": "bigpoweritem",
+            "count": 1
+        }
+    ],
     
     "maxPower": 400,
     "powerLostOnDeath": 100,

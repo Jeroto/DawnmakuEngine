@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OpenTK.Mathematics;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -8,8 +9,8 @@ namespace DawnmakuEngine.Data.JSONFormats
     {
         public string shader;
         public List<bool> activePowerLevels = new List<bool>();
-        public JSONVec2 unfocusPos;
-        public JSONVec2 focusPos;
+        public Vector2 unfocusPos;
+        public Vector2 focusPos;
 
         public int framesToMove;
         public float rotateSpeed;

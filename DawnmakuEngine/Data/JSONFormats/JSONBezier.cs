@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OpenTK.Mathematics;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -13,7 +14,7 @@ namespace DawnmakuEngine.Data.JSONFormats
 
         public class Point
         {
-            public JSONVec2 pos;
+            public Vector2 pos;
             public float time;
             public float waitTime;
         }

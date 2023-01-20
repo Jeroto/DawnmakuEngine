@@ -21,5 +21,7 @@ namespace DawnmakuEngine.Data.JSONFormats
         public float magnetSpeed;
         public float drawSpeed;
         public float collectDist;
+
+        public List<JSONResourceModification> resourcesModifiedOnPickup = new List<JSONResourceModification>();
     }
 }

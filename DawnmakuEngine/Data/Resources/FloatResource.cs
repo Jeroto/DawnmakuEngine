@@ -23,9 +23,16 @@ namespace DawnmakuEngine.Data.Resources
 
         public override void ModifyValue(params object[] values)
         {
-            value += Convert.ToSingle(values[0]);
+            try
+            {
+                value += Convert.ToSingle(values[0]);
 
-            value = MathHelper.Clamp(value, min, max);
+                value = MathHelper.Clamp(value, min, max);
+            }
+            catch (Exception e)
+            {
+                GameMaster.LogErrorMessage("There was an error modifying a float resource!", e.Message);
+            }
         }
 
         public override float OutputFloat()

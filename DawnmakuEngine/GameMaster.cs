@@ -33,6 +33,7 @@ namespace DawnmakuEngine
 
         public float timeScale = 1, timeScaleUpdate = 1, frameTime = 1/60f;
         public Vector2i currentSize = new Vector2i(1920, 1080);
+        public Vector2 aspectRatio = new Vector2(4, 3);
 
         public GameWindowSettings gameWindowSettings = new GameWindowSettings();
         public NativeWindowSettings nativeWindowSettings = new NativeWindowSettings();
@@ -49,6 +50,9 @@ namespace DawnmakuEngine
 
         public int difficulty;
         public uint highScore, score;
+
+        public List<ResourceModification> resourcesModifiedOnDeath = new List<ResourceModification>();
+        public List<string> itemsDroppedOnDeath = new List<string>();
 
         public int maxPowerLevel = 8,
             currentPowerLevel = 0, prevPowerLevel,
@@ -68,7 +72,7 @@ namespace DawnmakuEngine
         public int playerTypeIndex, playerShotIndex;
         public float grazeDistance = 10;
         public bool pointOfCollection = false,
-            fullPowerPOC = false, shiftForPOC = false;
+            fullPowerForCollection = false, shiftForCollection = false;
         public int pocHeight = 100, itemDisableHeight = -100;
         public Vector2 playerBoundsX, playerBoundsY;
 
@@ -89,7 +93,7 @@ namespace DawnmakuEngine
             playerBulletSpawnSoundPlayed = false, playerBulletStageSoundPlayed = false;
 
 
-        public static Settings playerSettings = new Settings();
+        public static PlayerSettings playerSettings = new PlayerSettings();
 
         public float BgmVol { get { return playerSettings.masterVolume * playerSettings.bgmVolume; } }
         public float SfxVol { get { return playerSettings.masterVolume * playerSettings.sfxVolume; } }
