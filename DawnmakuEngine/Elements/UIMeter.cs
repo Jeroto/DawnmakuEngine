@@ -10,8 +10,6 @@ namespace DawnmakuEngine.Elements
 {
     public class UIMeter : SpriteRenderer
     {
-        public ResourceGroup resources;
-        public ResourceGroup.CalculationType calcType;
         
         public float value;
         public float prevValue;
@@ -19,7 +17,6 @@ namespace DawnmakuEngine.Elements
 
         public override void OnUpdate()
         {
-            value = resources.GetFloatCalc(calcType);
             if(value != prevValue)
             {
                 UpdateGraphic();
@@ -87,19 +84,6 @@ namespace DawnmakuEngine.Elements
 
             newMeshRend.shader = shader;
             newMeshRend.LayerName = "borderui";
-
-            return newMeter;
-        }
-
-        public static UIMeter Create(Vector3 position, Vector3 rotation, SpriteSet.Sprite graphic, Vector2 size, Shader shader,
-            ResourceGroup resources, ResourceGroup.CalculationType calcType, string name = METER_NAME)
-        {
-            UIMeter newMeter = Create(position, rotation, graphic, size, shader, name);
-            newMeter.resources = resources;
-            newMeter.calcType = calcType;
-
-            newMeter.value = resources.GetFloatCalc(calcType);
-            newMeter.UpdateGraphic();
 
             return newMeter;
         }

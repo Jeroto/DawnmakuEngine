@@ -17,168 +17,217 @@ namespace DawnmakuEngine.Data.Resources
         }
 
         #region Call Calcs
-        public float GetFloatCalc(CalculationType calc, object[] args = null)
+        public float GetFloatCalc(CalculationType calc, object[][] args = null)
         {
             switch(calc)
             {
                 default:
                 case CalculationType.Add:
-                    return AddAllFloat();
+                    return AddAllFloat(args);
                 case CalculationType.Average:
-                    return AverageAllFloat();
+                    return AverageAllFloat(args);
                 case CalculationType.Maximum:
-                    return MaximumFloat();
+                    return MaximumFloat(args);
                 case CalculationType.Minimum:
-                    return MinimumFloat();
+                    return MinimumFloat(args);
                 case CalculationType.Specific:
-                    return SpecificValueFloat((string)args[0]);
+                    return SpecificValueFloat(args);
                 case CalculationType.Custom:
                     return CustomFloat(args);
             }
         }
-        public int GetIntCalc(CalculationType calc, object[] args = null)
+        public int GetIntCalc(CalculationType calc, object[][] args = null)
         {
             switch (calc)
             {
                 default:
                 case CalculationType.Add:
-                    return AddAllInt();
+                    return AddAllInt(args);
                 case CalculationType.Average:
-                    return AverageAllInt();
+                    return AverageAllInt(args);
                 case CalculationType.Maximum:
-                    return MaximumInt();
+                    return MaximumInt(args);
                 case CalculationType.Minimum:
-                    return MinimumInt();
+                    return MinimumInt(args);
                 case CalculationType.Specific:
-                    return SpecificValueInt((string)args[0]);
+                    return SpecificValueInt(args);
                 case CalculationType.Custom:
                     return CustomInt(args);
             }
         }
-        public object GetObjCalc(CalculationType calc, object[] args = null)
+        public object GetObjCalc(CalculationType calc, object[][] args = null)
         {
-            switch (calc)
+            try
             {
-                default:
-                case CalculationType.Add:
-                    return AddAllObj(args);
-                case CalculationType.Average:
-                    return AverageAllObj(args);
-                case CalculationType.Maximum:
-                    return MaximumObj(args);
-                case CalculationType.Minimum:
-                    return MinimumObj(args);
-                case CalculationType.Specific:
-                    return SpecificValueObj(args);
-                case CalculationType.Custom:
-                    return CustomObj(args);
+                switch (calc)
+                {
+                    default:
+                    case CalculationType.Add:
+                        return AddAllObj(args);
+                    case CalculationType.Average:
+                        return AverageAllObj(args);
+                    case CalculationType.Maximum:
+                        return MaximumObj(args);
+                    case CalculationType.Minimum:
+                        return MinimumObj(args);
+                    case CalculationType.Specific:
+                        return SpecificValueObj(args);
+                    case CalculationType.Custom:
+                        return CustomObj(args);
+                }
             }
+            catch (Exception e)
+            {
+                GameMaster.LogErrorMessage("There was an error calculating an Obj value in a resource group!", e.Message);
+            }
+
+            return null;
         }
         #endregion
 
         #region Int Calcs
-        protected int AddAllInt()
+        protected int AddAllInt(object[][] args)
         {
             int result = 0;
             for (int i = 0; i < resources.Count; i++)
-                result += resources[i].OutputInt();
+            {
+                if (args == null || args.Length < i)
+                    result += resources[i].OutputInt();
+                else
+                    result += resources[i].OutputInt(args[i]);
+            }
             return result;
         }
-        protected int AverageAllInt()
+        protected int AverageAllInt(object[][] args)
         {
-            return (int)(AddAllInt() / resources.Count);
+            return AddAllInt(args) / resources.Count;
         }
-        protected int MaximumInt()
+        protected int MaximumInt(object[][] args)
         {
             int result = 0;
             int test = 0;
             for (int i = 0; i < resources.Count; i++)
             {
-                test = resources[i].OutputInt();
+                if (args == null || args.Length < i)
+                    test = resources[i].OutputInt();
+                else
+                    test = resources[i].OutputInt(args[i]);
+
                 if (result < test)
                     result = test;
             }
             return result;
         }
-        protected int MinimumInt()
+        protected int MinimumInt(object[][] args)
         {
             int result = int.MaxValue;
             int test = 0;
             for (int i = 0; i < resources.Count; i++)
             {
-                test = resources[i].OutputInt();
+                if (args == null || args.Length < i)
+                    test = resources[i].OutputInt();
+                else
+                    test = resources[i].OutputInt(args[i]);
+
                 if (result > test)
                     result = test;
             }
             return result;
         }
-        protected int SpecificValueInt(string resourceName)
+        protected int SpecificValueInt(object[][] args)
         {
-            for (int i = 0; i < resources.Count; i++)
+            try
             {
-                if (resources[i].name == resourceName)
-                    return resources[i].OutputInt();
+                for (int i = 0; i < resources.Count; i++)
+                {
+                    if (resources[i].name == (string)args[0][0])
+                        return resources[i].OutputInt(args[1]);
+                }
             }
+            catch (Exception e)
+            {
+                GameMaster.LogErrorMessage("There was an error outputting a specific int value in a resource group!", e.Message);
+            }
+            
             return -1;
         }
-        protected virtual int CustomInt(object[] args) { return 0; }
+        protected virtual int CustomInt(object[][] args) { return 0; }
         #endregion
 
         #region Float Calcs
-        protected float AddAllFloat()
+        protected float AddAllFloat(object[][] args)
         {
             float result = 0;
             for (int i = 0; i < resources.Count; i++)
-                result += resources[i].OutputFloat();
+            {
+                if (args == null || args.Length < i)
+                    result += resources[i].OutputFloat();
+                else
+                    result += resources[i].OutputFloat(args[i]);
+            }
             return result;
         }
-        protected float AverageAllFloat()
+        protected float AverageAllFloat(object[][] args)
         {
-            return AddAllFloat() / resources.Count;
+            return AddAllFloat(args) / resources.Count;
         }
-        protected float MaximumFloat()
+        protected float MaximumFloat(object[][] args)
         {
             float result = 0;
             float test = 0;
             for (int i = 0; i < resources.Count; i++)
             {
-                test = resources[i].OutputFloat();
+                if (args == null || args.Length < i)
+                    test = resources[i].OutputFloat();
+                else
+                    test = resources[i].OutputFloat(args[i]);
                 if (result < test)
                     result = test;
             }
             return result;
         }
-        protected float MinimumFloat()
+        protected float MinimumFloat(object[][] args)
         {
             float result = float.MaxValue;
             float test = 0;
             for (int i = 0; i < resources.Count; i++)
             {
-                test = resources[i].OutputFloat();
+                if (args == null || args.Length < i)
+                    test = resources[i].OutputFloat();
+                else
+                    test = resources[i].OutputFloat(args[i]);
                 if (result > test)
                     result = test;
             }
             return result;
         }
-        protected float SpecificValueFloat(string resourceName)
+        protected float SpecificValueFloat(object[][] args)
         {
-            for (int i = 0; i < resources.Count; i++)
+            try
             {
-                if (resources[i].name == resourceName)
-                    return resources[i].OutputFloat();
+                for (int i = 0; i < resources.Count; i++)
+                {
+                    if (resources[i].name == (string)args[0][0])
+                        return resources[i].OutputFloat(args[1]);
+                }
             }
+            catch (Exception e)
+            {
+                GameMaster.LogErrorMessage("There was an error outputting a specific float value in a resource group!", e.Message);
+            }
+            
             return -1;
         }
         protected virtual float CustomFloat(object[] args) { return 0; }
         #endregion
 
         #region Custom Obj OutputCalcs
-        protected virtual object AddAllObj(object[] args) { return null; }
-        protected virtual object AverageAllObj(object[] args) { return null; }
-        protected virtual object MaximumObj(object[] args) { return null; }
-        protected virtual object MinimumObj(object[] args) { return null; }
-        protected virtual object SpecificValueObj(object[] args) { return null; }
-        protected virtual object CustomObj(object[] args) { return null; }
+        protected virtual object AddAllObj(object[][] args) { return null; }
+        protected virtual object AverageAllObj(object[][] args) { return null; }
+        protected virtual object MaximumObj(object[][] args) { return null; }
+        protected virtual object MinimumObj(object[][] args) { return null; }
+        protected virtual object SpecificValueObj(object[][] args) { return null; }
+        protected virtual object CustomObj(object[][] args) { return null; }
         #endregion
 
 

@@ -206,6 +206,31 @@ namespace DawnmakuEngine.Elements
                     currentItem.velocity = dir * (currentItem.drawToPlayer ? currentItem.itemData.drawSpeed : currentItem.itemData.magnetSpeed);
                 }
             }
+
+            itemCount = (ushort)FloatAroundItem.itemList.Count;
+            FloatAroundItem curFloatItem;
+
+            for (int i = 0; i < itemCount; i++)
+            {
+                curFloatItem = FloatAroundItem.itemList[i];
+                if (!curFloatItem.IsEnabled || curFloatItem.disableCollectTime > 0)
+                    continue;
+                itemPos = curFloatItem.EntityAttachedTo.WorldPosition.Xy;
+                dist = Vector2.DistanceSquared(playerPos, itemPos);
+
+                if (dist <= curFloatItem.itemData[curFloatItem.curData].collectDistSqr)
+                {
+                    curFloatItem.Collect();
+                    continue;
+                }
+
+                if (dist <= curFloatItem.itemData[curFloatItem.curData].magnetDistSqr)
+                {
+                    curFloatItem.nearPlayer = true;
+                }
+                else
+                    curFloatItem.nearPlayer = false;
+            }
         }
 
         public void BulletCollisions()
@@ -306,7 +331,7 @@ namespace DawnmakuEngine.Elements
                 ItemElement itemElement;
                 for (i = 0; i < gameMaster.itemsDroppedOnDeath.Count; i++)
                 {
-                    itemEntity = ItemElement.SpawnItem(gameMaster.itemData[gameMaster.itemsDroppedOnDeath[i]], entityAttachedTo.WorldPosition, 0.5f);
+                    itemEntity = ItemElement.SpawnItem(gameMaster.itemData[gameMaster.itemsDroppedOnDeath[i]], entityAttachedTo.WorldPosition, 30);
                     itemElement = itemEntity.GetElement<ItemElement>();
                     itemElement.velocity.Y += gameMaster.itemRandYRange.Y;
                     itemElement.halfItemFallSpeed = true;

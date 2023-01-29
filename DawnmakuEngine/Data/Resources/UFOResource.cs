@@ -15,10 +15,19 @@ namespace DawnmakuEngine.Data.Resources
                 return;
 
             string[] colors = stringValue.Split(',');
+            int ufoCount;
 
-            for (int i = 0; i < colors.Length; i++)
+            if(colors.Length == 1 && int.TryParse(colors[0], out ufoCount))
             {
-                ufos[i] = ColorToInt(colors[i]);
+                ufos = new int[ufoCount];
+            }
+            else
+            {
+                ufos = new int[colors.Length];
+                for (int i = 0; i < colors.Length; i++)
+                {
+                    ufos[i] = ColorToInt(colors[i].ToLower());
+                }
             }
         }
         public int ColorToInt(string col)
@@ -26,13 +35,14 @@ namespace DawnmakuEngine.Data.Resources
             switch (col)
             {
                 default:
-                case "None":
+                case "null":
+                case "none":
                     return 0;
-                case "Red":
+                case "red":
                     return 1;
-                case "Green":
+                case "green":
                     return 2;
-                case "Blue":
+                case "blue":
                     return 3;
             }
         }
@@ -42,17 +52,17 @@ namespace DawnmakuEngine.Data.Resources
             {
                 default:
                 case 0:
-                    return "None";
+                    return "none";
                 case 1:
-                    return "Red";
+                    return "red";
                 case 2:
-                    return "Green";
+                    return "green";
                 case 3:
-                    return "Blue";
+                    return "blue";
             }
         }
 
-        public override object GetValue()
+        public override object GetValue(params object[] values)
         {
             return ufos;
         }
@@ -62,9 +72,52 @@ namespace DawnmakuEngine.Data.Resources
             try
             {
                 int index = Convert.ToInt32(values[0]);
+                int ufoType = Convert.ToInt32(values[1]);
+                //Set an exact index if we get one
                 if (index >= 0 && index < ufos.Length)
                 {
-                    ufos[index] = Convert.ToInt32(values[1]);
+                    ufos[index] = ufoType;
+                }
+                else 
+                {
+                    int i;
+
+                    //try to fill any slot that isn't the last one
+                    for (i = 0; i < ufos.Length - 1; i++)
+                    {
+                        if (ufos[i] == 0)
+                        {
+                            ufos[i] = ufoType;
+                            break;
+                        }
+                    }
+
+                    //If i is greater than the count minus one, we've set a ufo, otherwise we begin checking for equality
+                    if(i >= ufos.Length - 1)
+                    {
+                        bool match = true;
+                        for (i = 0; i < ufos.Length - 1; i++)
+                        {
+                            if (ufos[i] != ufoType)
+                            {
+                                match = false;
+                                break;
+                            }
+                        }
+
+                        //If one didn't match the new ufo, we shift all ufos over one and replace the first one
+                        //However, we continue leaving the last slot empty
+                        if(!match)
+                        {
+                            for (i = ufos.Length - 2; i >= 1; i--)
+                            {
+                                ufos[i] = ufos[i - 1];
+                            }
+                            ufos[0] = ufoType;
+                        }
+                        else //If the types are all the same, we add on the last one
+                            ufos[ufos.Length - 1] = ufoType;
+                    }
                 }
             }
             catch (Exception e)
@@ -73,17 +126,25 @@ namespace DawnmakuEngine.Data.Resources
             }
         }
 
-        public override float OutputFloat()
+        public override float OutputFloat(params object[] values)
         {
             return ufos[0];
         }
 
-        public override int OutputInt()
+        public override int OutputInt(params object[] values)
         {
+            try
+            {
+                return ufos[Convert.ToInt32(values[0])];
+            }
+            catch (Exception e)
+            {
+                GameMaster.LogErrorMessage("There was an error outputting an int for a UFO resource!", e.Message);
+            }
             return ufos[0];
         }
 
-        public override string OutputString()
+        public override string OutputString(params object[] values)
         {
             return IntToColor(ufos[0]) + ", " + IntToColor(ufos[1]) + ", " + IntToColor(ufos[2]);
         }

@@ -16,7 +16,7 @@ namespace DawnmakuEngine.Data.Resources
             value = float.Parse(stringValue);
         }
 
-        public override object GetValue()
+        public override object GetValue(params object[] values)
         {
             return value;
         }
@@ -35,12 +35,26 @@ namespace DawnmakuEngine.Data.Resources
             }
         }
 
-        public override float OutputFloat()
+        public override float OutputFloat(params object[] values)
         {
             return (value - min) / (max - min);
         }
 
-        public override string OutputString()
+        public override int OutputInt(params object[] values)
+        {
+            try
+            {
+                return (int)(value + Convert.ToSingle(values[0]));
+            }
+            catch (Exception e)
+            {
+                GameMaster.LogErrorMessage("There was an error outputting an int for a float resource!", e.Message);
+            }
+
+            return (int)value;
+        }
+
+        public override string OutputString(params object[] values)
         {
             return value.ToString();
         }

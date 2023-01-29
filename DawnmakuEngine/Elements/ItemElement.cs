@@ -16,7 +16,7 @@ namespace DawnmakuEngine.Elements
         public ItemData itemData;
         public Vector2 velocity;
         public bool drawToPlayer, magnetToPlayer;
-        GameMaster gameMaster = GameMaster.gameMaster;
+        protected GameMaster gameMaster = GameMaster.gameMaster;
 
         public bool halfItemFallSpeed = false;
         public float disableCollectTime = 0;
@@ -29,7 +29,7 @@ namespace DawnmakuEngine.Elements
                     drawToPlayer = true;
             }
             else
-                disableCollectTime -= gameMaster.frameTime * gameMaster.timeScale;
+                disableCollectTime -= gameMaster.timeScale;
 
             if (!drawToPlayer && !magnetToPlayer)
             {
@@ -45,8 +45,6 @@ namespace DawnmakuEngine.Elements
 
             if (entityAttachedTo.WorldPosition.Y <= gameMaster.itemDisableHeight)
                 entityAttachedTo.Disable();
-
-            base.OnUpdate();
         }
 
         public void Collect()

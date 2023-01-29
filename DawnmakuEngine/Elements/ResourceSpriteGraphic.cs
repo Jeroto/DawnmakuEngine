@@ -17,19 +17,21 @@ namespace DawnmakuEngine.Elements
         public List<SpriteSet.Sprite> sprites;
         public int index, prevIndex;
 
-        public int lowerLimitCheck = 0, upperLimitCheck = 9999;
+        public object[][] calcMods = new object[1][] { new object[1] { 0 } };
+        public int minIndex, maxIndex;
+        public int defaultIndex = 0;
 
         public override void OnUpdate()
         {
-            index = resources.GetIntCalc(calcType);
+            index = resources.GetIntCalc(calcType, calcMods);
             if (index != prevIndex)
             {
                 prevIndex = index;
 
-                if (index < lowerLimitCheck)
-                    index = 0;
-                else if (index > upperLimitCheck)
-                    index = 1;
+                if (index < minIndex)
+                    index = minIndex;
+                else if (index > maxIndex)
+                    index = maxIndex;
 
                 uiSprite.Sprite = sprites[MathHelper.Clamp(index, 0, sprites.Count - 1)];
             }
@@ -60,27 +62,30 @@ namespace DawnmakuEngine.Elements
         }
 
         public static ResourceSpriteGraphic Create(Vector3 position, Vector3 rotation, Vector3 scale, Shader shader, List<SpriteSet.Sprite> sprites,
-            Vector4 color, bool colorIsByte, ResourceGroup resources, ResourceGroup.CalculationType calcType, int lowerLimitCheck = 0, int upperLimitCheck = 9999, string name = RESOURCE_SPRITE_NAME)
+            Vector4 color, bool colorIsByte, ResourceGroup resources, ResourceGroup.CalculationType calcType, int minIndex = 0, int maxIndex = 9999, object[][] calcMods = null, string name = RESOURCE_SPRITE_NAME)
         {
             ResourceSpriteGraphic newResGraphic = Create(position, rotation, scale, shader, sprites, name);
             newResGraphic.resources = resources;
             newResGraphic.calcType = calcType;
 
 
-            newResGraphic.lowerLimitCheck = lowerLimitCheck;
-            newResGraphic.upperLimitCheck = upperLimitCheck;
+            newResGraphic.minIndex = minIndex;
+            newResGraphic.maxIndex = maxIndex;
 
             if (colorIsByte)
                 newResGraphic.uiSprite.ColorByte = color;
             else
                 newResGraphic.uiSprite.ColorFloat = color;
 
-            newResGraphic.index = resources.GetIntCalc(calcType);
+            if(calcMods != null)
+                newResGraphic.calcMods = calcMods;
+            
+            newResGraphic.index = resources.GetIntCalc(calcType, newResGraphic.calcMods);
 
-            if (newResGraphic.index < newResGraphic.lowerLimitCheck)
-                newResGraphic.index = 0;
-            else if (newResGraphic.index > newResGraphic.upperLimitCheck)
-                newResGraphic.index = 1;
+            if (newResGraphic.index < newResGraphic.minIndex)
+                newResGraphic.index = newResGraphic.minIndex;
+            else if (newResGraphic.index > newResGraphic.maxIndex)
+                newResGraphic.index = newResGraphic.maxIndex;
 
             newResGraphic.uiSprite.Sprite = newResGraphic.sprites[MathHelper.Clamp(newResGraphic.index, 0, newResGraphic.sprites.Count - 1)];
 

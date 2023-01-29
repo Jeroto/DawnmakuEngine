@@ -22,5 +22,7 @@
     "magnetDist": 0,
     "magnetSpeed": 0,
     "drawSpeed": 0,
-    "collectDist": 0
+    "collectDist": 0,
+
+    "resourcesModifiedOnPickup": [ ]
 }

@@ -23,7 +23,7 @@
    {
       "name":"UFOs",
       "type":"UFO",
-      "value":"red,green,none",
+      "value":"42",
       "min": 0,
       "max": 3
    }

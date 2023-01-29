@@ -1569,9 +1569,7 @@ namespace DawnmakuEngine
                 {
                     KerningMode = KerningMode.None,
                     HorizontalAlignment = HorizontalAlignment.Center,
-                    VerticalAlignment = VerticalAlignment.Center,
-                    LineSpacing = 1.5f,
-                    
+                    VerticalAlignment = VerticalAlignment.Center
                 };
 
 
@@ -1610,7 +1608,7 @@ namespace DawnmakuEngine
                 height += curHeight;
 
                 timer.Restart();
-                Image<Rgba32> image = new Image<Rgba32>(width < widthLimit ? width : widthLimit, height, new Rgba32(0, 0, 0, 0));
+                Image<Rgba32> image = new Image<Rgba32>(width < widthLimit ? width : widthLimit, (int)MathHelper.Ceiling(height * 1.25f), new Rgba32(0, 0, 0, 0));
                 PointF point = new PointF();
                 int xDrawn = 0, yDrawn = 0;
                 float imageCenter = height * 0.5f;
@@ -1651,7 +1649,7 @@ namespace DawnmakuEngine
                     {
                         charsUnderLimit = 0;
                         xDrawn = 0;
-                        yDrawn += curHeight;
+                        yDrawn += (int)(curHeight * 1.25f);
                         curHeight = 0;
                     }
                 }

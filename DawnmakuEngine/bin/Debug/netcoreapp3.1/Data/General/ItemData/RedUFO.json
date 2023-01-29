@@ -1,0 +1,42 @@
+{
+    "shader": "spriteshader",
+    "canBeAutoCollectedAtTop": false,
+    "autoDraw": false,
+    "animStates": [
+        "redufo"
+    ],
+
+    "overrideDefaultValues": true,
+    "randXVelRange": {
+        "min": 0,
+        "max": 0
+    },
+    "randYVelRange": {
+        "min": 0,
+        "max": 0
+    },
+
+    "maxFallSpeed": 0,
+    "gravAccel": 0,
+    "xDecel": 0,
+    "magnetDist": 64,
+    "magnetSpeed": 0,
+    "drawSpeed": 0,
+    "collectDist": 12,
+
+    "resourcesModifiedOnPickup": [
+        {
+            "name": "ufos",
+            "values":[
+                {
+                    "valueType": "int",
+                    "value": "-1"
+                },
+                {
+                    "valueType": "int",
+                    "value": "1"
+                }
+            ]
+        }
+    ]
+}

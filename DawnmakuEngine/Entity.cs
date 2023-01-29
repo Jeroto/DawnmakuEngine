@@ -183,6 +183,12 @@ namespace DawnmakuEngine
             get {return QuaternionToEuler(rotation); }
             set 
             {
+                while (value.X < 0)
+                    value.X += MathHelper.TwoPi;
+                while (value.Y < 0)
+                    value.Y += MathHelper.TwoPi;
+                while (value.Z < 0)
+                    value.Z += MathHelper.TwoPi;
                 rotation = Quaternion.FromEulerAngles(value);
                 SetChildrenWorldPosition();
                 OnRotate?.Invoke();
@@ -194,7 +200,13 @@ namespace DawnmakuEngine
                 Vector3 rot = QuaternionToEuler(rotation);
                 return new Vector3(MathHelper.RadiansToDegrees(rot.X), MathHelper.RadiansToDegrees(rot.Y), MathHelper.RadiansToDegrees(rot.Z)); }
             set 
-            { 
+            {
+                while (value.X < 0)
+                    value.X += 360;
+                while (value.Y < 0)
+                    value.Y += 360;
+                while (value.Z < 0)
+                    value.Z += 360;
                 rotation = Quaternion.FromEulerAngles(new Vector3(MathHelper.DegreesToRadians(value.X), MathHelper.DegreesToRadians(value.Y), MathHelper.DegreesToRadians(value.Z)));
                 SetChildrenWorldPosition();
                 OnRotate?.Invoke();

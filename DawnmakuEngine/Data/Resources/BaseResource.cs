@@ -26,28 +26,29 @@ namespace DawnmakuEngine.Data.Resources
         /// <summary>
         /// Modifies the value(s) contained in the resource. Any number and types of values can be passed in to modify the resource.
         /// </summary>
-        /// <param name="values">The list of values. Within the function, each entry needs to be converted to the type you want to use.</param>
+        /// <param name="values">A list of any data type used to modify the value of the resource. Within the function, each entry needs to be converted to the type you want to use.</param>
         public virtual void ModifyValue(params object[] values)
         {
 
         }
 
-        
+
 
         /// <summary>
         /// Returns an 'object' containing the value, which will need to be converted to the intended type. Check for the value being null to avoid errors.
         /// </summary>
-        /// <returns></returns>
-        public virtual object GetValue()
+        /// <param name="values">A list of any data type, used to modify the output in some way. Within the function, each entry needs to be converted to the type you want to use.</param>
+        ///<returns>A generic 'object' which contains the value. Will need to be converted to the type you want to use wherever it's outputted.</returns>
+        public virtual object GetValue(params object[] values)
         {
             return null;
         }
-        
+
         /// <summary>
         /// Used for meters and UI. Outputs the value modified into a float. Usually a range between 0 and 1 is desired.
         /// </summary>
-        /// <returns></returns>
-        public virtual float OutputFloat()
+        /// <param name="values">A list of any data type, used to modify the output float in some way. Within the function, each entry needs to be converted to the type you want to use.</param>
+        public virtual float OutputFloat(params object[] values)
         {
             return 0;
         }
@@ -55,8 +56,8 @@ namespace DawnmakuEngine.Data.Resources
         /// <summary>
         /// Used for UI. Outputs the value modified into an int. Usually used as an index of some sort.
         /// </summary>
-        /// <returns></returns>
-        public virtual int OutputInt()
+        /// <param name="values">A list of any data type, used to modify the output int in some way. Within the function, each entry needs to be converted to the type you want to use.</param>
+        public virtual int OutputInt(params object[] values)
         {
             return 0;
         }
@@ -64,8 +65,8 @@ namespace DawnmakuEngine.Data.Resources
         /// <summary>
         /// Used mainly for UI. Outputs the value modified into a readable string.
         /// </summary>
-        /// <returns></returns>
-        public virtual string OutputString()
+        /// <param name="values">A list of any data type, used to modify the output string in some way.</param>
+        public virtual string OutputString(params object[] values)
         {
             return "";
         }

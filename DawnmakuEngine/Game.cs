@@ -93,7 +93,7 @@ namespace DawnmakuEngine
                             new Vector4(255, 255, 255, 255), 35, SixLabors.Fonts.HorizontalAlignment.Center, SixLabors.Fonts.VerticalAlignment.Center, "000000000", 16, "ScoreVal");
 
             ResourceGroup meterResources = new ResourceGroup(new List<BaseResource>() { GameMaster.gameMaster.resources["power"] });
-            UIMeter.Create(new Vector3(280, 250, 0), Vector3.Zero, GameMaster.gameMaster.uiSprites["powermeter"].sprites[0],
+            ResourceMeter.Create(new Vector3(280, 250, 0), Vector3.Zero, GameMaster.gameMaster.uiSprites["powermeter"].sprites[0],
                                 new Vector2(120, 24), GameMaster.gameMaster.shaders["spriteshader"], meterResources, ResourceGroup.CalculationType.Add);
 
             TextRenderer.Create(new Vector3(285, 262, 0), Vector3.Zero, true, "Arial", GameMaster.gameMaster.shaders["spriteshader"],
@@ -117,31 +117,31 @@ namespace DawnmakuEngine
             ResourceGroup graphicResGroup = new ResourceGroup(new List<BaseResource>() { GameMaster.gameMaster.resources["lives"] });
 
             ResourceSpriteGraphic.Create(new Vector3(263, 300, 0), Vector3.Zero, Vector3.One, GameMaster.gameMaster.shaders["spriteshader"], graphicSprites,
-                new Vector4(255, 170, 170, 255), true, graphicResGroup, ResourceGroup.CalculationType.Add, 1, 0, "lifeheart");
+                new Vector4(255, 170, 170, 255), true, graphicResGroup, ResourceGroup.CalculationType.Add, 0, 1, new object[1][] { new object[1] { 0 } }, "lifeheart");
 
             ResourceSpriteGraphic.Create(new Vector3(280, 300, 0), Vector3.Zero, Vector3.One, GameMaster.gameMaster.shaders["spriteshader"], graphicSprites,
-                new Vector4(255, 170, 170, 255), true, graphicResGroup, ResourceGroup.CalculationType.Add, 2, 1, "lifeheart");
+                new Vector4(255, 170, 170, 255), true, graphicResGroup, ResourceGroup.CalculationType.Add, 0, 1, new object[1][] { new object[1] { -1 } }, "lifeheart");
 
             ResourceSpriteGraphic.Create(new Vector3(297, 300, 0), Vector3.Zero, Vector3.One, GameMaster.gameMaster.shaders["spriteshader"], graphicSprites,
-                new Vector4(255, 170, 170, 255), true, graphicResGroup, ResourceGroup.CalculationType.Add, 3, 2, "lifeheart");
+                new Vector4(255, 170, 170, 255), true, graphicResGroup, ResourceGroup.CalculationType.Add, 0, 1, new object[1][] { new object[1] { -2 } }, "lifeheart");
 
             ResourceSpriteGraphic.Create(new Vector3(314, 300, 0), Vector3.Zero, Vector3.One, GameMaster.gameMaster.shaders["spriteshader"], graphicSprites,
-                new Vector4(255, 170, 170, 255), true, graphicResGroup, ResourceGroup.CalculationType.Add, 4, 3, "lifeheart");
+                new Vector4(255, 170, 170, 255), true, graphicResGroup, ResourceGroup.CalculationType.Add, 0, 1, new object[1][] { new object[1] { -3 } }, "lifeheart");
 
             ResourceSpriteGraphic.Create(new Vector3(331, 300, 0), Vector3.Zero, Vector3.One, GameMaster.gameMaster.shaders["spriteshader"], graphicSprites,
-                new Vector4(255, 170, 170, 255), true, graphicResGroup, ResourceGroup.CalculationType.Add, 5, 4, "lifeheart");
+                new Vector4(255, 170, 170, 255), true, graphicResGroup, ResourceGroup.CalculationType.Add, 0, 1, new object[1][] { new object[1] { -4 } }, "lifeheart");
 
             ResourceSpriteGraphic.Create(new Vector3(348, 300, 0), Vector3.Zero, Vector3.One, GameMaster.gameMaster.shaders["spriteshader"], graphicSprites,
-                new Vector4(255, 170, 170, 255), true, graphicResGroup, ResourceGroup.CalculationType.Add, 6, 5, "lifeheart");
+                new Vector4(255, 170, 170, 255), true, graphicResGroup, ResourceGroup.CalculationType.Add, 0, 1, new object[1][] { new object[1] { -5 } }, "lifeheart");
 
             ResourceSpriteGraphic.Create(new Vector3(365, 300, 0), Vector3.Zero, Vector3.One, GameMaster.gameMaster.shaders["spriteshader"], graphicSprites,
-                new Vector4(255, 170, 170, 255), true, graphicResGroup, ResourceGroup.CalculationType.Add, 7, 6, "lifeheart");
+                new Vector4(255, 170, 170, 255), true, graphicResGroup, ResourceGroup.CalculationType.Add, 0, 1, new object[1][] { new object[1] { -6 } }, "lifeheart");
 
             ResourceSpriteGraphic.Create(new Vector3(382, 300, 0), Vector3.Zero, Vector3.One, GameMaster.gameMaster.shaders["spriteshader"], graphicSprites,
-                new Vector4(255, 170, 170, 255), true, graphicResGroup, ResourceGroup.CalculationType.Add, 8, 7, "lifeheart");
+                new Vector4(255, 170, 170, 255), true, graphicResGroup, ResourceGroup.CalculationType.Add, 0, 1, new object[1][] { new object[1] { -7 } }, "lifeheart");
 
             ResourceSpriteGraphic.Create(new Vector3(399, 300, 0), Vector3.Zero, Vector3.One, GameMaster.gameMaster.shaders["spriteshader"], graphicSprites,
-                new Vector4(255, 170, 170, 255), true, graphicResGroup, ResourceGroup.CalculationType.Add, 9, 8, "lifeheart");
+                new Vector4(255, 170, 170, 255), true, graphicResGroup, ResourceGroup.CalculationType.Add, 0, 1, new object[1][] { new object[1] { -8 } }, "lifeheart");
 
 
             graphicSprites = new List<SpriteSet.Sprite>();
@@ -152,8 +152,17 @@ namespace DawnmakuEngine
 
             graphicResGroup = new ResourceGroup(new List<BaseResource>() { GameMaster.gameMaster.resources["ufos"] });
 
-            ResourceSpriteGraphic.Create(new Vector3(-180, 9, 0), Vector3.Zero, Vector3.One, GameMaster.gameMaster.shaders["spriteshader"], graphicSprites,
-                new Vector4(255, 170, 170, 255), true, graphicResGroup, ResourceGroup.CalculationType.Add, 0, 9999, "ufo1");
+            for (int i = 0; i < 21; i++)
+            {
+                ResourceSpriteGraphic.Create(new Vector3(-180 + (18 * i), 27, 0), Vector3.Zero, Vector3.One, GameMaster.gameMaster.shaders["spriteshader"], graphicSprites,
+                new Vector4(255, 170, 170, 255), true, graphicResGroup, ResourceGroup.CalculationType.Add, 0, 3, new object[1][] { new object[1] { i } }, "ufo" + i.ToString());
+            }
+
+            for (int i = 0; i < 21; i++)
+            {
+                ResourceSpriteGraphic.Create(new Vector3(-180 + (18 * i), 9, 0), Vector3.Zero, Vector3.One, GameMaster.gameMaster.shaders["spriteshader"], graphicSprites,
+                new Vector4(255, 170, 170, 255), true, graphicResGroup, ResourceGroup.CalculationType.Add, 0, 3, new object[1][] { new object[1] { i + 21 } }, "ufo" + (i + 21).ToString());
+            }
 
             //GameMaster.gameMaster.fontImages["Arial"].SaveAsPng("D:/Damio/source/repos/DawnmakuEngine/DawnmakuEngine/bin/Debug/netcoreapp3.1/Data/General/Fonts/arial.png");
         }
@@ -190,7 +199,13 @@ namespace DawnmakuEngine
             //Entity.FindEntity("FPSCounter").GetElement<TextRenderer>().textToWrite = "FPS:" + UpdateFrequency.ToString("0.00");
 
             gameMaster.ElementUpdate();
-            
+
+
+            if(toggleUFO && ItemElement.Random(0, 60) == 0)
+            {
+                FloatAroundItem.SpawnItem(new List<ItemData>() { gameMaster.itemData["redufo"], gameMaster.itemData["greenufo"], gameMaster.itemData["blueufo"] },
+                    new Vector3(ItemElement.Random(-100f, 100f), 350, 0), ItemElement.Random(0, 3));
+            }
 
             /*if (input.IsKeyDown(Key.D))
                 Entity.allEntities[0].Rotate(new Vector3(0, .02f, 0));
@@ -208,6 +223,7 @@ namespace DawnmakuEngine
             base.OnUpdateFrame(e);
         }
 
+        bool toggleUFO;
         protected void DebugKeys(KeyboardState input)
         {
             GameMaster gameMaster = GameMaster.gameMaster;
@@ -216,6 +232,9 @@ namespace DawnmakuEngine
                 UpdateFrequency = 240;
             if (input.IsKeyDown(Keys.L))
                 UpdateFrequency = 60;
+
+            if (input.IsKeyPressed(Keys.U))
+                toggleUFO = !toggleUFO;
 
             if (input.IsKeyDown(Keys.B))
             {
@@ -238,6 +257,18 @@ namespace DawnmakuEngine
             if (input.IsKeyDown(Keys.Apostrophe))
             {
                 ItemElement.SpawnItem(gameMaster.itemData["lifeitem"],
+                    gameMaster.playerEntity.WorldPosition + new Vector3(0, 100, 0));
+            }
+
+
+            if (input.IsKeyPressed(Keys.Semicolon))
+            {
+                ItemElement.SpawnItem(gameMaster.itemData["bombitem"],
+                    gameMaster.playerEntity.WorldPosition + new Vector3(0, 100, 0));
+            }
+            if (input.IsKeyPressed(Keys.Slash))
+            {
+                ItemElement.SpawnItem(gameMaster.itemData["pointitem"],
                     gameMaster.playerEntity.WorldPosition + new Vector3(0, 100, 0));
             }
 
@@ -281,6 +312,39 @@ namespace DawnmakuEngine
                 gameMaster.resources["ufos"].ModifyValue(0, 3);
             }
 
+            if (input.IsKeyPressed(Keys.D5))
+            {
+                gameMaster.resources["ufos"].ModifyValue(1, 0);
+            }
+            if (input.IsKeyPressed(Keys.D6))
+            {
+                gameMaster.resources["ufos"].ModifyValue(1, 1);
+            }
+            if (input.IsKeyPressed(Keys.D7))
+            {
+                gameMaster.resources["ufos"].ModifyValue(1, 2);
+            }
+            if (input.IsKeyPressed(Keys.D8))
+            {
+                gameMaster.resources["ufos"].ModifyValue(1, 3);
+            }
+
+            if (input.IsKeyPressed(Keys.D9))
+            {
+                gameMaster.resources["ufos"].ModifyValue(2, 0);
+            }
+            if (input.IsKeyPressed(Keys.D0))
+            {
+                gameMaster.resources["ufos"].ModifyValue(2, 1);
+            }
+            if (input.IsKeyPressed(Keys.Minus))
+            {
+                gameMaster.resources["ufos"].ModifyValue(2, 2);
+            }
+            if (input.IsKeyPressed(Keys.Equal))
+            {
+                gameMaster.resources["ufos"].ModifyValue(2, 3);
+            }
 
 
             if (gameMaster.score != prevScore)
